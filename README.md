@@ -325,6 +325,7 @@ All endpoints are prefixed with `/api/`. All endpoints except auth require a val
 | `GET` | `/entries/` | List catalog entries (see query params below) |
 | `POST` | `/entries/` | Create a new catalog entry |
 | `PATCH` | `/entries/{id}/` | Update a catalog entry |
+| `DELETE` | `/entries/{id}/` | Delete a catalog entry record |
 | `POST` | `/entries/{id}/resolve/` | Mark entry as resolved — stamps `resolved_at` (400 if already resolved) |
 | `PATCH` | `/entries/bulk_update_status/` | Bulk-update status: `{"ids": [...], "status": "SELL"}` |
 | `GET` | `/stats/` | Dashboard counts: `{active: {...}, resolved: {...}, in_collection: N}` |

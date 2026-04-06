@@ -67,7 +67,8 @@ Base URL: `http://localhost:8000/api/`
 | POST | `auth/login/` | dj-rest-auth login — returns `{"key": "..."}` |
 | POST | `auth/logout/` | Invalidates token |
 | GET | `lookup/{isbn}/` | Fetch/cache book metadata; includes `metadata_found` flag |
-| GET/POST | `entries/` | List (with filters) / create catalog entries |
+| GET/POST/PATCH | `entries/` | List (with filters) / create / update catalog entries |
+| DELETE | `entries/{id}/` | Delete a catalog entry record |
 | POST | `entries/{id}/resolve/` | Stamp `resolved_at = now()` (idempotent guard: 400 if already resolved) |
 | PATCH | `entries/bulk_update_status/` | `{"ids": [...], "status": "SELL"}` |
 | GET | `stats/` | Dashboard counts: `{active: {...}, resolved: {...}, in_collection: N}` |
@@ -230,7 +231,11 @@ useEffect(() => {
 - View toggles: All / In Collection / Pending / Resolved
 - Initialized from URL params (Dashboard links pass `?status=...&resolved=...`)
 - Resolved rows styled with `text-muted`, `opacity-50` cover image, secondary "Kept · date" badge
-- Action column: "Mark as Kept/Sold/Donated/Discarded" button OR "Done" badge if already resolved
+- Action column: "Resolve" button OR "Done" badge, plus a pencil icon for editing
+- **Edit Record Modal:**
+  - Triggered by clicking the book title (accessible via keyboard/role) or pencil icon.
+  - Allows editing of status, condition, flags, notes, price, and donation destination.
+  - Supports toggling resolution state (un-resolve) and record deletion.
 - Bulk status change, export to CSV/Excel/PDF
 
 ### `Login.jsx`

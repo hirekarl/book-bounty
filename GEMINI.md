@@ -89,7 +89,10 @@ Reference `.env.example` in the root or within subdirectories for required varia
   - `pages/Dashboard.jsx`: Stats overview (active + resolved), Culling Goal management.
   - `pages/TriageWizard.jsx`: Scan → AI recommend → accept/override → save flow. Uses `Html5Qrcode` (lower-level API, not `Html5QrcodeScanner`). Camera is **off by default** (`cameraEnabled` state). Scanner restricted to `EAN_13` format only to avoid false reads from the EAN-5 add-on barcode that appears beside ISBN barcodes. Resolution bumped to 1080p and `focusMode: continuous` applied post-start via `applyConstraints`. Do NOT add `aspectRatio` config or CSS overrides on `#reader video` — both break coordinate mapping and prevent decoding.
   - `pages/Inventory.jsx`: Filterable catalog table with view toggles, resolution, and exports.
-  - `services/api.js`: Axios API client with token interceptor and 401 redirect.
+    - **Edit Record Modal:** Triggered by clicking a book title (accessible with `role="button"` and keyboard listeners) or the pencil icon.
+    - **Capabilities:** Modify status, condition grade, condition flags, notes, price, and destination.
+    - **Lifecycle:** Toggle "Resolved" state (allows un-resolving) and "Delete Record" support.
+  - `services/api.js`: Axios API client with token interceptor and 401 redirect. Includes `updateCatalogEntry` (PATCH) and `deleteCatalogEntry` (DELETE).
 - `docs/legacy/`: Archived planning documents.
 - `v2_PRODUCT_VISION.md`: Current product vision (AI-driven culling).
 - `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
