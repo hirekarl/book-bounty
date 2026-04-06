@@ -8,15 +8,13 @@ from typing import ClassVar
 
 from rest_framework import serializers
 
-from triage.models import Book, CatalogEntry
+from triage.models import Book, CatalogEntry, CullingGoal
 
 
 class BookSerializer(serializers.ModelSerializer[Book]):
-    """Serializer for the Book model."""
-
+    # ... metadata ...
     class Meta:
-        """Metadata for the BookSerializer."""
-
+        # ... metadata ...
         model = Book
         fields: ClassVar[list[str]] = [
             "id",
@@ -30,6 +28,17 @@ class BookSerializer(serializers.ModelSerializer[Book]):
             "created_at",
         ]
         read_only_fields: ClassVar[list[str]] = ["id", "created_at"]
+
+
+class CullingGoalSerializer(serializers.ModelSerializer):
+    """Serializer for the CullingGoal model."""
+
+    class Meta:
+        """Metadata for the CullingGoalSerializer."""
+
+        model = CullingGoal
+        fields = ["id", "name", "description", "is_active", "created_at"]
+        read_only_fields = ["id", "created_at"]
 
 
 class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
@@ -51,6 +60,7 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
             "id",
             "book",
             "book_id",
+            "culling_goal",
             "status",
             "condition_grade",
             "condition_flags",
@@ -58,6 +68,7 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
             "asking_price",
             "donation_dest",
             "valuation_data",
+            "ai_recommendation",
             "created_at",
             "updated_at",
         ]

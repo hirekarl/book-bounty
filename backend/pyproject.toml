@@ -10,6 +10,9 @@ dependencies = [
     "django-allauth>=65.15.1",
     "django-cors-headers>=4.9.0",
     "djangorestframework>=3.17.1",
+    "google-genai>=1.70.0",
+    "instructor>=1.15.1",
+    "pydantic>=2.12.5",
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",
 ]

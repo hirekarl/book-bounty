@@ -12,9 +12,78 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from triage.models import CatalogEntry
-from triage.serializers import BookSerializer, CatalogEntrySerializer
+from triage.ai_engine import get_ai_recommendation
+from triage.models import CatalogEntry, CullingGoal
+from triage.serializers import BookSerializer, CatalogEntrySerializer, CullingGoalSerializer
 from triage.services import get_or_create_book
+
+
+class CullingGoalViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing CullingGoal records."""
+
+    queryset = CullingGoal.objects.all().order_by("-created_at")
+    serializer_class = CullingGoalSerializer
+
+    def perform_update(self, serializer: CullingGoalSerializer) -> None:
+        """Ensures only one goal is active at a time."""
+        instance = serializer.save()
+        if instance.is_active:
+            CullingGoal.objects.exclude(pk=instance.pk).update(is_active=False)
+
+
+class RecommendView(APIView):
+    """Calls the AI engine to generate a triage recommendation for a book."""
+
+    def post(self, request: Request) -> Response:
+        """Returns a structured AI recommendation.
+
+        Expected payload:
+            {
+                "isbn": "9780374528379",
+                "culling_goal_id": 1,        // optional; falls back to active goal
+                "condition_grade": "GOOD",   // optional; defaults to GOOD
+                "condition_flags": []        // optional
+            }
+        """
+        isbn = request.data.get("isbn")
+        if not isbn:
+            return Response({"error": "isbn is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        culling_goal_id = request.data.get("culling_goal_id")
+        if culling_goal_id:
+            goal = CullingGoal.objects.filter(pk=culling_goal_id).first()
+        else:
+            goal = CullingGoal.objects.filter(is_active=True).first()
+
+        if not goal:
+            return Response(
+                {"error": "No active culling goal found. Please set a culling goal first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        book, _ = get_or_create_book(isbn)
+
+        book_metadata = {
+            "title": book.title,
+            "author": book.author,
+            "year": book.publish_year,
+            "subjects": book.subjects,
+            "description": book.description,
+        }
+        condition = {
+            "grade": request.data.get("condition_grade", "GOOD"),
+            "flags": request.data.get("condition_flags", []),
+        }
+
+        try:
+            recommendation = get_ai_recommendation(goal.description, book_metadata, condition)
+        except Exception as exc:
+            return Response(
+                {"error": f"AI engine error: {exc}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(recommendation.model_dump(), status=status.HTTP_200_OK)
 
 
 class BookLookupView(APIView):

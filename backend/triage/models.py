@@ -9,17 +9,8 @@ from django.db import models
 
 
 class Book(models.Model):
-    """Stores immutable metadata for a book, keyed by ISBN.
-
-    Attributes:
-        isbn (str): Unique ISBN for the book. Optional for manual entries.
-        title (str): Title of the book.
-        author (str): Author(s) of the book.
-        publish_year (int): Year the book was published.
-        subjects (list[str]): List of subjects associated with the book.
-        created_at (datetime): Timestamp when the book record was created.
-    """
-
+    """Stores immutable metadata for a book, keyed by ISBN."""
+    # ... attributes ...
     isbn = models.CharField(max_length=13, unique=True, null=True, blank=True)
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
@@ -34,19 +25,27 @@ class Book(models.Model):
         return f"{self.title} by {self.author} ({self.publish_year})"
 
 
-class CatalogEntry(models.Model):
-    """Records the user's decision and specific details for a physical copy.
+class CullingGoal(models.Model):
+    """Defines the user's high-level goal for a culling session.
 
     Attributes:
-        book (Book): ForeignKey to the Book metadata.
-        status (str): Current triage status (KEEP, DONATE, SELL, DISCARD).
-        condition_flags (list[str]): JSON list of condition descriptions.
-        notes (str): Additional user-provided notes.
-        asking_price (Decimal): Price for books marked for sale.
-        donation_dest (str): Destination for donated books.
-        created_at (datetime): Timestamp when the entry was created.
-        updated_at (datetime): Timestamp when the entry was last updated.
+        name (str): Short name for the goal (e.g., 'Minimalist Move').
+        description (str): Detailed prompt context for the AI.
+        is_active (bool): Whether this is the current active goal.
     """
+
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        """Returns a string representation of the goal."""
+        return str(self.name)
+
+
+class CatalogEntry(models.Model):
+    """Records the user's decision and specific details for a physical copy."""
 
     class Status(models.TextChoices):
         """Triage status choices."""
@@ -65,6 +64,13 @@ class CatalogEntry(models.Model):
         POOR = "POOR", "Poor"
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="entries")
+    culling_goal = models.ForeignKey(
+        CullingGoal,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="entries",
+    )
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.KEEP,
     )
@@ -78,6 +84,7 @@ class CatalogEntry(models.Model):
     )
     donation_dest = models.CharField(max_length=255, blank=True)
     valuation_data = models.JSONField(default=dict, blank=True)
+    ai_recommendation = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

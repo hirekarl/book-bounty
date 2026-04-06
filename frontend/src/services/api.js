@@ -11,4 +11,9 @@ export const getCatalogEntries = (params) => api.get('/entries/', { params });
 export const createCatalogEntry = (data) => api.post('/entries/', data);
 export const getDashboardStats = () => api.get('/stats/');
 
+export const getCullingGoals = () => api.get('/goals/');
+export const createCullingGoal = (data) => api.post('/goals/', data);
+export const setActiveGoal = (id) => api.patch(`/goals/${id}/`, { is_active: true });
+export const getRecommendation = (data) => api.post('/recommend/', data);
+
 export default api;
