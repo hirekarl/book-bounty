@@ -164,38 +164,67 @@ cd backend && uv run python manage.py createsuperuser
   - Accept: pre-fills status and suggested_price; Override: shows manual status picker
 - **Step 3:** Confirm and save — creates CatalogEntry, returns to step 1 for next scan
 
-**Scanner implementation** — uses lower-level `Html5Qrcode` (not `Html5QrcodeScanner`) for full layout control and direct `MediaTrackConstraints` access. `focusMode: 'continuous'` enables continuous autofocus on supported cameras. Strict Mode fix via `setTimeout(fn, 0)`:
+**Scanner implementation** — uses lower-level `Html5Qrcode` (not `Html5QrcodeScanner`) for full layout control. Key design decisions:
+
+- `cameraEnabled` state (default `false`) — camera is **off by default**; user clicks "Start Camera". Toggling it triggers effect cleanup/restart cleanly.
+- `formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]` — restricts decoder to EAN-13 only. Book barcodes have a main EAN-13 (ISBN) and a smaller EAN-5 add-on beside it; without this restriction the scanner locks onto the wrong one.
+- `{ fps: 10, qrbox: 250 }` — library defaults; do not use `aspectRatio` or custom CSS on the video element, as both break the library's internal coordinate system and prevent decoding.
+- Post-start `applyConstraints` bumps resolution to 1080p (default is 640×480, too low for reliable EAN-13 decoding) and requests `focusMode: continuous`. Both are best-effort and silently ignored if unsupported.
+- `startPromise` pattern prevents "scanner is not running" errors when React Strict Mode cleanup fires before `start()` resolves — cleanup chains `stop()` off the promise rather than calling it immediately.
+
 ```js
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+
+// state: const [cameraEnabled, setCameraEnabled] = useState(false);
 
 useEffect(() => {
-  if (step !== 1 || !activeGoal) return;
+  if (step !== 1 || !activeGoal || !cameraEnabled) return;
   let qr = null;
   let cancelled = false;
+  let startPromise = null;
   const timer = setTimeout(() => {
     if (cancelled) return;
     document.getElementById('reader').innerHTML = '';
-    qr = new Html5Qrcode('reader');
-    qr.start(
-      { facingMode: { ideal: 'environment' }, advanced: [{ focusMode: 'continuous' }] },
-      { fps: 15, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
+    qr = new Html5Qrcode('reader', {
+      formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13],
+    });
+    startPromise = qr
+      .start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          if (cancelled) return;
+          const instance = qr; qr = null;
+          instance.stop().catch(() => {});
+          handleLookup(decodedText);
+        },
+        () => {},
+      )
+      .then(() => {
         if (cancelled) return;
-        qr.stop().catch(() => {});
-        handleLookup(decodedText);
-      },
-      () => {},
-    ).catch(() => {});
+        const track = document.querySelector('#reader video')?.srcObject?.getVideoTracks?.()[0];
+        track?.applyConstraints({
+          width: { ideal: 1920 }, height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' }],
+        }).catch(() => {});
+      })
+      .catch((err) => {
+        if (!cancelled) setLookupError(`Camera error: ${err?.message || err}`);
+        qr = null;
+      });
   }, 0);
   return () => {
     cancelled = true;
     clearTimeout(timer);
-    if (qr) qr.stop().catch(() => {});
+    if (qr) {
+      const instance = qr; qr = null;
+      (startPromise || Promise.resolve()).then(() => instance.stop().catch(() => {}));
+    }
   };
-}, [step, activeGoal]);
+}, [step, activeGoal, cameraEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 ```
 
-CSS in `index.css` forces the video to fill `#reader` via `position: absolute; width/height: 100%; object-fit: cover`.
+**Do not** add `experimentalFeatures`, `aspectRatio`, or CSS overrides on `#reader video` — all three have been tried and break scanning.
 
 ### `Inventory.jsx`
 - View toggles: All / In Collection / Pending / Resolved

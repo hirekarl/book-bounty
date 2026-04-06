@@ -12,7 +12,7 @@ import {
   Badge,
   ProgressBar,
 } from 'react-bootstrap';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   getBookMetadata,
@@ -49,6 +49,9 @@ const TriageWizard = () => {
   // Goal state — fetched once on mount, persists across scans
   const [activeGoal, setActiveGoal] = useState(null);
   const [goalCheckDone, setGoalCheckDone] = useState(false);
+
+  // Camera toggle — off by default so the camera doesn't start unexpectedly
+  const [cameraEnabled, setCameraEnabled] = useState(false);
 
   // Book state
   const [isbn, setIsbn] = useState('');
@@ -117,47 +120,78 @@ const TriageWizard = () => {
       });
   };
 
-  // Only initialise the scanner when an active goal exists.
+  // Only initialise the scanner when an active goal exists and camera is enabled.
   // The setTimeout(fn, 0) defers init by one tick so React Strict Mode's
   // synchronous cleanup can cancel the timer before it fires — preventing
   // the double-scanner that occurs when effects run twice in development.
-  //
-  // We use the lower-level Html5Qrcode API (not Html5QrcodeScanner) so we
-  // own the layout entirely and can pass MediaTrackConstraints directly,
-  // including focusMode: 'continuous' for better autofocus on supported cameras.
   useEffect(() => {
-    if (step !== 1 || !activeGoal) return;
+    if (step !== 1 || !activeGoal || !cameraEnabled) return;
 
     let qr = null;
     let cancelled = false;
+
+    // startPromise lets cleanup chain stop() after start() resolves,
+    // preventing "scanner is not running" errors when cleanup fires mid-init.
+    let startPromise = null;
 
     const timer = setTimeout(() => {
       if (cancelled) return;
       const readerEl = document.getElementById('reader');
       if (readerEl) readerEl.innerHTML = '';
 
-      qr = new Html5Qrcode('reader');
-      qr.start(
-        {
-          facingMode: { ideal: 'environment' },
-          advanced: [{ focusMode: 'continuous' }],
-        },
-        { fps: 15, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
+      // EAN_13 only — book ISBNs are EAN-13. Excluding other formats (especially
+      // the EAN-5 price add-on that sits beside ISBN barcodes) prevents the scanner
+      // locking onto the wrong code and speeds up each decode attempt.
+      qr = new Html5Qrcode('reader', {
+        formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13],
+      });
+      startPromise = qr
+        .start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: 250 },
+          (decodedText) => {
+            if (cancelled) return;
+            const instance = qr;
+            qr = null;
+            instance.stop().catch(() => {});
+            handleLookup(decodedText);
+          },
+          () => {},
+        )
+        .then(() => {
+          // Post-start: request full resolution and continuous AF on the live track.
+          // getUserMedia defaults to 640x480; bumping to 1080p gives the decoder
+          // far more pixels per barcode stripe, which is the main reason EAN-13
+          // barcodes fail to decode on capable cameras like the Logitech C920.
+          // focusMode: continuous keeps the AF hunting rather than locking at
+          // whatever distance it happened to be at when the stream opened.
           if (cancelled) return;
-          qr.stop().catch(() => {});
-          handleLookup(decodedText);
-        },
-        () => {}, // per-frame scan error — not fatal
-      ).catch(() => {}); // camera permission denied or unavailable
+          const track = document.querySelector('#reader video')?.srcObject?.getVideoTracks?.()[0];
+          track
+            ?.applyConstraints({
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              advanced: [{ focusMode: 'continuous' }],
+            })
+            .catch(() => {});
+        })
+        .catch((err) => {
+          if (!cancelled) setLookupError(`Camera error: ${err?.message || err}`);
+          qr = null;
+        });
     }, 0);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      if (qr) qr.stop().catch(() => {});
+      if (qr) {
+        // Chain stop() so it only runs after start() has resolved
+        const instance = qr;
+        qr = null;
+        (startPromise || Promise.resolve()).then(() => instance.stop().catch(() => {}));
+      }
     };
-  }, [step, activeGoal]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, activeGoal, cameraEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConditionToggle = (flag) => {
     setConditionFlags((prev) =>
@@ -204,6 +238,7 @@ const TriageWizard = () => {
     setAskingPrice('');
     setDonationDest('');
     setSubmitError(null);
+    setCameraEnabled(true);
     // activeGoal intentionally preserved — goal persists across scans in a session
   };
 
@@ -259,22 +294,37 @@ const TriageWizard = () => {
           <Col md={6}>
             <Card className="shadow-sm border-0">
               <Card.Body className="p-4">
-                <div
-                  className="mb-4 rounded overflow-hidden position-relative"
-                  style={{ height: '300px', background: '#111' }}
-                >
-                  <div id="reader" style={{ width: '100%', height: '100%' }} />
-                  {/* Centered aim-guide shown while camera initialises */}
+                {cameraEnabled ? (
+                  <div id="reader" className="mb-2 rounded overflow-hidden" />
+                ) : (
                   <div
-                    className="position-absolute top-50 start-50 translate-middle text-center pointer-events-none"
-                    style={{ zIndex: 0 }}
+                    className="mb-2 rounded d-flex flex-column align-items-center justify-content-center"
+                    style={{ height: '220px', background: '#111' }}
                   >
                     <i
                       className="bi bi-upc-scan text-white opacity-25"
                       style={{ fontSize: '5rem' }}
                     ></i>
-                    <div className="text-white opacity-25 small mt-1">Point camera at barcode</div>
+                    <div className="text-white opacity-25 small mt-1">Camera off</div>
                   </div>
+                )}
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <span className="text-muted small">
+                    <i className="bi bi-lightbulb me-1"></i>
+                    Center the barcode in the box and hold steady.
+                    <br />
+                    If focus is slow, try manual ISBN entry below.
+                  </span>
+                  <Button
+                    variant={cameraEnabled ? 'outline-secondary' : 'outline-warning'}
+                    size="sm"
+                    onClick={() => setCameraEnabled((v) => !v)}
+                  >
+                    <i
+                      className={`bi ${cameraEnabled ? 'bi-camera-video-off' : 'bi-camera-video'} me-1`}
+                    ></i>
+                    {cameraEnabled ? 'Stop Camera' : 'Start Camera'}
+                  </Button>
                 </div>
                 <Form.Group>
                   <Form.Label className="fw-bold text-muted small text-uppercase">

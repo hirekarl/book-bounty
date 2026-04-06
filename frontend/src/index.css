@@ -51,21 +51,3 @@ body {
   cursor: pointer;
 }
 
-/* Make the Html5Qrcode video fill its container and stay centred */
-#reader video {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-/* Keep the scan-box canvas overlay aligned with the video */
-#reader canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-}
