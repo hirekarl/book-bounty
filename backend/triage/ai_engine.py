@@ -44,6 +44,36 @@ class TriageRecommendation(BaseModel):
     )
 
 
+# Initialize the client at module level to avoid redundant setup on every request.
+_client = None
+
+
+def get_instructor_client() -> Any:
+    """Returns a shared instructor client instance.
+
+    Returns:
+        The instructor client instance, or None if the API key is missing.
+    """
+    global _client
+    if _client is not None:
+        return _client
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        logger.warning("GEMINI_API_KEY not found in environment.")
+        return None
+
+    try:
+        _client = instructor.from_genai(
+            genai.Client(api_key=api_key),
+            mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS,
+        )
+        return _client
+    except Exception as exc:
+        logger.error("Failed to initialize Gemini client: %s", exc)
+        return None
+
+
 def get_ai_recommendation(
     user_goal: str,
     book_metadata: dict[str, Any],
@@ -59,18 +89,13 @@ def get_ai_recommendation(
     Returns:
         A TriageRecommendation object.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
+    client = get_instructor_client()
+    if not client:
         return TriageRecommendation(
             status=TriageStatus.KEEP,
             confidence=0.5,
-            reasoning="API key missing. Defaulting to KEEP for safety.",
+            reasoning="AI engine unavailable (missing API key or init error). Defaulting to KEEP.",
         )
-
-    client = instructor.from_genai(
-        genai.Client(api_key=api_key),
-        mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS,
-    )
 
     system_prompt = (
         "You are an expert personal librarian and professional downsizing consultant. "
@@ -121,4 +146,8 @@ Provide a structured recommendation.
                 logger.warning("Gemini rate limited. Retrying in %ds (attempt %d/%d).", wait, attempt + 1, max_retries)
                 time.sleep(wait)
             else:
+                logger.error("Gemini API error (Status: %s): %s", getattr(exc, 'status_code', 'N/A'), exc)
                 raise
+        except Exception as exc:
+            logger.error("Unexpected error in AI recommendation: %s", exc)
+            raise

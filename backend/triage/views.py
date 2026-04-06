@@ -109,7 +109,7 @@ class BookLookupView(APIView):
 class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
     """ViewSet for managing CatalogEntry records."""
 
-    queryset = CatalogEntry.objects.all().order_by("-created_at")
+    queryset = CatalogEntry.objects.all().select_related("book").order_by("-created_at")
     serializer_class = CatalogEntrySerializer
 
     def get_queryset(self) -> models.QuerySet[CatalogEntry]:

@@ -34,10 +34,10 @@ class ServiceTests(TestCase):
         }
 
         metadata = fetch_book_metadata("1234567890")
-        assert metadata["title"] == "Test Book Title"
-        assert metadata["author"] == "Test Author"
-        assert metadata["publish_year"] == 2024
-        assert metadata["subjects"] == ["Fiction"]
+        self.assertEqual(metadata["title"], "Test Book Title")
+        self.assertEqual(metadata["author"], "Test Author")
+        self.assertEqual(metadata["publish_year"], 2024)
+        self.assertEqual(metadata["subjects"], ["Fiction"])
 
     @patch("requests.get")
     def test_fetch_book_metadata_not_found(self, mock_get: MagicMock) -> None:
@@ -47,15 +47,15 @@ class ServiceTests(TestCase):
         mock_response.json.return_value = {}
 
         metadata = fetch_book_metadata("1234567890")
-        assert metadata == {}
+        self.assertEqual(metadata, {})
 
     @patch("triage.services.fetch_book_metadata")
     def test_get_or_create_book_local(self, mock_fetch: MagicMock) -> None:
         """Test getting a book that already exists locally."""
         Book.objects.create(isbn="111", title="Local Book", author="Author")
         book, created = get_or_create_book("111")
-        assert not created
-        assert book.title == "Local Book"
+        self.assertFalse(created)
+        self.assertEqual(book.title, "Local Book")
         mock_fetch.assert_not_called()
 
     @patch("triage.services.fetch_book_metadata")
@@ -66,18 +66,20 @@ class ServiceTests(TestCase):
             "author": "Remote Author",
             "publish_year": 2023,
             "subjects": ["Science"],
+            "cover_url": "http://example.com/cover.jpg",
+            "description": "A book description.",
         }
         book, created = get_or_create_book("222")
-        assert created
-        assert book.title == "Remote Book"
-        assert Book.objects.filter(isbn="222").exists()
+        self.assertTrue(created)
+        self.assertEqual(book.title, "Remote Book")
+        self.assertTrue(Book.objects.filter(isbn="222").exists())
 
     def test_suggest_triage_outcome_discard(self) -> None:
         """Test suggestion logic for damaged books."""
         outcome = suggest_triage_outcome(["WATER_DAMAGE"])
-        assert outcome == CatalogEntry.Status.DISCARD
+        self.assertEqual(outcome, CatalogEntry.Status.DISCARD)
 
     def test_suggest_triage_outcome_keep(self) -> None:
         """Test suggestion logic for books in good condition."""
         outcome = suggest_triage_outcome([])
-        assert outcome == CatalogEntry.Status.KEEP
+        self.assertEqual(outcome, CatalogEntry.Status.KEEP)

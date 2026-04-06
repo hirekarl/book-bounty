@@ -73,4 +73,9 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
             "created_at",
             "updated_at",
         ]
-        read_only_fields: ClassVar[list[str]] = ["id", "created_at", "updated_at"]
+        read_only_fields: ClassVar[list[str]] = [
+            "id",
+            "resolved_at",
+            "created_at",
+            "updated_at",
+        ]

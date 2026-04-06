@@ -7,18 +7,31 @@ dashboard statistics.
 
 from unittest.mock import MagicMock, patch
 
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from triage.models import Book, CatalogEntry
 
 
-class APITests(APITestCase):
+class BaseAPITestCase(APITestCase):
+    """Base class for API tests with authentication setup."""
+
+    def setUp(self) -> None:
+        """Sets up a test user and token authentication."""
+        self.user = User.objects.create_user(username="testuser", password="password")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
+
+
+class APITests(BaseAPITestCase):
     """Test suite for the triage API endpoints."""
 
     def setUp(self) -> None:
         """Set up test data for the API tests."""
+        super().setUp()
         self.book = Book.objects.create(
             isbn="1234567890",
             title="Test Book",
@@ -38,8 +51,8 @@ class APITests(APITestCase):
         # Test lookup for existing book
         url = reverse("book-lookup", kwargs={"isbn": "1234567890"})
         response = self.client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["title"] == "Test Book"
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Test Book")
         mock_fetch.assert_not_called()
 
         # Test lookup for new book
@@ -48,20 +61,22 @@ class APITests(APITestCase):
             "author": "New Author",
             "publish_year": 2023,
             "subjects": [],
+            "cover_url": None,
+            "description": "",
         }
         url = reverse("book-lookup", kwargs={"isbn": "0987654321"})
         response = self.client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["title"] == "New Book"
-        assert Book.objects.filter(isbn="0987654321").exists()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "New Book")
+        self.assertTrue(Book.objects.filter(isbn="0987654321").exists())
 
     def test_list_entries(self) -> None:
         """Test listing catalog entries."""
         url = reverse("catalog-entries-list")
         response = self.client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]["book"]["title"] == "Test Book"
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["book"]["title"], "Test Book")
 
     def test_create_entry(self) -> None:
         """Test creating a new catalog entry."""
@@ -76,10 +91,12 @@ class APITests(APITestCase):
             "notes": "To be sold.",
         }
         response = self.client.post(url, data, format="json")
-        assert response.status_code == status.HTTP_201_CREATED
-        assert CatalogEntry.objects.filter(
-            book=new_book, status=CatalogEntry.Status.SELL,
-        ).exists()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            CatalogEntry.objects.filter(
+                book=new_book, status=CatalogEntry.Status.SELL,
+            ).exists()
+        )
 
     def test_dashboard_stats(self) -> None:
         """Test the dashboard statistics endpoint."""
@@ -89,11 +106,14 @@ class APITests(APITestCase):
 
         url = reverse("dashboard-stats")
         response = self.client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data[CatalogEntry.Status.KEEP] == 1
-        assert response.data[CatalogEntry.Status.SELL] == 1
-        assert response.data[CatalogEntry.Status.DONATE] == 0
-        assert response.data[CatalogEntry.Status.DISCARD] == 0
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Updated structure check
+        self.assertEqual(response.data["active"][CatalogEntry.Status.KEEP], 1)
+        self.assertEqual(response.data["active"][CatalogEntry.Status.SELL], 1)
+        self.assertEqual(response.data["active"][CatalogEntry.Status.DONATE], 0)
+        self.assertEqual(response.data["active"][CatalogEntry.Status.DISCARD], 0)
+        self.assertEqual(response.data["in_collection"], 2)
 
     def test_filter_entries(self) -> None:
         """Test filtering entries by status."""
@@ -102,14 +122,14 @@ class APITests(APITestCase):
 
         url = reverse("catalog-entries-list")
         response = self.client.get(url, {"status": "SELL"})
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]["status"] == CatalogEntry.Status.SELL
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["status"], CatalogEntry.Status.SELL)
 
     def test_search_entries(self) -> None:
         """Test searching entries by title or author."""
         url = reverse("catalog-entries-list")
         response = self.client.get(url, {"search": "Test Book"})
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == 1
-        assert response.data[0]["book"]["title"] == "Test Book"
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["book"]["title"], "Test Book")

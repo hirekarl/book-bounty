@@ -22,6 +22,7 @@ import api, {
   deleteCatalogEntry,
 } from '../services/api';
 import { Modal } from 'react-bootstrap';
+import { StatusBadge, ConditionBadge } from '../components/common/Badge';
 import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -104,10 +105,6 @@ const Inventory = () => {
     setSelectedIds([]);
   };
 
-  const getStatusBadge = (status) => (
-    <Badge bg={STATUS_VARIANTS[status] || 'secondary'}>{status}</Badge>
-  );
-
   const handleSelectAll = (e) => {
     setSelectedIds(e.target.checked ? entries.map((ent) => ent.id) : []);
   };
@@ -148,6 +145,14 @@ const Inventory = () => {
   };
 
   const handleSaveEdit = () => {
+    if (editData.status === 'SELL') {
+      const price = parseFloat(editData.asking_price);
+      if (isNaN(price) || price < 0) {
+        setError('Please enter a valid positive asking price.');
+        return;
+      }
+    }
+
     setSaving(true);
     const payload = {
       status: editData.status,
@@ -444,42 +449,14 @@ const Inventory = () => {
                         </div>
                       </td>
                       <td>
-                        {getStatusBadge(e.status)}
-                        {isResolved && (
-                          <div className="mt-1">
-                            <Badge
-                              bg="secondary"
-                              className="fw-normal"
-                              style={{ fontSize: '0.7rem' }}
-                            >
-                              {RESOLVE_LABELS[e.status]?.replace('Mark as ', '') ?? 'Resolved'}
-                              {' · '}
-                              {new Date(e.resolved_at).toLocaleDateString()}
-                            </Badge>
-                          </div>
-                        )}
+                        <StatusBadge
+                          status={e.status}
+                          isResolved={isResolved}
+                          date={e.resolved_at}
+                        />
                       </td>
                       <td>
-                        <div>
-                          <Badge bg="light" text="dark" className="border">
-                            {e.condition_grade}
-                          </Badge>
-                        </div>
-                        {e.condition_flags?.length > 0 && (
-                          <div className="d-flex flex-wrap gap-1 mt-1">
-                            {e.condition_flags.map((f) => (
-                              <Badge
-                                key={f}
-                                bg="light"
-                                text="muted"
-                                className="fw-normal border-0 p-0"
-                                style={{ fontSize: '0.65rem' }}
-                              >
-                                #{flagLabel(f)}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                        <ConditionBadge grade={e.condition_grade} flags={e.condition_flags} />
                       </td>
                       <td className="small">
                         {e.status === 'SELL' && e.asking_price && (
