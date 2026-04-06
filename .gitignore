@@ -1,0 +1,53 @@
+# --- Global / OS-specific ---
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.log
+*.swp
+
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+python/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.sqlite3
+media/
+static/
+db.sqlite3
+
+# --- Node / React ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.stylelintcache
+.vite/
+coverage/
+
+# --- Other ---
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.gemini/
+.geminiignore
+plans/
+bookbounty_global_context.md
