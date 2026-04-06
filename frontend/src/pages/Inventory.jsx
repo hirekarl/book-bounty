@@ -15,12 +15,26 @@ import {
   Alert,
 } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
-import api, { getCatalogEntries, resolveEntry } from '../services/api';
+import api, {
+  getCatalogEntries,
+  resolveEntry,
+  updateCatalogEntry,
+  deleteCatalogEntry,
+} from '../services/api';
+import { Modal } from 'react-bootstrap';
 import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 const STATUS_VARIANTS = { KEEP: 'success', DONATE: 'info', SELL: 'primary', DISCARD: 'danger' };
+const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
+const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
+const flagKey = (f) => f.toUpperCase().replace(' ', '_');
+const flagLabel = (k) =>
+  k
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 
 const RESOLVE_LABELS = {
   KEEP: 'Mark as Kept',
@@ -60,6 +74,12 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const fetchEntries = useCallback(() => {
     setLoading(true);
@@ -111,6 +131,72 @@ const Inventory = () => {
     resolveEntry(id)
       .then(() => fetchEntries())
       .catch(() => setError('Failed to resolve entry.'));
+  };
+
+  const handleEditClick = (entry) => {
+    setSelectedEntry(entry);
+    setEditData({
+      status: entry.status,
+      condition_grade: entry.condition_grade,
+      condition_flags: [...(entry.condition_flags || [])],
+      notes: entry.notes || '',
+      asking_price: entry.asking_price || '',
+      donation_dest: entry.donation_dest || '',
+      is_resolved: !!entry.resolved_at,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = () => {
+    setSaving(true);
+    const payload = {
+      status: editData.status,
+      condition_grade: editData.condition_grade,
+      condition_flags: editData.condition_flags,
+      notes: editData.notes,
+      asking_price: editData.status === 'SELL' ? editData.asking_price : null,
+      donation_dest: editData.status === 'DONATE' ? editData.donation_dest : '',
+    };
+
+    // Handle resolution change manually since we don't have a toggle endpoint,
+    // we use the resolved_at field directly via patch if possible, or we call the action.
+    // However, our backend resolve action is POST and doesn't support un-resolving easily
+    // without a direct model update. Since it's a ModelViewSet, we can just patch resolved_at.
+    if (editData.is_resolved && !selectedEntry.resolved_at) {
+      payload.resolved_at = new Date().toISOString();
+    } else if (!editData.is_resolved && selectedEntry.resolved_at) {
+      payload.resolved_at = null;
+    }
+
+    updateCatalogEntry(selectedEntry.id, payload)
+      .then(() => {
+        setShowEditModal(false);
+        setSaving(false);
+        fetchEntries();
+      })
+      .catch(() => {
+        setError('Failed to update entry.');
+        setSaving(false);
+      });
+  };
+
+  const handleDeleteEntry = () => {
+    if (!window.confirm('Are you sure you want to delete this record?')) return;
+    deleteCatalogEntry(selectedEntry.id)
+      .then(() => {
+        setShowEditModal(false);
+        fetchEntries();
+      })
+      .catch(() => setError('Failed to delete entry.'));
+  };
+
+  const handleToggleFlag = (flag) => {
+    setEditData((prev) => ({
+      ...prev,
+      condition_flags: prev.condition_flags.includes(flag)
+        ? prev.condition_flags.filter((f) => f !== flag)
+        : [...prev.condition_flags, flag],
+    }));
   };
 
   const exportToCSV = () => {
@@ -338,7 +424,19 @@ const Inventory = () => {
                             </div>
                           )}
                           <div>
-                            <div className={`fw-bold ${isResolved ? 'text-muted' : 'text-dark'}`}>
+                            <div
+                              className={`fw-bold ${isResolved ? 'text-muted' : 'text-dark'}`}
+                              style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => handleEditClick(e)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                  event.preventDefault();
+                                  handleEditClick(e);
+                                }
+                              }}
+                            >
                               {e.book.title}
                             </div>
                             <div className="text-muted small">by {e.book.author}</div>
@@ -362,9 +460,26 @@ const Inventory = () => {
                         )}
                       </td>
                       <td>
-                        <Badge bg="light" text="dark" className="border">
-                          {e.condition_grade}
-                        </Badge>
+                        <div>
+                          <Badge bg="light" text="dark" className="border">
+                            {e.condition_grade}
+                          </Badge>
+                        </div>
+                        {e.condition_flags?.length > 0 && (
+                          <div className="d-flex flex-wrap gap-1 mt-1">
+                            {e.condition_flags.map((f) => (
+                              <Badge
+                                key={f}
+                                bg="light"
+                                text="muted"
+                                className="fw-normal border-0 p-0"
+                                style={{ fontSize: '0.65rem' }}
+                              >
+                                #{flagLabel(f)}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="small">
                         {e.status === 'SELL' && e.asking_price && (
@@ -386,19 +501,30 @@ const Inventory = () => {
                         </div>
                       </td>
                       <td>
-                        {isResolved ? (
-                          <Badge bg="light" text="muted" className="border fw-normal">
-                            <i className="bi bi-check2 me-1"></i>Done
-                          </Badge>
-                        ) : (
+                        <div className="d-flex gap-2 align-items-center">
+                          {isResolved ? (
+                            <Badge bg="light" text="muted" className="border fw-normal">
+                              <i className="bi bi-check2 me-1"></i>Done
+                            </Badge>
+                          ) : (
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              onClick={() => handleResolve(e.id)}
+                            >
+                              {RESOLVE_LABELS[e.status] ?? 'Resolve'}
+                            </Button>
+                          )}
                           <Button
-                            variant="outline-secondary"
+                            variant="link"
                             size="sm"
-                            onClick={() => handleResolve(e.id)}
+                            className="text-muted p-0"
+                            onClick={() => handleEditClick(e)}
+                            title="Edit Record"
                           >
-                            {RESOLVE_LABELS[e.status] ?? 'Resolve'}
+                            <i className="bi bi-pencil-square fs-5"></i>
                           </Button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -408,6 +534,173 @@ const Inventory = () => {
           </Table>
         </div>
       )}
+
+      {/* Edit Record Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold">Edit Record</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-2">
+          {selectedEntry && (
+            <Row>
+              <Col md={4} className="text-center mb-3">
+                {selectedEntry.book.cover_url ? (
+                  <img
+                    src={selectedEntry.book.cover_url}
+                    alt=""
+                    className="img-fluid rounded shadow-sm"
+                    style={{ maxHeight: '200px' }}
+                  />
+                ) : (
+                  <div
+                    className="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
+                    style={{ height: '200px', width: '140px' }}
+                  >
+                    <i className="bi bi-book display-4 text-muted"></i>
+                  </div>
+                )}
+                <div className="mt-2 small text-muted">ISBN: {selectedEntry.book.isbn}</div>
+              </Col>
+              <Col md={8}>
+                <h5 className="fw-bold mb-1">{selectedEntry.book.title}</h5>
+                <p className="text-muted mb-3">by {selectedEntry.book.author}</p>
+
+                <Form>
+                  <Row className="g-3 mb-3">
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-muted text-uppercase">
+                          Status
+                        </Form.Label>
+                        <Form.Select
+                          value={editData.status}
+                          onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                        >
+                          <option value="KEEP">Keep</option>
+                          <option value="DONATE">Donate</option>
+                          <option value="SELL">Sell</option>
+                          <option value="DISCARD">Discard</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label className="small fw-bold text-muted text-uppercase">
+                          Condition
+                        </Form.Label>
+                        <Form.Select
+                          value={editData.condition_grade}
+                          onChange={(e) =>
+                            setEditData({ ...editData, condition_grade: e.target.value })
+                          }
+                        >
+                          {CONDITION_GRADES.map((g) => (
+                            <option key={g} value={g}>
+                              {g}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted text-uppercase d-block">
+                      Condition Flags
+                    </Form.Label>
+                    <div className="d-flex flex-wrap gap-2">
+                      {CONDITION_FLAGS.map((flag) => {
+                        const key = flagKey(flag);
+                        const isActive = editData.condition_flags.includes(key);
+                        return (
+                          <Badge
+                            key={flag}
+                            bg={isActive ? 'warning' : 'light'}
+                            text={isActive ? 'dark' : 'muted'}
+                            className={`border cursor-pointer px-2 py-1 ${isActive ? '' : 'opacity-75'}`}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => handleToggleFlag(key)}
+                          >
+                            {flag}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </Form.Group>
+
+                  {editData.status === 'SELL' && (
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-bold text-muted text-uppercase">
+                        Asking Price ($)
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        value={editData.asking_price}
+                        onChange={(e) => setEditData({ ...editData, asking_price: e.target.value })}
+                      />
+                    </Form.Group>
+                  )}
+
+                  {editData.status === 'DONATE' && (
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-bold text-muted text-uppercase">
+                        Donation Destination
+                      </Form.Label>
+                      <Form.Control
+                        value={editData.donation_dest}
+                        onChange={(e) =>
+                          setEditData({ ...editData, donation_dest: e.target.value })
+                        }
+                      />
+                    </Form.Group>
+                  )}
+
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted text-uppercase">
+                      Notes
+                    </Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      value={editData.notes}
+                      onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="switch"
+                      id="resolved-switch"
+                      label="Mark as Resolved"
+                      checked={editData.is_resolved}
+                      onChange={(e) => setEditData({ ...editData, is_resolved: e.target.checked })}
+                    />
+                    <Form.Text className="text-muted">
+                      {editData.is_resolved
+                        ? 'This book will be marked as processed.'
+                        : 'This book will remain in your active triage list.'}
+                    </Form.Text>
+                  </Form.Group>
+                </Form>
+              </Col>
+            </Row>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0 justify-content-between">
+          <Button variant="outline-danger" onClick={handleDeleteEntry} size="sm">
+            <i className="bi bi-trash3 me-1"></i>Delete Record
+          </Button>
+          <div className="d-flex gap-2">
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="warning" onClick={handleSaveEdit} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

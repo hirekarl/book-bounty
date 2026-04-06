@@ -43,6 +43,8 @@ export const logout = () =>
 export const getBookMetadata = (isbn) => api.get(`/lookup/${isbn}/`);
 export const getCatalogEntries = (params) => api.get('/entries/', { params });
 export const createCatalogEntry = (data) => api.post('/entries/', data);
+export const updateCatalogEntry = (id, data) => api.patch(`/entries/${id}/`, data);
+export const deleteCatalogEntry = (id) => api.delete(`/entries/${id}/`);
 export const resolveEntry = (id) => api.post(`/entries/${id}/resolve/`);
 export const getDashboardStats = () => api.get('/stats/');
 
