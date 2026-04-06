@@ -46,4 +46,6 @@ When invoking the `generalist` tool, use these persona-specific protocols:
 3.  **Delegate:** Call `generalist` for each sub-task with the appropriate persona, file scope, and persona context.
 4.  **Verify:** Call `Sentry` to validate changes.
 5.  **Sync:** Update `GEMINI.md` and the sub-agent's persona "Feedback Log" if needed.
-6.  **Commit:** Finalize the work tree once Sentry gives the "Green Light."
+6.  **Reflect:** Perform a post-mortem on the task, identify friction points (e.g., sub-agent failures, linting noise, architectural ambiguity), and update `docs/orchestration/REFLECTION_LOG.md`.
+7.  **Evolve:** If a friction point is recurring, update the relevant persona mandates or meta-directives to mitigate it.
+8.  **Commit:** Finalize the work tree once Sentry gives the "Green Light." (ONLY after receiving explicit permission from the User).

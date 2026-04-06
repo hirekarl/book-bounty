@@ -37,7 +37,10 @@ When executing tasks, assume the appropriate persona state:
   - Announce persona.
   - Read persona context file.
   - Implement, verify, and update persona feedback log.
-- **Completion:** Synthesize findings into `CLAUDE.md`.
+- **Completion:** 
+  - Update `docs/orchestration/REFLECTION_LOG.md` with session findings.
+  - Propose persona mandate updates to Atlas if friction occurred.
+  - Synthesize findings into `CLAUDE.md`.
 
 ---
 
