@@ -12,7 +12,7 @@ import {
   Badge,
   ProgressBar,
 } from 'react-bootstrap';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   getBookMetadata,
@@ -121,31 +121,41 @@ const TriageWizard = () => {
   // The setTimeout(fn, 0) defers init by one tick so React Strict Mode's
   // synchronous cleanup can cancel the timer before it fires — preventing
   // the double-scanner that occurs when effects run twice in development.
+  //
+  // We use the lower-level Html5Qrcode API (not Html5QrcodeScanner) so we
+  // own the layout entirely and can pass MediaTrackConstraints directly,
+  // including focusMode: 'continuous' for better autofocus on supported cameras.
   useEffect(() => {
     if (step !== 1 || !activeGoal) return;
 
-    let scanner = null;
+    let qr = null;
     let cancelled = false;
 
     const timer = setTimeout(() => {
       if (cancelled) return;
       const readerEl = document.getElementById('reader');
       if (readerEl) readerEl.innerHTML = '';
-      scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 });
-      scanner.render(
+
+      qr = new Html5Qrcode('reader');
+      qr.start(
+        {
+          facingMode: { ideal: 'environment' },
+          advanced: [{ focusMode: 'continuous' }],
+        },
+        { fps: 15, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           if (cancelled) return;
-          scanner.clear().catch(() => {});
+          qr.stop().catch(() => {});
           handleLookup(decodedText);
         },
-        () => {},
-      );
+        () => {}, // per-frame scan error — not fatal
+      ).catch(() => {}); // camera permission denied or unavailable
     }, 0);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      if (scanner) scanner.clear().catch(() => {});
+      if (qr) qr.stop().catch(() => {});
     };
   }, [step, activeGoal]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -250,10 +260,22 @@ const TriageWizard = () => {
             <Card className="shadow-sm border-0">
               <Card.Body className="p-4">
                 <div
-                  id="reader"
-                  className="mb-4 border rounded bg-dark"
-                  style={{ minHeight: '300px', overflow: 'hidden' }}
-                />
+                  className="mb-4 rounded overflow-hidden position-relative"
+                  style={{ height: '300px', background: '#111' }}
+                >
+                  <div
+                    id="reader"
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                  {/* Centered aim-guide shown while camera initialises */}
+                  <div
+                    className="position-absolute top-50 start-50 translate-middle text-center pointer-events-none"
+                    style={{ zIndex: 0 }}
+                  >
+                    <i className="bi bi-upc-scan text-white opacity-25" style={{ fontSize: '5rem' }}></i>
+                    <div className="text-white opacity-25 small mt-1">Point camera at barcode</div>
+                  </div>
+                </div>
                 <Form.Group>
                   <Form.Label className="fw-bold text-muted small text-uppercase">
                     Manual Entry

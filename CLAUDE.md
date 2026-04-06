@@ -164,31 +164,38 @@ cd backend && uv run python manage.py createsuperuser
   - Accept: pre-fills status and suggested_price; Override: shows manual status picker
 - **Step 3:** Confirm and save — creates CatalogEntry, returns to step 1 for next scan
 
-**Scanner Strict Mode fix** (critical — React Strict Mode runs effects twice):
+**Scanner implementation** — uses lower-level `Html5Qrcode` (not `Html5QrcodeScanner`) for full layout control and direct `MediaTrackConstraints` access. `focusMode: 'continuous'` enables continuous autofocus on supported cameras. Strict Mode fix via `setTimeout(fn, 0)`:
 ```js
+import { Html5Qrcode } from 'html5-qrcode';
+
 useEffect(() => {
   if (step !== 1 || !activeGoal) return;
-  let scanner = null;
+  let qr = null;
   let cancelled = false;
-  const timer = setTimeout(() => {      // defer one tick
-    if (cancelled) return;               // cleanup fires synchronously, cancels timer
-    // ... initialize scanner ...
-    scanner.render(
+  const timer = setTimeout(() => {
+    if (cancelled) return;
+    document.getElementById('reader').innerHTML = '';
+    qr = new Html5Qrcode('reader');
+    qr.start(
+      { facingMode: { ideal: 'environment' }, advanced: [{ focusMode: 'continuous' }] },
+      { fps: 15, qrbox: { width: 250, height: 250 } },
       (decodedText) => {
         if (cancelled) return;
-        scanner.clear().catch(() => {}); // stop camera immediately on scan
+        qr.stop().catch(() => {});
         handleLookup(decodedText);
       },
       () => {},
-    );
+    ).catch(() => {});
   }, 0);
   return () => {
     cancelled = true;
     clearTimeout(timer);
-    if (scanner) scanner.clear().catch(() => {});
+    if (qr) qr.stop().catch(() => {});
   };
 }, [step, activeGoal]);
 ```
+
+CSS in `index.css` forces the video to fill `#reader` via `position: absolute; width/height: 100%; object-fit: cover`.
 
 ### `Inventory.jsx`
 - View toggles: All / In Collection / Pending / Resolved
