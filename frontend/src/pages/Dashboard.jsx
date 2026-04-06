@@ -18,6 +18,56 @@ import {
   createCullingGoal,
   setActiveGoal,
 } from '../services/api';
+import { StatusBadge } from '../components/common/Badge';
+
+const ACTIVE_CARDS = [
+  {
+    label: 'Keeping',
+    variant: 'success',
+    icon: 'bi-journal-check',
+    key: 'KEEP',
+    resolvedLabel: 'Kept',
+  },
+  {
+    label: 'To Sell',
+    variant: 'primary',
+    icon: 'bi-cash-coin',
+    key: 'SELL',
+    resolvedLabel: 'Sold',
+  },
+  {
+    label: 'To Donate',
+    variant: 'info',
+    icon: 'bi-gift',
+    key: 'DONATE',
+    resolvedLabel: 'Donated',
+  },
+  {
+    label: 'To Discard',
+    variant: 'danger',
+    icon: 'bi-trash3',
+    key: 'DISCARD',
+    resolvedLabel: 'Discarded',
+  },
+];
+
+const PRESET_GOALS = [
+  {
+    name: 'The Minimalist Transition',
+    description:
+      'I am moving into a tiny house. I only want to keep books that are absolute essentials, high-value collectibles, or have deep personal meaning. Reduce collection by 80%.',
+  },
+  {
+    name: 'The Financial Optimizer',
+    description:
+      'I need to raise money for a move. Recommend selling anything with a market value over $15. Donate the rest unless it is a rare edition.',
+  },
+  {
+    name: 'The Space Maker',
+    description:
+      'I am clearing out a room. Keep my favorite fiction, but suggest discarding or donating old textbooks and outdated reference materials.',
+  },
+];
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -81,55 +131,6 @@ const Dashboard = () => {
       .catch(() => setError('Failed to create goal.'))
       .finally(() => setGoalSaving(false));
   };
-
-  const activeCards = [
-    {
-      label: 'Keeping',
-      variant: 'success',
-      icon: 'bi-journal-check',
-      key: 'KEEP',
-      resolvedLabel: 'Kept',
-    },
-    {
-      label: 'To Sell',
-      variant: 'primary',
-      icon: 'bi-cash-coin',
-      key: 'SELL',
-      resolvedLabel: 'Sold',
-    },
-    {
-      label: 'To Donate',
-      variant: 'info',
-      icon: 'bi-gift',
-      key: 'DONATE',
-      resolvedLabel: 'Donated',
-    },
-    {
-      label: 'To Discard',
-      variant: 'danger',
-      icon: 'bi-trash3',
-      key: 'DISCARD',
-      resolvedLabel: 'Discarded',
-    },
-  ];
-
-  const presetGoals = [
-    {
-      name: 'The Minimalist Transition',
-      description:
-        'I am moving into a tiny house. I only want to keep books that are absolute essentials, high-value collectibles, or have deep personal meaning. Reduce collection by 80%.',
-    },
-    {
-      name: 'The Financial Optimizer',
-      description:
-        'I need to raise money for a move. Recommend selling anything with a market value over $15. Donate the rest unless it is a rare edition.',
-    },
-    {
-      name: 'The Space Maker',
-      description:
-        'I am clearing out a room. Keep my favorite fiction, but suggest discarding or donating old textbooks and outdated reference materials.',
-    },
-  ];
 
   return (
     <Container>
@@ -250,7 +251,7 @@ const Dashboard = () => {
               <p className="text-muted small text-uppercase fw-bold mb-3">Create a Goal</p>
               <p className="text-muted small mb-3">Start from a preset or write your own:</p>
               <div className="d-flex flex-wrap gap-2 mb-3">
-                {presetGoals.map((p) => (
+                {PRESET_GOALS.map((p) => (
                   <Button
                     key={p.name}
                     variant="outline-secondary"
@@ -327,7 +328,7 @@ const Dashboard = () => {
           {/* Active / pending decisions */}
           <p className="text-muted small text-uppercase fw-bold mb-2">Active Decisions</p>
           <Row className="g-3 mb-4">
-            {activeCards.map((card) => (
+            {ACTIVE_CARDS.map((card) => (
               <Col key={card.key} xs={6} lg={3}>
                 <Card className={`text-center border-${card.variant} h-100 shadow-sm`}>
                   <Card.Header className={`bg-${card.variant} text-white py-3`}>
@@ -337,6 +338,9 @@ const Dashboard = () => {
                     <Card.Title className="text-muted text-uppercase small fw-bold">
                       {card.label}
                     </Card.Title>
+                    <div className="mb-2">
+                      <StatusBadge status={card.key} />
+                    </div>
                     <Card.Text className="display-5 fw-bold text-dark">
                       {stats?.active?.[card.key] ?? 0}
                     </Card.Text>
@@ -359,7 +363,7 @@ const Dashboard = () => {
           {/* Resolved / legacy */}
           <p className="text-muted small text-uppercase fw-bold mb-2">Resolved</p>
           <Row className="g-3 mb-5">
-            {activeCards.map((card) => (
+            {ACTIVE_CARDS.map((card) => (
               <Col key={card.key} xs={6} lg={3}>
                 <Card className="text-center border-light h-100 shadow-sm">
                   <Card.Header className="bg-light text-muted py-3">
@@ -369,6 +373,9 @@ const Dashboard = () => {
                     <Card.Title className="text-muted text-uppercase small fw-bold">
                       {card.resolvedLabel}
                     </Card.Title>
+                    <div className="mb-2">
+                      <StatusBadge status={card.key} isResolved={true} />
+                    </div>
                     <Card.Text className="display-5 fw-bold text-muted">
                       {stats?.resolved?.[card.key] ?? 0}
                     </Card.Text>

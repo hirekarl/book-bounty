@@ -187,36 +187,36 @@ class DashboardStatsView(APIView):
     """View to retrieve dashboard statistics."""
 
     def get(self, _request: Request) -> Response:
-        """Retrieves dashboard statistics split by resolved state.
+        """Retrieves dashboard statistics using efficient aggregation.
 
         Returns:
-            active:       counts of unresolved entries per status (pending decisions)
-            resolved:     counts of resolved entries per status (legacy record)
-            in_collection: books physically still present (unresolved + resolved KEEPs)
+            active:       counts of unresolved entries per status
+            resolved:     counts of resolved entries per status
+            in_collection: total books physically present
         """
-        zero = {s: 0 for s in CatalogEntry.Status.values}
-
-        active: dict[str, int] = dict(zero)
-        for row in (
-            CatalogEntry.objects.filter(resolved_at__isnull=True)
-            .values("status")
-            .annotate(count=Count("id"))
-        ):
-            active[row["status"]] = row["count"]
-
-        resolved: dict[str, int] = dict(zero)
-        for row in (
-            CatalogEntry.objects.filter(resolved_at__isnull=False)
-            .values("status")
-            .annotate(count=Count("id"))
-        ):
-            resolved[row["status"]] = row["count"]
-
-        in_collection = (
-            CatalogEntry.objects.filter(resolved_at__isnull=True).count()
-            + CatalogEntry.objects.filter(
-                resolved_at__isnull=False, status=CatalogEntry.Status.KEEP
-            ).count()
+        # Efficiently calculate all counts in a single pass using conditional aggregation
+        stats_agg = CatalogEntry.objects.aggregate(
+            **{
+                f"active_{s}": Count("id", filter=Q(status=s, resolved_at__isnull=True))
+                for s in CatalogEntry.Status.values
+            },
+            **{
+                f"resolved_{s}": Count("id", filter=Q(status=s, resolved_at__isnull=False))
+                for s in CatalogEntry.Status.values
+            },
+            in_collection=Count(
+                "id",
+                filter=Q(resolved_at__isnull=True) | Q(status=CatalogEntry.Status.KEEP),
+            ),
         )
 
-        return Response({"active": active, "resolved": resolved, "in_collection": in_collection})
+        active = {s: stats_agg[f"active_{s}"] for s in CatalogEntry.Status.values}
+        resolved = {s: stats_agg[f"resolved_{s}"] for s in CatalogEntry.Status.values}
+
+        return Response(
+            {
+                "active": active,
+                "resolved": resolved,
+                "in_collection": stats_agg["in_collection"],
+            }
+        )

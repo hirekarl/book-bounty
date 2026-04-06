@@ -11,9 +11,9 @@ from django.db import models
 class Book(models.Model):
     """Stores immutable metadata for a book, keyed by ISBN."""
     # ... attributes ...
-    isbn = models.CharField(max_length=13, unique=True, null=True, blank=True)
-    title = models.CharField(max_length=255)
-    author = models.CharField(max_length=255)
+    isbn = models.CharField(max_length=13, unique=True, null=True, blank=True, db_index=True)
+    title = models.CharField(max_length=255, db_index=True)
+    author = models.CharField(max_length=255, db_index=True)
     publish_year = models.IntegerField(null=True, blank=True)
     subjects = models.JSONField(default=list, blank=True)
     cover_url = models.URLField(max_length=500, null=True, blank=True)
@@ -72,7 +72,7 @@ class CatalogEntry(models.Model):
         related_name="entries",
     )
     status = models.CharField(
-        max_length=10, choices=Status.choices, default=Status.KEEP,
+        max_length=10, choices=Status.choices, default=Status.KEEP, db_index=True
     )
     condition_grade = models.CharField(
         max_length=10, choices=Condition.choices, default=Condition.GOOD,
@@ -85,7 +85,7 @@ class CatalogEntry(models.Model):
     donation_dest = models.CharField(max_length=255, blank=True)
     valuation_data = models.JSONField(default=dict, blank=True)
     ai_recommendation = models.JSONField(default=dict, blank=True)
-    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
