@@ -363,9 +363,9 @@ const TriageWizard = () => {
           <Col lg={4} className="mb-4">
             <Card className="shadow-sm border-0 sticky-top" style={{ top: '2rem' }}>
               <Card.Body className="text-center p-4">
-                {book.cover_image || book.cover_url ? (
+                {book.cover_url || book.cover_image ? (
                   <img
-                    src={book.cover_image || book.cover_url}
+                    src={book.cover_url || book.cover_image}
                     alt={book.title}
                     className="img-fluid rounded shadow mb-4"
                     style={{ maxHeight: '300px' }}
