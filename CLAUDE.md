@@ -13,8 +13,11 @@ book-bounty/
 │   └── triage/        # main app: models, views, serializers, ai_engine
 ├── frontend/          # React 19 + Vite SPA
 │   └── src/
-│       ├── pages/     # Dashboard, TriageWizard, Inventory, Login
-│       ├── components/ # Layout (navbar + sidebar)
+│       ├── pages/     # Dashboard, Inventory, Login, TriageWizard.jsx
+│       │   └── TriageWizard/ # RecommendationCard, ConditionForm
+│       ├── components/ 
+│       │   ├── common/ # Badge.jsx
+│       │   └── Layout.jsx
 │       └── services/  # api.js (Axios client)
 ├── v2_PRODUCT_VISION.md   # current product vision (AI culling)
 ├── v2_AI_ENGINE_SPEC.md   # AI engine technical spec
@@ -113,10 +116,13 @@ Returns `TriageRecommendation` schema (see ai_engine.py):
 model = "gemini-2.5-flash"
 
 # Correct instructor mode (NOT Mode.GEMINI_JSON — that's invalid)
+# Persistent client initialized at module level in ai_engine.py
 client = instructor.from_genai(
     genai.Client(api_key=api_key),
     mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS,
 )
+
+# Open Library API calls in services.py MUST include timeout=10
 
 # Rate limit error handling (NOT google.api_core — that package isn't installed)
 from google.genai.errors import ClientError

@@ -38,7 +38,7 @@
 - **Docstrings:** Use **Google-style docstrings** for all modules, classes, and functions.
 - **Typing:** Strict type hinting is enforced via `mypy`.
 - **Linting & Formatting:** Managed by `ruff`.
-- **Testing:** Unit tests using Django's `TestCase`. Run with `uv run python manage.py test`.
+- **Testing:** Unit tests using Django's `TestCase`. Run with `uv run python manage.py test`. Base class `BaseAPITestCase` in `test_api.py` handles token auth setup.
 
 ### Frontend (React/JS)
 - **Component Pattern:** Use `react-bootstrap` components (Container, Row, Col, Card, etc.) instead of raw HTML/CSS.
@@ -84,22 +84,29 @@ Reference `.env.example` in the root or within subdirectories for required varia
 
 ## 5. Directory Structure
 - `backend/triage/`: Main logic for book metadata, catalog entries, and decision engine.
-  - `ai_engine.py`: Gemini 2.5 Flash integration. Contains `get_ai_recommendation()` and the `TriageRecommendation` Pydantic schema.
+  - `ai_engine.py`: Gemini 2.5 Flash integration. Contains `get_ai_recommendation()` and the `TriageRecommendation` Pydantic schema. Uses a persistent `instructor` client for efficiency.
   - `models.py`: `Book`, `CatalogEntry` (with `resolved_at`), `CullingGoal`.
-  - `views.py`: `BookLookupView`, `CatalogEntryViewSet` (with `resolve` and `bulk_update_status` actions), `CullingGoalViewSet`, `RecommendView`, `DashboardStatsView`.
-  - `serializers.py`: DRF serializers for all models.
-  - `services.py`: Open Library API client and book caching.
+  - `views.py`: `BookLookupView`, `CatalogEntryViewSet` (uses `select_related('book')`), `CullingGoalViewSet`, `RecommendView`, `DashboardStatsView`.
+  - `serializers.py`: DRF serializers for all models. `CatalogEntrySerializer` marks `resolved_at` as read-only.
+  - `services.py`: Open Library API client and book caching. Includes 10s timeout on API calls.
 - `backend/core/`: Django project configuration and settings.
 - `frontend/src/`: React source code, components, and assets.
+  - `components/common/`: Shared UI components like `Badge.jsx` (StatusBadge, ConditionBadge).
   - `pages/Login.jsx`: Token auth login form.
   - `pages/Dashboard.jsx`: Stats overview (active + resolved), Culling Goal management.
-  - `pages/TriageWizard.jsx`: Scan → AI recommend → accept/override → save flow. Uses `Html5Qrcode` (lower-level API, not `Html5QrcodeScanner`). Camera is **off by default** (`cameraEnabled` state). Scanner restricted to `EAN_13` format only to avoid false reads from the EAN-5 add-on barcode that appears beside ISBN barcodes. Resolution bumped to 1080p and `focusMode: continuous` applied post-start via `applyConstraints`. Do NOT add `aspectRatio` config or CSS overrides on `#reader video` — both break coordinate mapping and prevent decoding.
+  - `pages/TriageWizard.jsx`: Main triage container. Refactored into sub-components in `pages/TriageWizard/`.
+    - `RecommendationCard.jsx`: AI suggestion display and accept/override logic.
+    - `ConditionForm.jsx`: Physical condition entry and pricing/notes.
   - `pages/Inventory.jsx`: Filterable catalog table with view toggles, resolution, and exports.
     - **Edit Record Modal:** Triggered by clicking a book title (accessible with `role="button"` and keyboard listeners) or the pencil icon.
-    - **Capabilities:** Modify status, condition grade, condition flags, notes, price, and destination.
+    - **Capabilities:** Modify status, condition grade, condition flags, notes, price, and destination. Validates `asking_price` on save.
     - **Lifecycle:** Toggle "Resolved" state (allows un-resolving) and "Delete Record" support.
   - `services/api.js`: Axios API client with token interceptor and 401 redirect. Includes `updateCatalogEntry` (PATCH) and `deleteCatalogEntry` (DELETE).
-- `docs/legacy/`: Archived planning documents.
+- `docs/`:
+  - `CODE_REVIEW.md`: Senior Dev audit findings.
+  - `REMEDIATION_PLAN.md`: Strategic plan for fixing identified issues.
+  - `REMEDIATION_REPORT.md`: Final summary of performance and security improvements.
+  - `legacy/`: Archived planning documents.
 - `v2_PRODUCT_VISION.md`: Current product vision (AI-driven culling).
 - `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
 - `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace — does NOT inform current implementation.
