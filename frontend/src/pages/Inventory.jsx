@@ -23,6 +23,7 @@ import api, {
 } from '../services/api';
 import { StatusBadge, ConditionBadge } from '../components/common/Badge';
 import EditRecordModal from './Inventory/EditRecordModal';
+import BulkReviewModal from './Inventory/BulkReviewModal';
 import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -70,6 +71,7 @@ const Inventory = () => {
 
   // Modal State
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -257,6 +259,11 @@ const Inventory = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="fw-bold mb-0">My Collection</h2>
         <div className="d-flex gap-2">
+          {selectedIds.some((id) => !entries.find((e) => e.id === id)?.resolved_at) && (
+            <Button variant="warning" onClick={() => setShowBulkModal(true)}>
+              <i className="bi bi-magic me-1"></i>Bulk Triage
+            </Button>
+          )}
           {selectedIds.length > 0 && (
             <Dropdown as={ButtonGroup}>
               <Button variant="primary">Bulk Action ({selectedIds.length})</Button>
@@ -344,6 +351,7 @@ const Inventory = () => {
                     type="checkbox"
                     onChange={handleSelectAll}
                     checked={selectedIds.length === entries.length && entries.length > 0}
+                    aria-label="Select all books in current view"
                   />
                 </th>
                 <th>Book Details</th>
@@ -372,6 +380,7 @@ const Inventory = () => {
                           type="checkbox"
                           checked={selectedIds.includes(e.id)}
                           onChange={() => handleSelectOne(e.id)}
+                          aria-label={`Select ${e.book.title}`}
                         />
                       </td>
                       <td>
@@ -483,6 +492,18 @@ const Inventory = () => {
         onSave={handleSaveEdit}
         onDelete={handleDeleteEntry}
         saving={saving}
+      />
+
+      {/* Bulk Review Modal */}
+      <BulkReviewModal
+        show={showBulkModal}
+        onHide={() => setShowBulkModal(false)}
+        selectedEntries={entries.filter((e) => selectedIds.includes(e.id) && !e.resolved_at)}
+        onComplete={() => {
+          setShowBulkModal(false);
+          setSelectedIds([]);
+          fetchEntries();
+        }}
       />
     </Container>
   );

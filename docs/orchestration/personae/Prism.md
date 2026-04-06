@@ -22,3 +22,4 @@ You are the guardian of the user experience. You build modular, accessible, and 
 - *April 2026: Extracted EditRecordModal and implemented shared Badge components.*
 - *April 2026: Implemented Global Notification System (NotificationContext + GlobalToast) and integrated with API interceptors for automatic error reporting.*
 - *April 2026: Implemented Phase 3.2: Robust client-side form validation using Zod and Formik for Inventory and Triage Wizard. Refactored state management to utilize useFormik and centralized Zod schemas in src/schemas/catalogSchema.js.*
+- *May 2026: Implemented Phase 4 Bulk Review UI. Added multi-select capability to Inventory table and created `BulkReviewModal` for comparative triage. Ensured all new forms use `useFormik` and adhere to A11y mandates (aria-label, controlId).*

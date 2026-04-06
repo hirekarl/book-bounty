@@ -13,7 +13,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from triage.ai_engine import get_ai_recommendation
+from triage.ai_engine import get_ai_recommendation, get_bulk_ai_recommendation
 from triage.models import CatalogEntry, CullingGoal
 from triage.serializers import BookSerializer, CatalogEntrySerializer, CullingGoalSerializer
 from triage.services import get_or_create_book
@@ -84,7 +84,7 @@ class RecommendView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
-        return Response(recommendation.model_dump(), status=status.HTTP_200_OK)
+        return Response(recommendation.model_dump(mode="json"), status=status.HTTP_200_OK)
 
 
 class BookLookupView(APIView):
@@ -220,3 +220,61 @@ class DashboardStatsView(APIView):
                 "in_collection": stats_agg["in_collection"],
             }
         )
+
+
+class RecommendBulkView(APIView):
+    """Calls the AI engine to generate recommendations for multiple catalog entries."""
+
+    def post(self, request: Request) -> Response:
+        """Returns structured AI recommendations for multiple entries.
+
+        Expected payload:
+            {
+                "entry_ids": [1, 2, 3],
+                "culling_goal_id": 1        // optional; falls back to active goal
+            }
+        """
+        entry_ids = request.data.get("entry_ids", [])
+        if not entry_ids:
+            return Response(
+                {"error": "entry_ids is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        culling_goal_id = request.data.get("culling_goal_id")
+        if culling_goal_id:
+            goal = CullingGoal.objects.filter(pk=culling_goal_id).first()
+        else:
+            goal = CullingGoal.objects.filter(is_active=True).first()
+
+        if not goal:
+            return Response(
+                {"error": "No active culling goal found. Please set a culling goal first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Fetch entries efficiently, ensuring they aren't already resolved
+        entries = CatalogEntry.objects.filter(
+            id__in=entry_ids, resolved_at__isnull=True
+        ).select_related("book")
+
+        if not entries.exists():
+            return Response(
+                {"error": "No valid unresolved entries found for the provided IDs."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            bulk_recommendation = get_bulk_ai_recommendation(list(entries), goal)
+        except Exception as exc:
+            return Response(
+                {"error": f"AI engine error: {exc}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        # Map back to entry IDs as requested
+        results = {
+            rec.catalog_entry_id: rec.model_dump(mode="json", exclude={"catalog_entry_id"})
+            for rec in bulk_recommendation.recommendations
+        }
+
+        return Response(results, status=status.HTTP_200_OK)

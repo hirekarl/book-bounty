@@ -133,3 +133,52 @@ class APITests(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["book"]["title"], "Test Book")
+
+    @patch("triage.views.get_bulk_ai_recommendation")
+    def test_recommend_bulk(self, mock_get_bulk: MagicMock) -> None:
+        """Test the bulk recommendation endpoint."""
+        from triage.ai_engine import (
+            BulkRecommendationResponse,
+            BulkTriageRecommendation,
+            TriageStatus,
+        )
+        from triage.models import CullingGoal
+
+        goal = CullingGoal.objects.create(
+            name="Test Goal", description="Reduce by 50%", is_active=True
+        )
+
+        # Create another entry
+        another_book = Book.objects.create(isbn="999", title="Another Book", author="Author")
+        another_entry = CatalogEntry.objects.create(book=another_book)
+
+        mock_get_bulk.return_value = BulkRecommendationResponse(
+            recommendations=[
+                BulkTriageRecommendation(
+                    catalog_entry_id=self.entry.id,
+                    status=TriageStatus.KEEP,
+                    confidence=0.9,
+                    reasoning="Classic book.",
+                    notable_tags=["Classic"],
+                ),
+                BulkTriageRecommendation(
+                    catalog_entry_id=another_entry.id,
+                    status=TriageStatus.SELL,
+                    confidence=0.8,
+                    reasoning="High resale value.",
+                    suggested_price=20.0,
+                    notable_tags=["High Value"],
+                ),
+            ]
+        )
+
+        url = reverse("recommend-bulk")
+        data = {"entry_ids": [self.entry.id, another_entry.id], "culling_goal_id": goal.id}
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        # Use integer keys as seen in debug output
+        self.assertEqual(str(response.data[self.entry.id]["status"]), "KEEP")
+        self.assertEqual(str(response.data[another_entry.id]["status"]), "SELL")
+        self.assertEqual(response.data[another_entry.id]["suggested_price"], 20.0)

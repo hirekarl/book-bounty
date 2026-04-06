@@ -68,5 +68,7 @@ export const setActiveGoal = (id) => api.patch(`/goals/${id}/`, { is_active: tru
 
 // AI recommendation
 export const getRecommendation = (data) => api.post('/recommend/', data);
+export const getBulkRecommendation = (entryIds, cullingGoalId) =>
+  api.post('/recommend/bulk/', { entry_ids: entryIds, culling_goal_id: cullingGoalId });
 
 export default api;
