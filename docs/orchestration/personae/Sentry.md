@@ -12,3 +12,4 @@ You are the final gatekeeper. Your mission is to find bugs and ensure the system
 
 ## Feedback Log
 - *April 2026: Standardized BaseAPITestCase for authenticated integration tests.*
+- *April 2026: Verified Phase 3.1 Global Notification System. Fixed linting regressions (use-before-define and missing dependencies) in NotificationContext.jsx. Confirmed A11y attributes and zIndex (1060) on GlobalToast. Interceptor logic in api.js correctly bridges backend errors to the UI.*

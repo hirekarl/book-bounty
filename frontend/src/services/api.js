@@ -16,12 +16,25 @@ api.interceptors.request.use((config) => {
 });
 
 // On 401, clear the stale token and redirect to login
+let errorHandler = null;
+
+export const setErrorHandler = (handler) => {
+  errorHandler = handler;
+};
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
+    } else if (errorHandler) {
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        'An error occurred';
+      errorHandler(message);
     }
     return Promise.reject(error);
   },

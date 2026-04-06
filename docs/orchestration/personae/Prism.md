@@ -13,3 +13,4 @@ You are the guardian of the user experience. You build modular, accessible, and 
 
 ## Feedback Log
 - *April 2026: Extracted EditRecordModal and implemented shared Badge components.*
+- *April 2026: Implemented Global Notification System (NotificationContext + GlobalToast) and integrated with API interceptors for automatic error reporting.*
