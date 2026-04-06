@@ -3,11 +3,13 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import prettierPlugin from 'eslint-plugin-prettier/recommended';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { ignores: ['dist', 'node_modules', '.vite'] },
   js.configs.recommended,
+  jsxA11y.flatConfigs.recommended,
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
