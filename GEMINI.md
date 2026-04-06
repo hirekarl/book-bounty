@@ -98,7 +98,8 @@ Reference `.env.example` in the root or within subdirectories for required varia
     - `RecommendationCard.jsx`: AI suggestion display and accept/override logic.
     - `ConditionForm.jsx`: Physical condition entry and pricing/notes.
   - `pages/Inventory.jsx`: Filterable catalog table with view toggles, resolution, and exports.
-    - **Edit Record Modal:** Triggered by clicking a book title (accessible with `role="button"` and keyboard listeners) or the pencil icon.
+  - `pages/Inventory/`:
+    - `EditRecordModal.jsx`: Standalone modal component for advanced record management.
     - **Capabilities:** Modify status, condition grade, condition flags, notes, price, and destination. Validates `asking_price` on save.
     - **Lifecycle:** Toggle "Resolved" state (allows un-resolving) and "Delete Record" support.
   - `services/api.js`: Axios API client with token interceptor and 401 redirect. Includes `updateCatalogEntry` (PATCH) and `deleteCatalogEntry` (DELETE).
@@ -110,4 +111,6 @@ Reference `.env.example` in the root or within subdirectories for required varia
 - `v2_PRODUCT_VISION.md`: Current product vision (AI-driven culling).
 - `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
 - `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace — does NOT inform current implementation.
+- `CLAUDE.md`: Project context file for Claude Code sessions.
+ion.
 - `CLAUDE.md`: Project context file for Claude Code sessions.

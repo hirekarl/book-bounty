@@ -13,11 +13,12 @@ book-bounty/
 │   └── triage/        # main app: models, views, serializers, ai_engine
 ├── frontend/          # React 19 + Vite SPA
 │   └── src/
-│       ├── pages/     # Dashboard, Inventory, Login, TriageWizard.jsx
-│       │   └── TriageWizard/ # RecommendationCard, ConditionForm
 │       ├── components/ 
-│       │   ├── common/ # Badge.jsx
+│       │   ├── common/ # Badge.jsx (StatusBadge, ConditionBadge)
 │       │   └── Layout.jsx
+│       └── pages/     # Dashboard, Inventory, Login, TriageWizard.jsx
+│           ├── Inventory/ # EditRecordModal
+│           └── TriageWizard/ # RecommendationCard, ConditionForm
 │       └── services/  # api.js (Axios client)
 ├── v2_PRODUCT_VISION.md   # current product vision (AI culling)
 ├── v2_AI_ENGINE_SPEC.md   # AI engine technical spec
@@ -315,9 +316,17 @@ cd frontend && npx prettier --write .
 
 ---
 
-## 11. OS & Shell Handling
+## 12. Backend Performance
 
-At the start of a new session, check the operating system:
-- **Windows:** Use **PowerShell** commands (e.g., `;` as a separator instead of `&&`).
-- **Linux/macOS:** Use **bash** commands.
-- This alleviates tool failures caused by cross-platform command syntax mismatches.
+- **Database Indexing:** Fields used frequently for filtering and lookup (`Book.isbn`, `Book.title`, `Book.author`, `CatalogEntry.status`, `CatalogEntry.resolved_at`) are indexed via `db_index=True`.
+- **Query Optimization:** 
+  - `CatalogEntryViewSet` uses `.select_related('book')` to eliminate N+1 query overhead.
+  - `DashboardStatsView` uses a single `.aggregate()` query with conditional `Count(Q(...))` filters to calculate all dashboard metrics in one database roundtrip.
+
+---
+
+## 13. Code Quality
+
+- **Senior Dev Audit (April 2026):** Codebase underwent a comprehensive stability and performance audit.
+- **Remediation:** Monolithic components were decomposed, ORM queries optimized, and API resilience improved with timeouts and shared clients.
+- **Testing:** Always run `uv run python manage.py test` before pushing changes. API tests require `BaseAPITestCase` for authenticated context.
