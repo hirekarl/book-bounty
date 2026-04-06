@@ -306,3 +306,12 @@ cd frontend && npx prettier --write .
 - **v2_PRODUCT_VISION.md** and **v2_AI_ENGINE_SPEC.md** define the current implementation target.
 - **v3_PRODUCT_VISION.md** is aspirational only (B2B institutional acquisition marketplace). It does NOT inform any current implementation decisions.
 - This is a **single-user app** — no multi-tenancy, no sharing. One Django user per install.
+
+---
+
+## 11. OS & Shell Handling
+
+At the start of a new session, check the operating system:
+- **Windows:** Use **PowerShell** commands (e.g., `;` as a separator instead of `&&`).
+- **Linux/macOS:** Use **bash** commands.
+- This alleviates tool failures caused by cross-platform command syntax mismatches.

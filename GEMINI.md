@@ -45,6 +45,12 @@
 - **Linting & Formatting:** Managed by `ESLint` and `Prettier`.
 - **Routing:** React Router DOM for navigation.
 
+### OS & Shell Handling
+- **Environment Detection:** At the start of every session, verify the operating system.
+- **Windows:** Use **PowerShell** commands (e.g., `;` as a separator instead of `&&`).
+- **Linux/macOS:** Use **bash** commands.
+- This prevents tool failures caused by cross-platform command syntax mismatches.
+
 ---
 
 ## 3. Key Commands
