@@ -13,8 +13,13 @@ import {
   ProgressBar,
 } from 'react-bootstrap';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { getBookMetadata, createCatalogEntry, getRecommendation } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  getBookMetadata,
+  createCatalogEntry,
+  getRecommendation,
+  getCullingGoals,
+} from '../services/api';
 
 const STATUS_CONFIG = {
   KEEP: { label: 'Keep', variant: 'success', icon: 'bi-journal-check' },
@@ -27,9 +32,23 @@ const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
 
+const GoalPill = ({ goal }) =>
+  goal ? (
+    <div className="text-center mb-4">
+      <Badge bg="warning" text="dark" className="px-3 py-2 fs-6 fw-normal">
+        <i className="bi bi-bullseye me-2"></i>
+        Goal: {goal.name}
+      </Badge>
+    </div>
+  ) : null;
+
 const TriageWizard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: Scan, 2: Triage, 3: Outcome
+
+  // Goal state — fetched once on mount, persists across scans
+  const [activeGoal, setActiveGoal] = useState(null);
+  const [goalCheckDone, setGoalCheckDone] = useState(false);
 
   // Book state
   const [isbn, setIsbn] = useState('');
@@ -53,6 +72,16 @@ const TriageWizard = () => {
   const [askingPrice, setAskingPrice] = useState('');
   const [donationDest, setDonationDest] = useState('');
   const [submitError, setSubmitError] = useState(null);
+
+  // Fetch active goal on mount
+  useEffect(() => {
+    getCullingGoals()
+      .then((res) => {
+        setActiveGoal(res.data.find((g) => g.is_active) || null);
+        setGoalCheckDone(true);
+      })
+      .catch(() => setGoalCheckDone(true));
+  }, []);
 
   const fetchAiRecommendation = (bookIsbn, grade, flags) => {
     setAiLoading(true);
@@ -88,8 +117,9 @@ const TriageWizard = () => {
       });
   };
 
+  // Only initialise the scanner when an active goal exists
   useEffect(() => {
-    if (step === 1) {
+    if (step === 1 && activeGoal) {
       const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 });
       scanner.render(
         (decodedText) => {
@@ -102,7 +132,7 @@ const TriageWizard = () => {
         scanner.clear().catch((e) => console.error('Failed to clear scanner', e));
       };
     }
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, activeGoal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConditionToggle = (flag) => {
     setConditionFlags((prev) =>
@@ -149,6 +179,7 @@ const TriageWizard = () => {
     setAskingPrice('');
     setDonationDest('');
     setSubmitError(null);
+    // activeGoal intentionally preserved — goal persists across scans in a session
   };
 
   const getEbayLink = () =>
@@ -158,12 +189,47 @@ const TriageWizard = () => {
 
   // ── Step 1: Scan ────────────────────────────────────────────────────────────
   if (step === 1) {
+    // Still checking for a goal
+    if (!goalCheckDone) {
+      return (
+        <Container className="py-5 text-center">
+          <Spinner animation="border" variant="warning" />
+        </Container>
+      );
+    }
+
+    // No active goal — block scanning with a clear prompt
+    if (!activeGoal) {
+      return (
+        <Container className="py-5">
+          <Row className="justify-content-center">
+            <Col md={6}>
+              <Alert variant="warning" className="text-center shadow-sm">
+                <i className="bi bi-bullseye display-4 d-block mb-3"></i>
+                <h5 className="fw-bold">No Culling Goal Set</h5>
+                <p className="mb-4">
+                  You need an active culling goal before scanning. It gives the AI the context it
+                  needs to make useful recommendations.
+                </p>
+                <Button as={Link} to="/" variant="warning" className="fw-bold px-4">
+                  <i className="bi bi-arrow-left me-2"></i>Go to Dashboard
+                </Button>
+              </Alert>
+            </Col>
+          </Row>
+        </Container>
+      );
+    }
+
     return (
       <Container className="py-4">
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <i className="bi bi-upc-scan display-4 text-warning"></i>
           <h2 className="fw-bold mt-2">Scan or Enter ISBN</h2>
         </div>
+
+        <GoalPill goal={activeGoal} />
+
         <Row className="justify-content-center">
           <Col md={6}>
             <Card className="shadow-sm border-0">
@@ -212,9 +278,12 @@ const TriageWizard = () => {
     const effectiveStatus = overriding ? status : aiRec?.status || status;
     const statusConfig = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.KEEP;
     const isUncertain = aiRec && aiRec.confidence < 0.5;
+    const metadataMissing = book.metadata_found === false;
 
     return (
       <Container className="py-4">
+        <GoalPill goal={activeGoal} />
+
         <Row>
           {/* Sidebar: Book Info */}
           <Col lg={4} className="mb-4">
@@ -262,6 +331,18 @@ const TriageWizard = () => {
 
           {/* Main: Triage */}
           <Col lg={8}>
+            {/* Metadata warning */}
+            {metadataMissing && (
+              <Alert variant="warning" className="mb-4 d-flex align-items-start gap-2">
+                <i className="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                <div>
+                  <strong>Book not found in Open Library.</strong> The AI will attempt a
+                  recommendation based on the ISBN alone, but accuracy will be limited. Consider
+                  verifying the outcome manually.
+                </div>
+              </Alert>
+            )}
+
             {/* AI Recommendation Card */}
             <Card className="shadow-sm border-0 mb-4">
               <Card.Header className="bg-white fw-bold py-3 d-flex justify-content-between align-items-center">

@@ -100,8 +100,9 @@ class BookLookupView(APIView):
             A Response containing the serialized Book metadata.
         """
         book, _ = get_or_create_book(isbn)
-        serializer = BookSerializer(book)
-        return Response(serializer.data)
+        data = dict(BookSerializer(book).data)
+        data["metadata_found"] = not (book.title == "Unknown Book" and book.author == "Unknown")
+        return Response(data)
 
 
 class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
