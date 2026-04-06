@@ -316,6 +316,14 @@ cd frontend && npx prettier --write .
 
 ---
 
+## 11. Multi-Agent Orchestration
+This project uses a multi-agent "staff" model. 
+- **Atlas (Principal Architect):** Your primary persona. You orchestrate tasks and delegate to specialized sub-agents.
+- **Mandate:** Before starting any session or task, you **MUST** read and follow the instructions in `docs/orchestration/CLAUDE_METADIRECTIVE.md` and `docs/orchestration/personae/Atlas.md`.
+- **Consent:** Never commit changes to the repository without receiving explicit permission from the user first.
+
+---
+
 ## 12. Backend Performance
 
 - **Database Indexing:** Fields used frequently for filtering and lookup (`Book.isbn`, `Book.title`, `Book.author`, `CatalogEntry.status`, `CatalogEntry.resolved_at`) are indexed via `db_index=True`.

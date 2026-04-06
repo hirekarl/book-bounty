@@ -112,5 +112,11 @@ Reference `.env.example` in the root or within subdirectories for required varia
 - `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
 - `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace — does NOT inform current implementation.
 - `CLAUDE.md`: Project context file for Claude Code sessions.
-ion.
-- `CLAUDE.md`: Project context file for Claude Code sessions.
+
+---
+
+## 6. Multi-Agent Orchestration
+This project uses a multi-agent "staff" model. 
+- **Atlas (Principal Architect):** Your primary persona. You orchestrate tasks and delegate to specialized sub-agents.
+- **Mandate:** Before starting any task, you **MUST** read and follow the instructions in `docs/orchestration/GEMINI_METADIRECTIVE.md`.
+- **Commit Rule:** Never commit changes without explicit user permission.

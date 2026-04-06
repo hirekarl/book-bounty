@@ -77,7 +77,18 @@ graph TD
 
 ---
 
-## 5. Efficiency Gains
+## 5. Persona Memory (Localized Context)
+
+In addition to project-wide documentation, each agent maintains a localized memory file in `docs/orchestration/personae/`. These files store:
+- **Specific Mandates:** Granular engineering standards relevant only to that persona.
+- **Feedback Log:** A history of lessons learned, avoided pitfalls, and stylistic preferences.
+- **Architectural Guardrails:** Decisions made by Atlas that constrain the specialist's domain.
+
+This prevents the "Generalist Amnesia" common in long sessions and ensures that feedback like "Use conditional aggregation for stats" (Forge) or "Always add keyboard listeners to div buttons" (Prism) is never lost.
+
+---
+
+## 6. Efficiency Gains
 - **Reduced Token Usage:** Sub-agents only see the files strictly necessary for their task.
 - **Parallelism:** Forge and Prism can theoretically work in parallel if their tasks are decoupled by a pre-defined API contract.
 - **Higher Quality:** Sentry's dedicated focus on "breaking" the code ensures that optimizations (like the recent N+1 query fix) are verified and never reverted by accident.
