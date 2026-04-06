@@ -11,3 +11,4 @@ You are the orchestrator. You do not write code; you design systems and delegate
 
 ## Feedback Log
 - *Initial setup April 2026: Focused on transition from single-agent to multi-agent orchestration.*
+- *April 2026: Orchestrated Phase 3.1 & 3.2. Identified handover friction between Prism and Sentry; implemented stricter 'Rules of Hooks' mandates for Prism to reduce Sentry's cleanup overhead.*

@@ -6,27 +6,14 @@ const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotate
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
 
 const ConditionForm = ({
-  conditionGrade,
-  setConditionGrade,
-  conditionFlags,
+  formik,
   handleConditionToggle,
   fetchAiRecommendation,
   aiRec,
-  status,
-  askingPrice,
-  setAskingPrice,
-  donationDest,
-  setDonationDest,
-  notes,
-  setNotes,
   getEbayLink,
   getAmazonLink,
-  validated,
 }) => {
-  const isAskingPriceInvalid =
-    status === 'SELL' &&
-    (askingPrice === '' || isNaN(parseFloat(askingPrice)) || parseFloat(askingPrice) <= 0);
-  const isDonationDestInvalid = status === 'DONATE' && !donationDest?.trim();
+  const { values, errors, touched, handleChange, handleBlur, setFieldValue } = formik;
 
   return (
     <Card className="shadow-sm border-0 mb-4">
@@ -45,8 +32,8 @@ const ConditionForm = ({
             {CONDITION_GRADES.map((g) => (
               <Button
                 key={g}
-                variant={conditionGrade === g ? 'warning' : 'outline-secondary'}
-                onClick={() => setConditionGrade(g)}
+                variant={values.condition_grade === g ? 'warning' : 'outline-secondary'}
+                onClick={() => setFieldValue('condition_grade', g)}
                 className="flex-grow-1"
               >
                 {g.charAt(0) + g.slice(1).toLowerCase()}
@@ -66,7 +53,7 @@ const ConditionForm = ({
                 type="checkbox"
                 id={`check-${flag}`}
                 label={flag}
-                checked={conditionFlags.includes(flagKey(flag))}
+                checked={values.condition_flags.includes(flagKey(flag))}
                 onChange={() => handleConditionToggle(flagKey(flag))}
               />
             ))}
@@ -75,7 +62,7 @@ const ConditionForm = ({
 
         <hr className="my-4" />
 
-        {status === 'SELL' && (
+        {values.status === 'SELL' && (
           <Form.Group className="mb-4" controlId="triage-asking-price">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <Form.Label className="fw-bold text-muted small text-uppercase mb-0">
@@ -101,38 +88,44 @@ const ConditionForm = ({
               </div>
             </div>
             <Form.Control
+              name="asking_price"
               type="number"
               step="0.01"
               min="0.01"
               required
               placeholder="0.00"
-              value={askingPrice}
-              isInvalid={validated && isAskingPriceInvalid}
-              onChange={(e) => setAskingPrice(e.target.value)}
+              value={values.asking_price}
+              isInvalid={touched.asking_price && !!errors.asking_price}
+              aria-invalid={touched.asking_price && !!errors.asking_price}
+              onChange={handleChange}
+              onBlur={handleBlur}
               size="lg"
               aria-describedby="triage-asking-price-feedback"
             />
             <Form.Control.Feedback type="invalid" id="triage-asking-price-feedback">
-              Please enter a valid price greater than 0.
+              {errors.asking_price}
             </Form.Control.Feedback>
           </Form.Group>
         )}
 
-        {status === 'DONATE' && (
+        {values.status === 'DONATE' && (
           <Form.Group className="mb-4" controlId="triage-donation-dest">
             <Form.Label className="fw-bold text-muted small text-uppercase">
               Donation Destination
             </Form.Label>
             <Form.Control
+              name="donation_dest"
               required
               placeholder="e.g. Goodwill, Library"
-              value={donationDest}
-              isInvalid={validated && isDonationDestInvalid}
-              onChange={(e) => setDonationDest(e.target.value)}
+              value={values.donation_dest}
+              isInvalid={touched.donation_dest && !!errors.donation_dest}
+              aria-invalid={touched.donation_dest && !!errors.donation_dest}
+              onChange={handleChange}
+              onBlur={handleBlur}
               aria-describedby="triage-donation-dest-feedback"
             />
             <Form.Control.Feedback type="invalid" id="triage-donation-dest-feedback">
-              Please enter a donation destination.
+              {errors.donation_dest}
             </Form.Control.Feedback>
           </Form.Group>
         )}
@@ -140,11 +133,13 @@ const ConditionForm = ({
         <Form.Group controlId="triage-notes">
           <Form.Label className="fw-bold text-muted small text-uppercase">Notes</Form.Label>
           <Form.Control
+            name="notes"
             as="textarea"
             rows={3}
             placeholder="Add any specific details here..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            value={values.notes}
+            onChange={handleChange}
+            onBlur={handleBlur}
           />
         </Form.Group>
       </Card.Body>

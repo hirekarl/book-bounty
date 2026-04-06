@@ -1,58 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Modal, Button, Row, Col, Form, Badge } from 'react-bootstrap';
+import { useFormik } from 'formik';
+import { catalogSchema, validateWithZod } from '../../schemas/catalogSchema';
 
 const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
 
-const EditRecordModal = ({
-  show,
-  onHide,
-  entry,
-  editData,
-  setEditData,
-  onSave,
-  onDelete,
-  saving,
-}) => {
-  const [validated, setValidated] = useState(false);
+const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
+  const formik = useFormik({
+    initialValues: {
+      status: 'KEEP',
+      condition_grade: 'GOOD',
+      condition_flags: [],
+      notes: '',
+      asking_price: '',
+      donation_dest: '',
+      is_resolved: false,
+    },
+    validate: validateWithZod(catalogSchema),
+    onSubmit: (values) => {
+      onSave(values);
+    },
+  });
 
-  // Reset validation when modal opens
-  React.useEffect(() => {
-    if (show) setValidated(false);
-  }, [show]);
+  // Sync Formik with entry when modal opens or entry changes
+  useEffect(() => {
+    if (show && entry) {
+      formik.setValues({
+        status: entry.status || 'KEEP',
+        condition_grade: entry.condition_grade || 'GOOD',
+        condition_flags: [...(entry.condition_flags || [])],
+        notes: entry.notes || '',
+        asking_price: entry.asking_price || '',
+        donation_dest: entry.donation_dest || '',
+        is_resolved: !!entry.resolved_at,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, entry]);
 
   if (!entry) return null;
 
-  const isAskingPriceInvalid =
-    editData.status === 'SELL' &&
-    (editData.asking_price === '' ||
-      isNaN(parseFloat(editData.asking_price)) ||
-      parseFloat(editData.asking_price) <= 0);
-
-  const isDonationDestInvalid = editData.status === 'DONATE' && !editData.donation_dest?.trim();
-
   const handleToggleFlag = (key) => {
-    setEditData((prev) => ({
-      ...prev,
-      condition_flags: prev.condition_flags.includes(key)
-        ? prev.condition_flags.filter((f) => f !== key)
-        : [...prev.condition_flags, key],
-    }));
-  };
-
-  const handleSave = (event) => {
-    const form = event.currentTarget.closest('.modal-content').querySelector('form');
-    const isCustomInvalid = isAskingPriceInvalid || isDonationDestInvalid;
-
-    if (form.checkValidity() === false || isCustomInvalid) {
-      event.preventDefault();
-      event.stopPropagation();
-      setValidated(true);
-      return;
-    }
-    setValidated(true);
-    onSave();
+    const currentFlags = formik.values.condition_flags;
+    const nextFlags = currentFlags.includes(key)
+      ? currentFlags.filter((f) => f !== key)
+      : [...currentFlags, key];
+    formik.setFieldValue('condition_flags', nextFlags);
   };
 
   return (
@@ -84,7 +79,7 @@ const EditRecordModal = ({
             <h5 className="fw-bold mb-1">{entry.book.title}</h5>
             <p className="text-muted mb-3">by {entry.book.author}</p>
 
-            <Form noValidate validated={validated}>
+            <Form noValidate onSubmit={formik.handleSubmit}>
               <Row className="g-3 mb-3">
                 <Col md={6}>
                   <Form.Group controlId="edit-status">
@@ -92,8 +87,10 @@ const EditRecordModal = ({
                       Status
                     </Form.Label>
                     <Form.Select
-                      value={editData.status}
-                      onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                      name="status"
+                      value={formik.values.status}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     >
                       <option value="KEEP">Keep</option>
                       <option value="DONATE">Donate</option>
@@ -108,10 +105,10 @@ const EditRecordModal = ({
                       Condition
                     </Form.Label>
                     <Form.Select
-                      value={editData.condition_grade}
-                      onChange={(e) =>
-                        setEditData({ ...editData, condition_grade: e.target.value })
-                      }
+                      name="condition_grade"
+                      value={formik.values.condition_grade}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     >
                       {CONDITION_GRADES.map((g) => (
                         <option key={g} value={g}>
@@ -130,7 +127,7 @@ const EditRecordModal = ({
                 <div className="d-flex flex-wrap gap-2">
                   {CONDITION_FLAGS.map((flag) => {
                     const key = flagKey(flag);
-                    const isActive = editData.condition_flags.includes(key);
+                    const isActive = formik.values.condition_flags.includes(key);
                     return (
                       <Badge
                         key={flag}
@@ -147,41 +144,47 @@ const EditRecordModal = ({
                 </div>
               </Form.Group>
 
-              {editData.status === 'SELL' && (
+              {formik.values.status === 'SELL' && (
                 <Form.Group className="mb-3" controlId="edit-asking-price">
                   <Form.Label className="small fw-bold text-muted text-uppercase">
                     Asking Price ($)
                   </Form.Label>
                   <Form.Control
+                    name="asking_price"
                     type="number"
                     step="0.01"
                     min="0.01"
                     required
-                    value={editData.asking_price}
-                    isInvalid={validated && isAskingPriceInvalid}
-                    onChange={(e) => setEditData({ ...editData, asking_price: e.target.value })}
+                    value={formik.values.asking_price}
+                    isInvalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                    aria-invalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     aria-describedby="asking-price-feedback"
                   />
                   <Form.Control.Feedback type="invalid" id="asking-price-feedback">
-                    Please enter a valid price greater than 0.
+                    {formik.errors.asking_price}
                   </Form.Control.Feedback>
                 </Form.Group>
               )}
 
-              {editData.status === 'DONATE' && (
+              {formik.values.status === 'DONATE' && (
                 <Form.Group className="mb-3" controlId="edit-donation-dest">
                   <Form.Label className="small fw-bold text-muted text-uppercase">
                     Donation Destination
                   </Form.Label>
                   <Form.Control
+                    name="donation_dest"
                     required
-                    value={editData.donation_dest}
-                    isInvalid={validated && isDonationDestInvalid}
-                    onChange={(e) => setEditData({ ...editData, donation_dest: e.target.value })}
+                    value={formik.values.donation_dest}
+                    isInvalid={formik.touched.donation_dest && !!formik.errors.donation_dest}
+                    aria-invalid={formik.touched.donation_dest && !!formik.errors.donation_dest}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     aria-describedby="donation-dest-feedback"
                   />
                   <Form.Control.Feedback type="invalid" id="donation-dest-feedback">
-                    Please enter a donation destination.
+                    {formik.errors.donation_dest}
                   </Form.Control.Feedback>
                 </Form.Group>
               )}
@@ -189,23 +192,27 @@ const EditRecordModal = ({
               <Form.Group className="mb-3" controlId="edit-notes">
                 <Form.Label className="small fw-bold text-muted text-uppercase">Notes</Form.Label>
                 <Form.Control
+                  name="notes"
                   as="textarea"
                   rows={2}
-                  value={editData.notes}
-                  onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                  value={formik.values.notes}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                 />
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Check
+                  name="is_resolved"
                   type="switch"
                   id="resolved-switch"
                   label="Mark as Resolved"
-                  checked={editData.is_resolved}
-                  onChange={(e) => setEditData({ ...editData, is_resolved: e.target.checked })}
+                  checked={formik.values.is_resolved}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                 />
                 <Form.Text className="text-muted">
-                  {editData.is_resolved
+                  {formik.values.is_resolved
                     ? 'This book will be marked as processed.'
                     : 'This book will remain in your active triage list.'}
                 </Form.Text>
@@ -222,7 +229,7 @@ const EditRecordModal = ({
           <Button variant="secondary" onClick={onHide}>
             Cancel
           </Button>
-          <Button variant="warning" onClick={handleSave} disabled={saving}>
+          <Button variant="warning" onClick={formik.handleSubmit} disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

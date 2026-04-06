@@ -71,7 +71,6 @@ const Inventory = () => {
   // Modal State
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
-  const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
 
   const fetchEntries = useCallback(() => {
@@ -124,36 +123,25 @@ const Inventory = () => {
 
   const handleEditClick = (entry) => {
     setSelectedEntry(entry);
-    setEditData({
-      status: entry.status,
-      condition_grade: entry.condition_grade,
-      condition_flags: [...(entry.condition_flags || [])],
-      notes: entry.notes || '',
-      asking_price: entry.asking_price || '',
-      donation_dest: entry.donation_dest || '',
-      is_resolved: !!entry.resolved_at,
-    });
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = (values) => {
     setSaving(true);
     const payload = {
-      status: editData.status,
-      condition_grade: editData.condition_grade,
-      condition_flags: editData.condition_flags,
-      notes: editData.notes,
-      asking_price: editData.status === 'SELL' ? editData.asking_price : null,
-      donation_dest: editData.status === 'DONATE' ? editData.donation_dest : '',
+      status: values.status,
+      condition_grade: values.condition_grade,
+      condition_flags: values.condition_flags,
+      notes: values.notes,
+      asking_price: values.status === 'SELL' ? values.asking_price : null,
+      donation_dest: values.status === 'DONATE' ? values.donation_dest : '',
     };
 
     // Handle resolution change manually since we don't have a toggle endpoint,
     // we use the resolved_at field directly via patch if possible, or we call the action.
-    // However, our backend resolve action is POST and doesn't support un-resolving easily
-    // without a direct model update. Since it's a ModelViewSet, we can just patch resolved_at.
-    if (editData.is_resolved && !selectedEntry.resolved_at) {
+    if (values.is_resolved && !selectedEntry.resolved_at) {
       payload.resolved_at = new Date().toISOString();
-    } else if (!editData.is_resolved && selectedEntry.resolved_at) {
+    } else if (!values.is_resolved && selectedEntry.resolved_at) {
       payload.resolved_at = null;
     }
 
@@ -492,8 +480,6 @@ const Inventory = () => {
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
         entry={selectedEntry}
-        editData={editData}
-        setEditData={setEditData}
         onSave={handleSaveEdit}
         onDelete={handleDeleteEntry}
         saving={saving}

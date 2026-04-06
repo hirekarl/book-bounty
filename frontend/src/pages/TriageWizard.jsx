@@ -13,6 +13,8 @@ import {
 } from 'react-bootstrap';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Link, useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import { catalogSchema, validateWithZod } from '../schemas/catalogSchema';
 import {
   getBookMetadata,
   createCatalogEntry,
@@ -56,23 +58,28 @@ const TriageWizard = () => {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState(null);
 
-  // Condition state
-  const [conditionGrade, setConditionGrade] = useState('GOOD');
-  const [conditionFlags, setConditionFlags] = useState([]);
-
   // AI recommendation state
   const [aiRec, setAiRec] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [overriding, setOverriding] = useState(false);
 
-  // Final form state
-  const [status, setStatus] = useState('KEEP');
-  const [notes, setNotes] = useState('');
-  const [askingPrice, setAskingPrice] = useState('');
-  const [donationDest, setDonationDest] = useState('');
   const [submitError, setSubmitError] = useState(null);
-  const [validated, setValidated] = useState(false);
+
+  const formik = useFormik({
+    initialValues: {
+      status: 'KEEP',
+      condition_grade: 'GOOD',
+      condition_flags: [],
+      notes: '',
+      asking_price: '',
+      donation_dest: '',
+    },
+    validate: validateWithZod(catalogSchema),
+    onSubmit: (values) => {
+      handleFinalSubmit(values);
+    },
+  });
 
   // Fetch active goal on mount
   useEffect(() => {
@@ -84,22 +91,28 @@ const TriageWizard = () => {
       .catch(() => setGoalCheckDone(true));
   }, []);
 
-  const fetchAiRecommendation = useCallback((bookIsbn, grade, flags) => {
-    setAiLoading(true);
-    setAiError(null);
-    setAiRec(null);
-    getRecommendation({ isbn: bookIsbn, condition_grade: grade, condition_flags: flags })
-      .then((res) => {
-        setAiRec(res.data);
-        setStatus(res.data.status);
-        setAiLoading(false);
-      })
-      .catch((err) => {
-        const msg = err.response?.data?.error || 'AI recommendation failed.';
-        setAiError(msg);
-        setAiLoading(false);
-      });
-  }, []);
+  const fetchAiRecommendation = useCallback(
+    (bookIsbn, grade, flags) => {
+      setAiLoading(true);
+      setAiError(null);
+      setAiRec(null);
+      getRecommendation({ isbn: bookIsbn, condition_grade: grade, condition_flags: flags })
+        .then((res) => {
+          setAiRec(res.data);
+          formik.setFieldValue('status', res.data.status);
+          if (res.data.suggested_price) {
+            formik.setFieldValue('asking_price', String(res.data.suggested_price));
+          }
+          setAiLoading(false);
+        })
+        .catch((err) => {
+          const msg = err.response?.data?.error || 'AI recommendation failed.';
+          setAiError(msg);
+          setAiLoading(false);
+        });
+    },
+    [formik],
+  );
 
   const handleLookup = useCallback(
     (lookupIsbn) => {
@@ -178,53 +191,31 @@ const TriageWizard = () => {
   }, [step, activeGoal, cameraEnabled, handleLookup]);
 
   const handleConditionToggle = (flag) => {
-    setConditionFlags((prev) =>
-      prev.includes(flag) ? prev.filter((f) => f !== flag) : [...prev, flag],
-    );
+    const currentFlags = formik.values.condition_flags;
+    const nextFlags = currentFlags.includes(flag)
+      ? currentFlags.filter((f) => f !== flag)
+      : [...currentFlags, flag];
+    formik.setFieldValue('condition_flags', nextFlags);
   };
 
   const handleAcceptSuggestion = () => {
-    setStatus(aiRec.status);
-    if (aiRec.suggested_price) setAskingPrice(String(aiRec.suggested_price));
+    formik.setFieldValue('status', aiRec.status);
+    if (aiRec.suggested_price) {
+      formik.setFieldValue('asking_price', String(aiRec.suggested_price));
+    }
     setOverriding(false);
   };
 
-  const handleFinalSubmit = (event) => {
-    const form = event.currentTarget.closest('form');
-    let isValid = true;
-
-    if (form && form.checkValidity() === false) {
-      isValid = false;
-    }
-
-    // Manual check for price and destination to ensure they meet project mandates
-    const effectiveStatus = overriding ? status : aiRec?.status || status;
-    if (effectiveStatus === 'SELL') {
-      const price = parseFloat(askingPrice);
-      if (isNaN(price) || price <= 0) {
-        isValid = false;
-      }
-    }
-    if (effectiveStatus === 'DONATE' && !donationDest?.trim()) {
-      isValid = false;
-    }
-
-    setValidated(true);
-
-    if (!isValid) {
-      setSubmitError('Please fill in all required fields correctly.');
-      return;
-    }
-
+  const handleFinalSubmit = (values) => {
     setSubmitError(null);
     const data = {
       book_id: book.id,
-      status: effectiveStatus,
-      condition_grade: conditionGrade,
-      condition_flags: conditionFlags,
-      notes,
-      asking_price: effectiveStatus === 'SELL' ? askingPrice : null,
-      donation_dest: effectiveStatus === 'DONATE' ? donationDest : '',
+      status: values.status,
+      condition_grade: values.condition_grade,
+      condition_flags: values.condition_flags,
+      notes: values.notes,
+      asking_price: values.status === 'SELL' ? values.asking_price : null,
+      donation_dest: values.status === 'DONATE' ? values.donation_dest : '',
       ai_recommendation: aiRec || {},
     };
 
@@ -237,18 +228,12 @@ const TriageWizard = () => {
     setStep(1);
     setBook(null);
     setIsbn('');
-    setConditionGrade('GOOD');
-    setConditionFlags([]);
+    formik.resetForm();
     setAiRec(null);
     setAiError(null);
     setAiLoading(false);
     setOverriding(false);
-    setStatus('KEEP');
-    setNotes('');
-    setAskingPrice('');
-    setDonationDest('');
     setSubmitError(null);
-    setValidated(false);
     setCameraEnabled(true);
   };
 
@@ -368,7 +353,6 @@ const TriageWizard = () => {
   }
 
   if (step === 2) {
-    const effectiveStatus = overriding ? status : aiRec?.status || status;
     const metadataMissing = book.metadata_found === false;
 
     return (
@@ -431,18 +415,22 @@ const TriageWizard = () => {
               </Alert>
             )}
 
-            <Form noValidate validated={validated}>
+            <Form noValidate onSubmit={formik.handleSubmit}>
               <RecommendationCard
                 aiRec={aiRec}
                 aiLoading={aiLoading}
                 aiError={aiError}
                 overriding={overriding}
                 setOverriding={setOverriding}
-                status={status}
-                setStatus={setStatus}
+                status={formik.values.status}
+                setStatus={(val) => formik.setFieldValue('status', val)}
                 handleAcceptSuggestion={handleAcceptSuggestion}
                 fetchAiRecommendation={() =>
-                  fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
+                  fetchAiRecommendation(
+                    isbn,
+                    formik.values.condition_grade,
+                    formik.values.condition_flags,
+                  )
                 }
               />
 
@@ -454,8 +442,8 @@ const TriageWizard = () => {
                       {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
                         <Col key={id} xs={6} md={3}>
                           <Card
-                            className={`text-center h-100 border-2 ${status === id ? `border-${cfg.variant} bg-light` : 'border-light'}`}
-                            onClick={() => setStatus(id)}
+                            className={`text-center h-100 border-2 ${formik.values.status === id ? `border-${cfg.variant} bg-light` : 'border-light'}`}
+                            onClick={() => formik.setFieldValue('status', id)}
                             style={{ cursor: 'pointer' }}
                           >
                             <Card.Body className="p-3">
@@ -473,24 +461,18 @@ const TriageWizard = () => {
               )}
 
               <ConditionForm
-                conditionGrade={conditionGrade}
-                setConditionGrade={setConditionGrade}
-                conditionFlags={conditionFlags}
+                formik={formik}
                 handleConditionToggle={handleConditionToggle}
                 fetchAiRecommendation={() =>
-                  fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
+                  fetchAiRecommendation(
+                    isbn,
+                    formik.values.condition_grade,
+                    formik.values.condition_flags,
+                  )
                 }
                 aiRec={aiRec}
-                status={effectiveStatus}
-                askingPrice={askingPrice}
-                setAskingPrice={setAskingPrice}
-                donationDest={donationDest}
-                setDonationDest={setDonationDest}
-                notes={notes}
-                setNotes={setNotes}
                 getEbayLink={getEbayLink}
                 getAmazonLink={getAmazonLink}
-                validated={validated}
               />
 
               {submitError && <Alert variant="danger">{submitError}</Alert>}
@@ -500,7 +482,7 @@ const TriageWizard = () => {
                   variant="warning"
                   size="lg"
                   className="fw-bold py-3 shadow-sm"
-                  onClick={handleFinalSubmit}
+                  type="submit"
                   disabled={aiLoading}
                 >
                   COMPLETE TRIAGE
