@@ -6,7 +6,8 @@ entries, and retrieving dashboard statistics.
 
 from django.db import models
 from django.db.models import Count
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -53,6 +54,30 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
                 | queryset.filter(book__author__icontains=search_query)
             )
         return queryset
+
+    @action(detail=False, methods=["patch"])
+    def bulk_update_status(self, request: Request) -> Response:
+        """Updates the status of multiple catalog entries at once.
+
+        Expected payload: {"ids": [1, 2, 3], "status": "KEEP"}
+        """
+        entry_ids = request.data.get("ids", [])
+        new_status = request.data.get("status")
+
+        if not entry_ids or not new_status:
+            return Response(
+                {"error": "Missing ids or status"}, status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_status not in CatalogEntry.Status.values:
+            return Response(
+                {"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated_count = CatalogEntry.objects.filter(id__in=entry_ids).update(
+            status=new_status,
+        )
+        return Response({"updated_count": updated_count}, status=status.HTTP_200_OK)
 
 
 class DashboardStatsView(APIView):

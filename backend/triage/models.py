@@ -25,6 +25,8 @@ class Book(models.Model):
     author = models.CharField(max_length=255)
     publish_year = models.IntegerField(null=True, blank=True)
     subjects = models.JSONField(default=list, blank=True)
+    cover_url = models.URLField(max_length=500, null=True, blank=True)
+    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -54,9 +56,20 @@ class CatalogEntry(models.Model):
         SELL = "SELL", "Sell"
         DISCARD = "DISCARD", "Discard"
 
+    class Condition(models.TextChoices):
+        """Condition grades."""
+
+        MINT = "MINT", "Mint"
+        GOOD = "GOOD", "Good"
+        FAIR = "FAIR", "Fair"
+        POOR = "POOR", "Poor"
+
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="entries")
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.KEEP,
+    )
+    condition_grade = models.CharField(
+        max_length=10, choices=Condition.choices, default=Condition.GOOD,
     )
     condition_flags = models.JSONField(default=list, blank=True)
     notes = models.TextField(blank=True)
@@ -64,6 +77,7 @@ class CatalogEntry(models.Model):
         max_digits=10, decimal_places=2, null=True, blank=True,
     )
     donation_dest = models.CharField(max_length=255, blank=True)
+    valuation_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

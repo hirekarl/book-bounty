@@ -25,6 +25,8 @@ class BookSerializer(serializers.ModelSerializer[Book]):
             "author",
             "publish_year",
             "subjects",
+            "cover_url",
+            "description",
             "created_at",
         ]
         read_only_fields: ClassVar[list[str]] = ["id", "created_at"]
@@ -50,10 +52,12 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
             "book",
             "book_id",
             "status",
+            "condition_grade",
             "condition_flags",
             "notes",
             "asking_price",
             "donation_dest",
+            "valuation_data",
             "created_at",
             "updated_at",
         ]

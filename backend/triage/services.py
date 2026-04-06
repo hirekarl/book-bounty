@@ -48,6 +48,12 @@ def fetch_book_metadata(isbn: str) -> dict[str, Any]:
             publish_year = int(year_match.group())
 
     subjects = [s["name"] for s in book_data.get("subjects", [])]
+    cover_data = book_data.get("cover", {})
+    cover_url = (
+        cover_data.get("medium")
+        or cover_data.get("large")
+        or cover_data.get("small")
+    )
 
     return {
         "isbn": isbn,
@@ -55,6 +61,8 @@ def fetch_book_metadata(isbn: str) -> dict[str, Any]:
         "author": authors or "Unknown Author",
         "publish_year": publish_year,
         "subjects": subjects,
+        "cover_url": cover_url,
+        "description": book_data.get("notes", ""),
     }
 
 
@@ -85,6 +93,8 @@ def get_or_create_book(isbn: str) -> tuple[Book, bool]:
         author=metadata["author"],
         publish_year=metadata["publish_year"],
         subjects=metadata["subjects"],
+        cover_url=metadata["cover_url"],
+        description=metadata["description"],
     )
     return book, True
 
