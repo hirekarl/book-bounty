@@ -31,11 +31,6 @@ const STATUS_VARIANTS = { KEEP: 'success', DONATE: 'info', SELL: 'primary', DISC
 const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
-const flagLabel = (k) =>
-  k
-    .toLowerCase()
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (l) => l.toUpperCase());
 
 const RESOLVE_LABELS = {
   KEEP: 'Mark as Kept',

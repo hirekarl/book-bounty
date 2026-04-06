@@ -14,11 +14,7 @@ export const StatusBadge = ({ status, isResolved, date }) => {
     <div className="d-flex flex-column align-items-start">
       <RBBadge bg={STATUS_VARIANTS[status] || 'secondary'}>{status}</RBBadge>
       {isResolved && (
-        <RBBadge
-          bg="secondary"
-          className="fw-normal mt-1"
-          style={{ fontSize: '0.7rem' }}
-        >
+        <RBBadge bg="secondary" className="fw-normal mt-1" style={{ fontSize: '0.7rem' }}>
           {RESOLVE_LABELS[status] || 'Resolved'}
           {date && ` · ${new Date(date).toLocaleDateString()}`}
         </RBBadge>

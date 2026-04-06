@@ -408,7 +408,7 @@ const TriageWizard = () => {
               </Alert>
             )}
 
-            <RecommendationCard 
+            <RecommendationCard
               aiRec={aiRec}
               aiLoading={aiLoading}
               aiError={aiError}
@@ -417,7 +417,9 @@ const TriageWizard = () => {
               status={status}
               setStatus={setStatus}
               handleAcceptSuggestion={handleAcceptSuggestion}
-              fetchAiRecommendation={() => fetchAiRecommendation(isbn, conditionGrade, conditionFlags)}
+              fetchAiRecommendation={() =>
+                fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
+              }
             />
 
             {(overriding || (!aiRec && !aiLoading)) && (
@@ -446,12 +448,14 @@ const TriageWizard = () => {
               </Card>
             )}
 
-            <ConditionForm 
+            <ConditionForm
               conditionGrade={conditionGrade}
               setConditionGrade={setConditionGrade}
               conditionFlags={conditionFlags}
               handleConditionToggle={handleConditionToggle}
-              fetchAiRecommendation={() => fetchAiRecommendation(isbn, conditionGrade, conditionFlags)}
+              fetchAiRecommendation={() =>
+                fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
+              }
               aiRec={aiRec}
               status={effectiveStatus}
               askingPrice={askingPrice}

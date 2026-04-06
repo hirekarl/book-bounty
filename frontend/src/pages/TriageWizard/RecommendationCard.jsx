@@ -8,16 +8,16 @@ const STATUS_CONFIG = {
   DISCARD: { label: 'Discard', variant: 'danger', icon: 'bi-trash3' },
 };
 
-const RecommendationCard = ({ 
-  aiRec, 
-  aiLoading, 
-  aiError, 
-  overriding, 
-  setOverriding, 
-  status, 
-  setStatus, 
-  handleAcceptSuggestion, 
-  fetchAiRecommendation 
+const RecommendationCard = ({
+  aiRec,
+  aiLoading,
+  aiError,
+  overriding,
+  setOverriding,
+  status,
+  setStatus,
+  handleAcceptSuggestion,
+  fetchAiRecommendation,
 }) => {
   const effectiveStatus = overriding ? status : aiRec?.status || status;
   const statusConfig = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.KEEP;
@@ -48,11 +48,7 @@ const RecommendationCard = ({
             <i className="bi bi-exclamation-circle me-2"></i>
             {aiError}
             <div className="mt-2">
-              <Button
-                variant="outline-warning"
-                size="sm"
-                onClick={fetchAiRecommendation}
-              >
+              <Button variant="outline-warning" size="sm" onClick={fetchAiRecommendation}>
                 Retry
               </Button>
             </div>
@@ -66,9 +62,7 @@ const RecommendationCard = ({
                 className={`rounded-3 p-3 bg-${statusConfig.variant} bg-opacity-10 text-center`}
                 style={{ minWidth: '90px' }}
               >
-                <i
-                  className={`bi ${statusConfig.icon} fs-2 text-${statusConfig.variant}`}
-                ></i>
+                <i className={`bi ${statusConfig.icon} fs-2 text-${statusConfig.variant}`}></i>
                 <div className={`fw-bold small text-${statusConfig.variant} mt-1`}>
                   {statusConfig.label}
                 </div>

@@ -5,15 +5,14 @@ const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
 
-const ConditionForm = ({ 
-  conditionGrade, 
-  setConditionGrade, 
-  conditionFlags, 
-  handleConditionToggle, 
-  fetchAiRecommendation, 
+const ConditionForm = ({
+  conditionGrade,
+  setConditionGrade,
+  conditionFlags,
+  handleConditionToggle,
+  fetchAiRecommendation,
   aiRec,
   status,
-  setStatus,
   askingPrice,
   setAskingPrice,
   donationDest,
@@ -21,27 +20,21 @@ const ConditionForm = ({
   notes,
   setNotes,
   getEbayLink,
-  getAmazonLink
+  getAmazonLink,
 }) => {
   return (
     <Card className="shadow-sm border-0 mb-4">
       <Card.Header className="bg-white fw-bold py-3 d-flex justify-content-between align-items-center">
         <span>Condition & Details</span>
         {aiRec && (
-          <Button
-            variant="outline-warning"
-            size="sm"
-            onClick={fetchAiRecommendation}
-          >
+          <Button variant="outline-warning" size="sm" onClick={fetchAiRecommendation}>
             <i className="bi bi-arrow-clockwise me-1"></i>Re-analyze
           </Button>
         )}
       </Card.Header>
       <Card.Body className="p-4">
         <Form.Group className="mb-4">
-          <Form.Label className="fw-bold text-muted small text-uppercase">
-            Overall Grade
-          </Form.Label>
+          <Form.Label className="fw-bold text-muted small text-uppercase">Overall Grade</Form.Label>
           <div className="d-flex gap-2">
             {CONDITION_GRADES.map((g) => (
               <Button
