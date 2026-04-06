@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, Button, Row, Col, Form, Badge } from 'react-bootstrap';
 
 const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
@@ -15,7 +15,22 @@ const EditRecordModal = ({
   onDelete,
   saving,
 }) => {
+  const [validated, setValidated] = useState(false);
+
+  // Reset validation when modal opens
+  React.useEffect(() => {
+    if (show) setValidated(false);
+  }, [show]);
+
   if (!entry) return null;
+
+  const isAskingPriceInvalid =
+    editData.status === 'SELL' &&
+    (editData.asking_price === '' ||
+      isNaN(parseFloat(editData.asking_price)) ||
+      parseFloat(editData.asking_price) <= 0);
+
+  const isDonationDestInvalid = editData.status === 'DONATE' && !editData.donation_dest?.trim();
 
   const handleToggleFlag = (key) => {
     setEditData((prev) => ({
@@ -24,6 +39,20 @@ const EditRecordModal = ({
         ? prev.condition_flags.filter((f) => f !== key)
         : [...prev.condition_flags, key],
     }));
+  };
+
+  const handleSave = (event) => {
+    const form = event.currentTarget.closest('.modal-content').querySelector('form');
+    const isCustomInvalid = isAskingPriceInvalid || isDonationDestInvalid;
+
+    if (form.checkValidity() === false || isCustomInvalid) {
+      event.preventDefault();
+      event.stopPropagation();
+      setValidated(true);
+      return;
+    }
+    setValidated(true);
+    onSave();
   };
 
   return (
@@ -55,10 +84,10 @@ const EditRecordModal = ({
             <h5 className="fw-bold mb-1">{entry.book.title}</h5>
             <p className="text-muted mb-3">by {entry.book.author}</p>
 
-            <Form>
+            <Form noValidate validated={validated}>
               <Row className="g-3 mb-3">
                 <Col md={6}>
-                  <Form.Group>
+                  <Form.Group controlId="edit-status">
                     <Form.Label className="small fw-bold text-muted text-uppercase">
                       Status
                     </Form.Label>
@@ -74,7 +103,7 @@ const EditRecordModal = ({
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                  <Form.Group>
+                  <Form.Group controlId="edit-condition">
                     <Form.Label className="small fw-bold text-muted text-uppercase">
                       Condition
                     </Form.Label>
@@ -119,32 +148,45 @@ const EditRecordModal = ({
               </Form.Group>
 
               {editData.status === 'SELL' && (
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-3" controlId="edit-asking-price">
                   <Form.Label className="small fw-bold text-muted text-uppercase">
                     Asking Price ($)
                   </Form.Label>
                   <Form.Control
                     type="number"
                     step="0.01"
+                    min="0.01"
+                    required
                     value={editData.asking_price}
+                    isInvalid={validated && isAskingPriceInvalid}
                     onChange={(e) => setEditData({ ...editData, asking_price: e.target.value })}
+                    aria-describedby="asking-price-feedback"
                   />
+                  <Form.Control.Feedback type="invalid" id="asking-price-feedback">
+                    Please enter a valid price greater than 0.
+                  </Form.Control.Feedback>
                 </Form.Group>
               )}
 
               {editData.status === 'DONATE' && (
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-3" controlId="edit-donation-dest">
                   <Form.Label className="small fw-bold text-muted text-uppercase">
                     Donation Destination
                   </Form.Label>
                   <Form.Control
+                    required
                     value={editData.donation_dest}
+                    isInvalid={validated && isDonationDestInvalid}
                     onChange={(e) => setEditData({ ...editData, donation_dest: e.target.value })}
+                    aria-describedby="donation-dest-feedback"
                   />
+                  <Form.Control.Feedback type="invalid" id="donation-dest-feedback">
+                    Please enter a donation destination.
+                  </Form.Control.Feedback>
                 </Form.Group>
               )}
 
-              <Form.Group className="mb-3">
+              <Form.Group className="mb-3" controlId="edit-notes">
                 <Form.Label className="small fw-bold text-muted text-uppercase">Notes</Form.Label>
                 <Form.Control
                   as="textarea"
@@ -180,7 +222,7 @@ const EditRecordModal = ({
           <Button variant="secondary" onClick={onHide}>
             Cancel
           </Button>
-          <Button variant="warning" onClick={onSave} disabled={saving}>
+          <Button variant="warning" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

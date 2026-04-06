@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Row,
@@ -72,6 +72,7 @@ const TriageWizard = () => {
   const [askingPrice, setAskingPrice] = useState('');
   const [donationDest, setDonationDest] = useState('');
   const [submitError, setSubmitError] = useState(null);
+  const [validated, setValidated] = useState(false);
 
   // Fetch active goal on mount
   useEffect(() => {
@@ -83,7 +84,7 @@ const TriageWizard = () => {
       .catch(() => setGoalCheckDone(true));
   }, []);
 
-  const fetchAiRecommendation = (bookIsbn, grade, flags) => {
+  const fetchAiRecommendation = useCallback((bookIsbn, grade, flags) => {
     setAiLoading(true);
     setAiError(null);
     setAiRec(null);
@@ -98,24 +99,27 @@ const TriageWizard = () => {
         setAiError(msg);
         setAiLoading(false);
       });
-  };
+  }, []);
 
-  const handleLookup = (lookupIsbn) => {
-    setLookupLoading(true);
-    setLookupError(null);
-    getBookMetadata(lookupIsbn)
-      .then((res) => {
-        setBook(res.data);
-        setIsbn(lookupIsbn);
-        setStep(2);
-        setLookupLoading(false);
-        fetchAiRecommendation(lookupIsbn, 'GOOD', []);
-      })
-      .catch(() => {
-        setLookupError('Could not find book metadata.');
-        setLookupLoading(false);
-      });
-  };
+  const handleLookup = useCallback(
+    (lookupIsbn) => {
+      setLookupLoading(true);
+      setLookupError(null);
+      getBookMetadata(lookupIsbn)
+        .then((res) => {
+          setBook(res.data);
+          setIsbn(lookupIsbn);
+          setStep(2);
+          setLookupLoading(false);
+          fetchAiRecommendation(lookupIsbn, 'GOOD', []);
+        })
+        .catch(() => {
+          setLookupError('Could not find book metadata.');
+          setLookupLoading(false);
+        });
+    },
+    [fetchAiRecommendation],
+  );
 
   useEffect(() => {
     if (step !== 1 || !activeGoal || !cameraEnabled) return;
@@ -171,7 +175,7 @@ const TriageWizard = () => {
         (startPromise || Promise.resolve()).then(() => instance.stop().catch(() => {}));
       }
     };
-  }, [step, activeGoal, cameraEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, activeGoal, cameraEnabled, handleLookup]);
 
   const handleConditionToggle = (flag) => {
     setConditionFlags((prev) =>
@@ -185,24 +189,42 @@ const TriageWizard = () => {
     setOverriding(false);
   };
 
-  const handleFinalSubmit = () => {
-    if (status === 'SELL') {
+  const handleFinalSubmit = (event) => {
+    const form = event.currentTarget.closest('form');
+    let isValid = true;
+
+    if (form && form.checkValidity() === false) {
+      isValid = false;
+    }
+
+    // Manual check for price and destination to ensure they meet project mandates
+    const effectiveStatus = overriding ? status : aiRec?.status || status;
+    if (effectiveStatus === 'SELL') {
       const price = parseFloat(askingPrice);
-      if (isNaN(price) || price < 0) {
-        setSubmitError('Please enter a valid positive asking price.');
-        return;
+      if (isNaN(price) || price <= 0) {
+        isValid = false;
       }
+    }
+    if (effectiveStatus === 'DONATE' && !donationDest?.trim()) {
+      isValid = false;
+    }
+
+    setValidated(true);
+
+    if (!isValid) {
+      setSubmitError('Please fill in all required fields correctly.');
+      return;
     }
 
     setSubmitError(null);
     const data = {
       book_id: book.id,
-      status,
+      status: effectiveStatus,
       condition_grade: conditionGrade,
       condition_flags: conditionFlags,
       notes,
-      asking_price: status === 'SELL' ? askingPrice : null,
-      donation_dest: status === 'DONATE' ? donationDest : '',
+      asking_price: effectiveStatus === 'SELL' ? askingPrice : null,
+      donation_dest: effectiveStatus === 'DONATE' ? donationDest : '',
       ai_recommendation: aiRec || {},
     };
 
@@ -226,6 +248,7 @@ const TriageWizard = () => {
     setAskingPrice('');
     setDonationDest('');
     setSubmitError(null);
+    setValidated(false);
     setCameraEnabled(true);
   };
 
@@ -408,79 +431,82 @@ const TriageWizard = () => {
               </Alert>
             )}
 
-            <RecommendationCard
-              aiRec={aiRec}
-              aiLoading={aiLoading}
-              aiError={aiError}
-              overriding={overriding}
-              setOverriding={setOverriding}
-              status={status}
-              setStatus={setStatus}
-              handleAcceptSuggestion={handleAcceptSuggestion}
-              fetchAiRecommendation={() =>
-                fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
-              }
-            />
+            <Form noValidate validated={validated}>
+              <RecommendationCard
+                aiRec={aiRec}
+                aiLoading={aiLoading}
+                aiError={aiError}
+                overriding={overriding}
+                setOverriding={setOverriding}
+                status={status}
+                setStatus={setStatus}
+                handleAcceptSuggestion={handleAcceptSuggestion}
+                fetchAiRecommendation={() =>
+                  fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
+                }
+              />
 
-            {(overriding || (!aiRec && !aiLoading)) && (
-              <Card className="shadow-sm border-0 mb-4">
-                <Card.Header className="bg-white fw-bold py-3">Select Status</Card.Header>
-                <Card.Body className="p-4">
-                  <Row className="g-3">
-                    {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
-                      <Col key={id} xs={6} md={3}>
-                        <Card
-                          className={`text-center h-100 border-2 ${status === id ? `border-${cfg.variant} bg-light` : 'border-light'}`}
-                          onClick={() => setStatus(id)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <Card.Body className="p-3">
-                            <i className={`bi ${cfg.icon} fs-2 text-${cfg.variant}`}></i>
-                            <div className={`fw-bold mt-2 small text-${cfg.variant}`}>
-                              {cfg.label}
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                </Card.Body>
-              </Card>
-            )}
+              {(overriding || (!aiRec && !aiLoading)) && (
+                <Card className="shadow-sm border-0 mb-4">
+                  <Card.Header className="bg-white fw-bold py-3">Select Status</Card.Header>
+                  <Card.Body className="p-4">
+                    <Row className="g-3">
+                      {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
+                        <Col key={id} xs={6} md={3}>
+                          <Card
+                            className={`text-center h-100 border-2 ${status === id ? `border-${cfg.variant} bg-light` : 'border-light'}`}
+                            onClick={() => setStatus(id)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <Card.Body className="p-3">
+                              <i className={`bi ${cfg.icon} fs-2 text-${cfg.variant}`}></i>
+                              <div className={`fw-bold mt-2 small text-${cfg.variant}`}>
+                                {cfg.label}
+                              </div>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card.Body>
+                </Card>
+              )}
 
-            <ConditionForm
-              conditionGrade={conditionGrade}
-              setConditionGrade={setConditionGrade}
-              conditionFlags={conditionFlags}
-              handleConditionToggle={handleConditionToggle}
-              fetchAiRecommendation={() =>
-                fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
-              }
-              aiRec={aiRec}
-              status={effectiveStatus}
-              askingPrice={askingPrice}
-              setAskingPrice={setAskingPrice}
-              donationDest={donationDest}
-              setDonationDest={setDonationDest}
-              notes={notes}
-              setNotes={setNotes}
-              getEbayLink={getEbayLink}
-              getAmazonLink={getAmazonLink}
-            />
+              <ConditionForm
+                conditionGrade={conditionGrade}
+                setConditionGrade={setConditionGrade}
+                conditionFlags={conditionFlags}
+                handleConditionToggle={handleConditionToggle}
+                fetchAiRecommendation={() =>
+                  fetchAiRecommendation(isbn, conditionGrade, conditionFlags)
+                }
+                aiRec={aiRec}
+                status={effectiveStatus}
+                askingPrice={askingPrice}
+                setAskingPrice={setAskingPrice}
+                donationDest={donationDest}
+                setDonationDest={setDonationDest}
+                notes={notes}
+                setNotes={setNotes}
+                getEbayLink={getEbayLink}
+                getAmazonLink={getAmazonLink}
+                validated={validated}
+              />
 
-            {submitError && <Alert variant="danger">{submitError}</Alert>}
+              {submitError && <Alert variant="danger">{submitError}</Alert>}
 
-            <div className="d-grid">
-              <Button
-                variant="warning"
-                size="lg"
-                className="fw-bold py-3 shadow-sm"
-                onClick={handleFinalSubmit}
-                disabled={aiLoading}
-              >
-                COMPLETE TRIAGE
-              </Button>
-            </div>
+              <div className="d-grid">
+                <Button
+                  variant="warning"
+                  size="lg"
+                  className="fw-bold py-3 shadow-sm"
+                  onClick={handleFinalSubmit}
+                  disabled={aiLoading}
+                >
+                  COMPLETE TRIAGE
+                </Button>
+              </div>
+            </Form>
           </Col>
         </Row>
       </Container>

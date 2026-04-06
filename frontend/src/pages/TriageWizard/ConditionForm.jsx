@@ -21,7 +21,13 @@ const ConditionForm = ({
   setNotes,
   getEbayLink,
   getAmazonLink,
+  validated,
 }) => {
+  const isAskingPriceInvalid =
+    status === 'SELL' &&
+    (askingPrice === '' || isNaN(parseFloat(askingPrice)) || parseFloat(askingPrice) <= 0);
+  const isDonationDestInvalid = status === 'DONATE' && !donationDest?.trim();
+
   return (
     <Card className="shadow-sm border-0 mb-4">
       <Card.Header className="bg-white fw-bold py-3 d-flex justify-content-between align-items-center">
@@ -70,7 +76,7 @@ const ConditionForm = ({
         <hr className="my-4" />
 
         {status === 'SELL' && (
-          <Form.Group className="mb-4">
+          <Form.Group className="mb-4" controlId="triage-asking-price">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <Form.Label className="fw-bold text-muted small text-uppercase mb-0">
                 Asking Price ($)
@@ -97,28 +103,41 @@ const ConditionForm = ({
             <Form.Control
               type="number"
               step="0.01"
+              min="0.01"
+              required
               placeholder="0.00"
               value={askingPrice}
+              isInvalid={validated && isAskingPriceInvalid}
               onChange={(e) => setAskingPrice(e.target.value)}
               size="lg"
+              aria-describedby="triage-asking-price-feedback"
             />
+            <Form.Control.Feedback type="invalid" id="triage-asking-price-feedback">
+              Please enter a valid price greater than 0.
+            </Form.Control.Feedback>
           </Form.Group>
         )}
 
         {status === 'DONATE' && (
-          <Form.Group className="mb-4">
+          <Form.Group className="mb-4" controlId="triage-donation-dest">
             <Form.Label className="fw-bold text-muted small text-uppercase">
               Donation Destination
             </Form.Label>
             <Form.Control
+              required
               placeholder="e.g. Goodwill, Library"
               value={donationDest}
+              isInvalid={validated && isDonationDestInvalid}
               onChange={(e) => setDonationDest(e.target.value)}
+              aria-describedby="triage-donation-dest-feedback"
             />
+            <Form.Control.Feedback type="invalid" id="triage-donation-dest-feedback">
+              Please enter a donation destination.
+            </Form.Control.Feedback>
           </Form.Group>
         )}
 
-        <Form.Group>
+        <Form.Group controlId="triage-notes">
           <Form.Label className="fw-bold text-muted small text-uppercase">Notes</Form.Label>
           <Form.Control
             as="textarea"

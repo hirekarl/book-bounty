@@ -13,3 +13,4 @@ You are the final gatekeeper. Your mission is to find bugs and ensure the system
 ## Feedback Log
 - *April 2026: Standardized BaseAPITestCase for authenticated integration tests.*
 - *April 2026: Verified Phase 3.1 Global Notification System. Fixed linting regressions (use-before-define and missing dependencies) in NotificationContext.jsx. Confirmed A11y attributes and zIndex (1060) on GlobalToast. Interceptor logic in api.js correctly bridges backend errors to the UI.*
+- *April 2026: Verified Phase 3.2 Form Validation. Fixed a critical Rules of Hooks violation in EditRecordModal.jsx. Improved handleSave logic in EditRecordModal.jsx to align with TriageWizard.jsx (manual whitespace validation for donation_dest). Stabilized handleLookup/fetchAiRec in TriageWizard.jsx with useCallback to resolve exhaustive-deps warnings. Confirmed A11y (required, aria-describedby) on all triage forms. Linting is clean (excluding Fast Refresh warning in Context).*

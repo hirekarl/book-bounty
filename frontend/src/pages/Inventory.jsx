@@ -137,14 +137,6 @@ const Inventory = () => {
   };
 
   const handleSaveEdit = () => {
-    if (editData.status === 'SELL') {
-      const price = parseFloat(editData.asking_price);
-      if (isNaN(price) || price < 0) {
-        setError('Please enter a valid positive asking price.');
-        return;
-      }
-    }
-
     setSaving(true);
     const payload = {
       status: editData.status,
