@@ -363,12 +363,13 @@ const TriageWizard = () => {
           <Col lg={4} className="mb-4">
             <Card className="shadow-sm border-0 sticky-top" style={{ top: '2rem' }}>
               <Card.Body className="text-center p-4">
-                {book.cover_url ? (
+                {book.cover_image || book.cover_url ? (
                   <img
-                    src={book.cover_url}
+                    src={book.cover_image || book.cover_url}
                     alt={book.title}
                     className="img-fluid rounded shadow mb-4"
                     style={{ maxHeight: '300px' }}
+                    loading="lazy"
                   />
                 ) : (
                   <div
@@ -442,8 +443,17 @@ const TriageWizard = () => {
                       {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
                         <Col key={id} xs={6} md={3}>
                           <Card
-                            className={`text-center h-100 border-2 ${formik.values.status === id ? `border-${cfg.variant} bg-light` : 'border-light'}`}
+                            className={`text-center h-100 border-2 ${formik.values.status === id ? `border-${cfg.variant} bg-light` : 'border-light shadow-sm'}`}
                             onClick={() => formik.setFieldValue('status', id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                formik.setFieldValue('status', id);
+                              }
+                            }}
+                            role="button"
+                            tabIndex="0"
+                            aria-pressed={formik.values.status === id}
                             style={{ cursor: 'pointer' }}
                           >
                             <Card.Body className="p-3">
@@ -476,6 +486,20 @@ const TriageWizard = () => {
               />
 
               {submitError && <Alert variant="danger">{submitError}</Alert>}
+
+              {formik.submitCount > 0 && !formik.isValid && (
+                <Alert variant="danger" className="mb-3 shadow-sm">
+                  <div className="fw-bold mb-1">
+                    <i className="bi bi-exclamation-octagon-fill me-2"></i>
+                    Please correct the following errors:
+                  </div>
+                  <ul className="mb-0 ps-3 small">
+                    {Object.values(formik.errors).map((err, idx) => (
+                      <li key={idx}>{err}</li>
+                    ))}
+                  </ul>
+                </Alert>
+              )}
 
               <div className="d-grid">
                 <Button

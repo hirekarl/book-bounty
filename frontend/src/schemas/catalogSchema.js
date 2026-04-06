@@ -8,7 +8,7 @@ export const catalogSchema = z
     condition_grade: z.enum(['MINT', 'GOOD', 'FAIR', 'POOR'], {
       required_error: 'Condition grade is required',
     }),
-    condition_flags: z.string().optional(),
+    condition_flags: z.array(z.string()).optional(),
     notes: z.string().optional(),
     asking_price: z
       .number()

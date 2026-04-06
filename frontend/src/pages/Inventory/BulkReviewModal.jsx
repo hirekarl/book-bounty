@@ -136,12 +136,13 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
                 <ListGroup.Item key={entry.id} className="px-0 py-4 border-bottom">
                   <Row className="align-items-start">
                     <Col md={3} lg={2} className="text-center">
-                      {entry.book.cover_url ? (
+                      {entry.book.cover_image || entry.book.cover_url ? (
                         <img
-                          src={entry.book.cover_url}
+                          src={entry.book.cover_image || entry.book.cover_url}
                           alt={`Cover for ${entry.book.title}`}
                           className="img-fluid rounded shadow-sm"
                           style={{ maxHeight: '120px' }}
+                          loading="lazy"
                         />
                       ) : (
                         <div
@@ -223,6 +224,11 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
                                 size="sm"
                                 onClick={() => handleApplyAISuggestion(entry.id)}
                                 disabled={!isDifferent}
+                                aria-label={
+                                  isDifferent
+                                    ? `Accept AI suggestion for ${entry.book.title}`
+                                    : `AI suggestion accepted for ${entry.book.title}`
+                                }
                               >
                                 {isDifferent ? 'Accept AI' : 'Accepted'}
                               </Button>

@@ -13,6 +13,7 @@ dependencies = [
     "google-genai>=1.70.0",
     "instructor>=1.15.1",
     "jsonref>=1.1.0",
+    "pillow>=12.2.0",
     "pydantic>=2.12.5",
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",

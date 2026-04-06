@@ -58,12 +58,13 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
       <Modal.Body className="pt-2">
         <Row>
           <Col md={4} className="text-center mb-3">
-            {entry.book.cover_url ? (
+            {entry.book.cover_image || entry.book.cover_url ? (
               <img
-                src={entry.book.cover_url}
+                src={entry.book.cover_image || entry.book.cover_url}
                 alt=""
                 className="img-fluid rounded shadow-sm"
                 style={{ maxHeight: '200px' }}
+                loading="lazy"
               />
             ) : (
               <div
@@ -136,6 +137,15 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
                         className={`border cursor-pointer px-2 py-1 ${isActive ? '' : 'opacity-75'}`}
                         style={{ cursor: 'pointer' }}
                         onClick={() => handleToggleFlag(key)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleToggleFlag(key);
+                          }
+                        }}
+                        role="button"
+                        tabIndex="0"
+                        aria-pressed={isActive}
                       >
                         {flag}
                       </Badge>

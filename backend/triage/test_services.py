@@ -6,10 +6,12 @@ and triage suggestion services.
 
 from unittest.mock import MagicMock, patch
 
+from django.core.files.base import ContentFile
 from django.test import TestCase
 
 from triage.models import Book, CatalogEntry
 from triage.services import (
+    download_cover_image,
     fetch_book_metadata,
     get_or_create_book,
     suggest_triage_outcome,
@@ -18,6 +20,58 @@ from triage.services import (
 
 class ServiceTests(TestCase):
     """Test suite for the triage services."""
+
+    @patch("requests.get")
+    def test_download_cover_image_success(self, mock_get: MagicMock) -> None:
+        """Test successful cover image download with extension in URL."""
+        book = Book.objects.create(isbn="9781603582865", title="Test Book", author="Author")
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.content = b"fake_image_data"
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+
+        download_cover_image(book, "http://example.com/cover.jpg")
+        
+        book.refresh_from_db()
+        self.assertTrue(book.cover_image)
+        self.assertIn("cover", book.cover_image.name)
+        self.assertTrue(book.cover_image.name.endswith(".jpg"))
+
+    @patch("requests.get")
+    def test_download_cover_image_no_extension_in_url(self, mock_get: MagicMock) -> None:
+        """Test cover image download when URL has no extension, using Content-Type."""
+        book = Book.objects.create(isbn="9781603582865", title="Test Book", author="Author")
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.content = b"fake_image_data"
+        mock_response.headers = {"Content-Type": "image/png"}
+
+        # URL without extension
+        download_cover_image(book, "http://example.com/covers/12345")
+        
+        book.refresh_from_db()
+        self.assertTrue(book.cover_image)
+        # Should append .png based on Content-Type
+        self.assertIn("12345", book.cover_image.name)
+        self.assertTrue(book.cover_image.name.endswith(".png"))
+
+    @patch("requests.get")
+    def test_download_cover_image_empty_path(self, mock_get: MagicMock) -> None:
+        """Test cover image download when URL path is empty."""
+        book = Book.objects.create(isbn="9781603582865", title="Test Book", author="Author")
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.content = b"fake_image_data"
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+
+        # URL with empty path
+        download_cover_image(book, "http://example.com")
+        
+        book.refresh_from_db()
+        self.assertTrue(book.cover_image)
+        # Should fallback to cover_{isbn}.jpg
+        self.assertIn(f"cover_{book.isbn}", book.cover_image.name)
+        self.assertTrue(book.cover_image.name.endswith(".jpg"))
 
     @patch("requests.get")
     def test_fetch_book_metadata_success(self, mock_get: MagicMock) -> None:

@@ -4,13 +4,63 @@ This module contains business logic for looking up book metadata from the
 Open Library API and determining suggested triage outcomes.
 """
 
+import logging
+import os
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
+from django.core.files.base import ContentFile
 
 from triage.models import Book, CatalogEntry
+
+logger = logging.getLogger(__name__)
+
+
+def download_cover_image(book: Book, url: str) -> None:
+    """Downloads a cover image from a URL and saves it to the book model.
+
+    Args:
+        book: The Book instance to update.
+        url: The URL of the image to download.
+    """
+    if not url:
+        return
+
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+
+        # Extract filename from URL
+        parsed_url = urlparse(url)
+        filename = os.path.basename(parsed_url.path)
+        
+        # Check if filename has an extension
+        _, ext = os.path.splitext(filename)
+        if not ext:
+            # Try to determine extension from Content-Type header
+            content_type = response.headers.get("Content-Type", "")
+            if "image/jpeg" in content_type:
+                ext = ".jpg"
+            elif "image/png" in content_type:
+                ext = ".png"
+            elif "image/gif" in content_type:
+                ext = ".gif"
+            else:
+                ext = ".jpg"  # Default fallback
+            
+            if not filename:
+                filename = f"cover_{book.isbn}{ext}"
+            else:
+                filename = f"{filename}{ext}"
+
+        book.cover_image.save(filename, ContentFile(response.content), save=True)
+    except requests.RequestException as e:
+        logger.error("Failed to download cover image for ISBN %s: %s", book.isbn, e)
+    except Exception:  # noqa: BLE001
+        logger.exception("Unexpected error downloading cover image for ISBN %s", book.isbn)
 
 
 def fetch_book_metadata(isbn: str) -> dict[str, Any]:
@@ -77,6 +127,9 @@ def get_or_create_book(isbn: str) -> tuple[Book, bool]:
     """
     book = Book.objects.filter(isbn=isbn).first()
     if book:
+        # Single Pull mandate: download if cover_image is not set
+        if not book.cover_image and book.cover_url:
+            download_cover_image(book, book.cover_url)
         return book, False
 
     metadata = fetch_book_metadata(isbn)
@@ -96,6 +149,10 @@ def get_or_create_book(isbn: str) -> tuple[Book, bool]:
         cover_url=metadata["cover_url"],
         description=metadata["description"],
     )
+
+    if metadata["cover_url"]:
+        download_cover_image(book, metadata["cover_url"])
+
     return book, True
 
 

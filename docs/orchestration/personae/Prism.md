@@ -23,3 +23,6 @@ You are the guardian of the user experience. You build modular, accessible, and 
 - *April 2026: Implemented Global Notification System (NotificationContext + GlobalToast) and integrated with API interceptors for automatic error reporting.*
 - *April 2026: Implemented Phase 3.2: Robust client-side form validation using Zod and Formik for Inventory and Triage Wizard. Refactored state management to utilize useFormik and centralized Zod schemas in src/schemas/catalogSchema.js.*
 - *May 2026: Implemented Phase 4 Bulk Review UI. Added multi-select capability to Inventory table and created `BulkReviewModal` for comparative triage. Ensured all new forms use `useFormik` and adhere to A11y mandates (aria-label, controlId).*
+- *May 2026: Adapted Frontend to use Local Cover Images (`cover_image`) with fallbacks to `cover_url` and placeholder icons. Implemented image lazy-loading across Inventory list and Bulk Review UI for enhanced performance.*
+- *May 2026: Extended image lazy-loading to Triage Wizard and Edit Record Modal book covers for consistent performance across all book-viewing surfaces.*
+- *May 2026: Fixed Triage Wizard submission by resolving `condition_flags` array/string schema mismatch and implementing a validation error summary. Enhanced accessibility for Status Cards and Condition Badges with proper ARIA roles and keyboard support.*

@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import TriageWizard from './pages/TriageWizard';
 import Inventory from './pages/Inventory';
-import { NotificationProvider } from './contexts/NotificationContext';
+import { NotificationProvider } from './contexts/NotificationProvider';
 import GlobalToast from './components/common/GlobalToast';
 
 const ProtectedRoute = ({ children }) => {

@@ -17,6 +17,7 @@ class Book(models.Model):
     publish_year = models.IntegerField(null=True, blank=True)
     subjects = models.JSONField(default=list, blank=True)
     cover_url = models.URLField(max_length=500, null=True, blank=True)
+    cover_image = models.ImageField(upload_to="covers/", null=True, blank=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

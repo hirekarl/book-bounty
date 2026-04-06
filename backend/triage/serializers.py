@@ -24,6 +24,7 @@ class BookSerializer(serializers.ModelSerializer[Book]):
             "publish_year",
             "subjects",
             "cover_url",
+            "cover_image",
             "description",
             "created_at",
         ]

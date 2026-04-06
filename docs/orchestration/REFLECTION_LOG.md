@@ -32,3 +32,24 @@ This log tracks session-level friction points, sub-agent performance, and archit
     2. Reinforced the "Self-QA" checklist for Prism specifically for ARIA and Label associations.
     3. Atlas performed a more surgical `read_file` review before the final commit.
 - **Efficiency Gain:** Parallel development halved implementation time. Enum serialization is now standardized, preventing future DRF/Pydantic collisions.
+
+### 2026-05-02: Book Cover Loading Fix
+- **Task:** Fixed book cover loading for ISBN 9781603582865 by improving cover download resilience and MEDIA_URL configuration.
+- **Friction Points:** Open Library URLs sometimes lack file extensions or have empty paths, causing `download_cover_image` to fail or create files with missing extensions. `MEDIA_URL` was missing a leading slash, potentially breaking frontend resolution.
+- **Mitigation:** 
+    1. Enhanced `download_cover_image` to use `Content-Type` headers for extension fallback.
+    2. Corrected `MEDIA_URL` to `"/media/"`.
+    3. Added comprehensive unit tests for URL parsing edge cases.
+- **Efficiency Gain:** Improved media handling prevents broken images in the UI and ensures consistent file naming across different metadata providers.
+
+### 2026-05-03: Triage Wizard Submission Fix
+- **Task:** Fixed "Complete Triage" button by adding validation error summary and resolving `condition_flags` schema mismatch.
+- **Friction Points:** 
+    1. Zod schema expected `condition_flags` as a string, while the Formik state and Backend model used an array, causing silent validation failures.
+    2. Lack of a global validation summary near the submit button meant users had no feedback when submission was blocked by hidden or scrolled-away field errors.
+    3. Status selection cards and condition badges lacked proper ARIA roles and keyboard support (Mandate violation).
+- **Mitigation:**
+    1. Updated `catalogSchema.js` to correctly define `condition_flags` as `z.array(z.string()).optional()`.
+    2. Implemented a dynamic `Alert` summary in `TriageWizard.jsx` that appears on failed submission attempts.
+    3. Enhanced accessibility for all custom interactive elements (Cards and Badges) with `role="button"`, `tabIndex`, and keyboard listeners.
+- **Efficiency Gain:** Submission reliability is restored, and accessibility is improved across the Triage and Inventory Edit flows.

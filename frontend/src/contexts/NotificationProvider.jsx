@@ -1,11 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { setErrorHandler } from '../services/api';
-
-const NotificationContext = createContext({
-  showNotification: () => {},
-});
-
-export const useNotification = () => useContext(NotificationContext);
+import { NotificationContext } from './NotificationContext';
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);

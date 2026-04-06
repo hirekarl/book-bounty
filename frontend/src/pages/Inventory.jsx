@@ -385,12 +385,13 @@ const Inventory = () => {
                       </td>
                       <td>
                         <div className="d-flex align-items-center">
-                          {e.book.cover_url ? (
+                          {e.book.cover_image || e.book.cover_url ? (
                             <img
-                              src={e.book.cover_url}
+                              src={e.book.cover_image || e.book.cover_url}
                               alt=""
                               className={`rounded me-3 ${isResolved ? 'opacity-50' : ''}`}
                               style={{ width: '40px', height: '60px', objectFit: 'cover' }}
+                              loading="lazy"
                             />
                           ) : (
                             <div
