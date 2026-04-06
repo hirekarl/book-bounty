@@ -13,6 +13,7 @@
 - **Core Technologies:**
     - **Backend:** Python 3.12+, Django 6.x, Django REST Framework (DRF), `uv` (package manager), SQLite.
     - **Frontend:** React 19, Vite, React Bootstrap (Bootstrap 5), Axios, React Router 7.
+- **Auth:** `dj-rest-auth` + `rest_framework.authtoken` (token auth). Login via `POST /api/auth/login/` returns `{"key": "..."}`.
 - **Integrations:**
     - **Open Library API:** Used for fetching book metadata via ISBN.
     - **Barcode Scanning:** `html5-qrcode` for camera-based ISBN scanning.
@@ -78,14 +79,19 @@ Reference `.env.example` in the root or within subdirectories for required varia
 ## 5. Directory Structure
 - `backend/triage/`: Main logic for book metadata, catalog entries, and decision engine.
   - `ai_engine.py`: Gemini 2.5 Flash integration. Contains `get_ai_recommendation()` and the `TriageRecommendation` Pydantic schema.
-  - `models.py`: `Book`, `CatalogEntry`, `CullingGoal`.
-  - `views.py`: `BookLookupView`, `CatalogEntryViewSet`, `CullingGoalViewSet`, `RecommendView`, `DashboardStatsView`.
+  - `models.py`: `Book`, `CatalogEntry` (with `resolved_at`), `CullingGoal`.
+  - `views.py`: `BookLookupView`, `CatalogEntryViewSet` (with `resolve` and `bulk_update_status` actions), `CullingGoalViewSet`, `RecommendView`, `DashboardStatsView`.
+  - `serializers.py`: DRF serializers for all models.
+  - `services.py`: Open Library API client and book caching.
 - `backend/core/`: Django project configuration and settings.
 - `frontend/src/`: React source code, components, and assets.
-  - `pages/Dashboard.jsx`: Stats overview and active Culling Goal management.
+  - `pages/Login.jsx`: Token auth login form.
+  - `pages/Dashboard.jsx`: Stats overview (active + resolved), Culling Goal management.
   - `pages/TriageWizard.jsx`: Scan → AI recommend → accept/override → save flow.
-  - `pages/Inventory.jsx`: Filterable, exportable catalog entry table.
-  - `services/api.js`: Axios API client for all backend calls.
+  - `pages/Inventory.jsx`: Filterable catalog table with view toggles, resolution, and exports.
+  - `services/api.js`: Axios API client with token interceptor and 401 redirect.
 - `docs/legacy/`: Archived planning documents.
 - `v2_PRODUCT_VISION.md`: Current product vision (AI-driven culling).
 - `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
+- `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace — does NOT inform current implementation.
+- `CLAUDE.md`: Project context file for Claude Code sessions.

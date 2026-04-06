@@ -32,6 +32,7 @@ The result is a fast, opinionated triage loop: scan a barcode, get a recommendat
 
 ## Features
 
+- **Token-based authentication** — secure login page; all API calls require a valid session token
 - **Camera-based ISBN scanning** via `html5-qrcode`, with manual entry fallback
 - **Automatic book metadata lookup** from the Open Library API (title, author, year, subjects, cover image, description)
 - **AI-powered triage recommendations** using Gemini 2.5 Flash — returns status, confidence score, one-sentence reasoning, suggested price, and descriptive tags
@@ -40,9 +41,11 @@ The result is a fast, opinionated triage loop: scan a barcode, get a recommendat
 - **Confidence indicator** — recommendations below 50% confidence are flagged as "AI Uncertain"
 - **Re-analyze** — change the condition grade or damage flags and rerun the AI without losing your work
 - **Condition grading** — MINT / GOOD / FAIR / POOR with specific damage flags (water damage, torn pages, spine damage, annotated, yellowing)
-- **Full inventory management** — search, filter by status, bulk status updates
+- **Resolution lifecycle** — mark books as Kept, Sold, Donated, or Discarded; resolved entries leave a permanent record
+- **In Collection view** — instantly see what's physically still on your shelves (all unresolved + resolved Keeps)
+- **Full inventory management** — search, filter by status or resolution state, view toggles, bulk status updates
 - **Export** — CSV, Excel (.xlsx), and PDF
-- **Dashboard** with live counts by triage status
+- **Dashboard** with live counts split by active decisions and resolved outcomes
 
 ---
 
@@ -75,6 +78,10 @@ flowchart TD
     N --> O{Continue?}
     O -- Scan next book --> C
     O -- Done --> P([Inventory:\nreview · bulk edit · export])
+
+    P --> Q{Act on decision}
+    Q -- Mark as Kept/Sold/\nDonated/Discarded --> R[Resolve entry\nstamp resolved_at]
+    R --> S([Dashboard:\nActive + Resolved counts\nIn Collection view])
 ```
 
 ---
@@ -195,14 +202,15 @@ cp .env.example .env
 
 > **Note:** `VITE_API_BASE_URL` is read at **build time** by Vite. If you change it, restart the dev server.
 
-### Running migrations
+### Running migrations and creating your account
 
 ```bash
 cd backend
 uv run python manage.py migrate
+uv run python manage.py createsuperuser
 ```
 
-This sets up the SQLite database with all tables including `Book`, `CatalogEntry`, and `CullingGoal`.
+`migrate` sets up the SQLite database with all tables. `createsuperuser` creates the login account you'll use in the app — BookBounty is single-user, so this is your one account.
 
 ---
 
@@ -272,9 +280,20 @@ Add an asking price (SELL), donation destination (DONATE), or freeform notes as 
 
 Click **Complete Triage** to save the entry. You'll see a confirmation screen with options to scan the next book or jump to the Inventory.
 
-### 7. Inventory Management
+### 7. Resolve Decisions (Inventory)
 
-The **Inventory** page shows all cataloged entries. You can:
+When you've physically acted on a book — sold it, dropped it at Goodwill, kept it on the shelf — mark it as resolved in the **Inventory**. Click the action button on any pending row to stamp it as **Kept**, **Sold**, **Donated**, or **Discarded**. Resolved entries stay in the database as a permanent record and are shown in a muted style with the resolution date.
+
+### 8. Inventory Management
+
+The **Inventory** page shows all cataloged entries with four view modes:
+
+- **All** — every entry in the database
+- **In Collection** — books physically still present (all unresolved + resolved Keeps)
+- **Pending** — decisions not yet acted upon
+- **Resolved** — entries that have been marked done
+
+You can also:
 
 - Search by title or author
 - Filter by status
@@ -285,22 +304,41 @@ The **Inventory** page shows all cataloged entries. You can:
 
 ## API Reference
 
-All endpoints are prefixed with `/api/`.
+All endpoints are prefixed with `/api/`. All endpoints except auth require a valid token (`Authorization: Token <key>`).
+
+### Authentication
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/lookup/{isbn}/` | Fetch and cache book metadata from Open Library |
+| `POST` | `/auth/login/` | Login — returns `{"key": "..."}` |
+| `POST` | `/auth/logout/` | Invalidate the current token |
+
+### Books & Triage
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/lookup/{isbn}/` | Fetch and cache book metadata from Open Library; includes `metadata_found` flag |
 | `GET` | `/goals/` | List all culling goals |
 | `POST` | `/goals/` | Create a new culling goal |
-| `PATCH` | `/goals/{id}/` | Update a goal (setting `is_active: true` deactivates all others) |
+| `PATCH` | `/goals/{id}/` | Update a goal (`is_active: true` deactivates all others) |
 | `POST` | `/recommend/` | Get an AI triage recommendation |
-| `GET` | `/entries/` | List catalog entries (supports `?status=` and `?search=` filters) |
+| `GET` | `/entries/` | List catalog entries (see query params below) |
 | `POST` | `/entries/` | Create a new catalog entry |
 | `PATCH` | `/entries/{id}/` | Update a catalog entry |
-| `PATCH` | `/entries/bulk_update_status/` | Bulk-update status for a list of entry IDs |
-| `GET` | `/stats/` | Dashboard counts by status |
+| `POST` | `/entries/{id}/resolve/` | Mark entry as resolved — stamps `resolved_at` (400 if already resolved) |
+| `PATCH` | `/entries/bulk_update_status/` | Bulk-update status: `{"ids": [...], "status": "SELL"}` |
+| `GET` | `/stats/` | Dashboard counts: `{active: {...}, resolved: {...}, in_collection: N}` |
 
-### `POST /recommend/` payload
+### `GET /entries/` query params
+
+| Param | Values | Description |
+|---|---|---|
+| `?status=` | `KEEP\|DONATE\|SELL\|DISCARD` | Filter by triage status |
+| `?search=` | any string | Case-insensitive match on title or author |
+| `?resolved=` | `true\|false` | Filter by resolution state |
+| `?in_collection=` | `true` | Books physically still present (unresolved + resolved Keeps) |
+
+### `POST /recommend/` payload and response
 
 ```json
 {
@@ -312,8 +350,6 @@ All endpoints are prefixed with `/api/`.
 ```
 
 `culling_goal_id`, `condition_grade`, and `condition_flags` are all optional. If `culling_goal_id` is omitted, the active goal is used automatically.
-
-### `POST /recommend/` response
 
 ```json
 {
@@ -390,18 +426,21 @@ book-bounty/
 ├── frontend/
 │   └── src/
 │       ├── components/
-│       │   └── Layout.jsx      # Nav + page shell
+│       │   └── Layout.jsx      # Nav + page shell + sign-out
 │       ├── pages/
+│       │   ├── Login.jsx       # Token auth login form
 │       │   ├── Dashboard.jsx   # Stats overview + Culling Goal management
 │       │   ├── TriageWizard.jsx # Scan → AI recommend → accept/override → save
-│       │   └── Inventory.jsx   # Filterable catalog table with exports
+│       │   └── Inventory.jsx   # Filterable catalog table, resolution, exports
 │       └── services/
-│           └── api.js          # Axios API client
+│           └── api.js          # Axios API client with token interceptor
 │
 ├── docs/legacy/                # Archived planning documents
 ├── .env.example                # Environment variable template
 ├── v2_PRODUCT_VISION.md        # Current product vision
 ├── v2_AI_ENGINE_SPEC.md        # AI engine technical specification
+├── v3_PRODUCT_VISION.md        # Aspirational B2B marketplace vision (not current impl)
+├── CLAUDE.md                   # Project context for Claude Code
 ├── GEMINI.md                   # Project context for Gemini CLI
 └── README.md                   # This file
 ```

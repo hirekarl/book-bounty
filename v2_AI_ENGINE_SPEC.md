@@ -39,7 +39,7 @@ The backend will provide a JSON blob containing:
 - `condition`: { grade, flags }
 
 ## 4. API Integration Strategy
-1.  **Endpoint:** `POST /api/entries/recommend/`
+1.  **Endpoint:** `POST /api/recommend/`
 2.  **Logic:**
     - Receive ISBN and current Culling Goal ID.
     - Fetch/Update local Book metadata.
