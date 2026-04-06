@@ -263,16 +263,16 @@ const TriageWizard = () => {
                   className="mb-4 rounded overflow-hidden position-relative"
                   style={{ height: '300px', background: '#111' }}
                 >
-                  <div
-                    id="reader"
-                    style={{ width: '100%', height: '100%' }}
-                  />
+                  <div id="reader" style={{ width: '100%', height: '100%' }} />
                   {/* Centered aim-guide shown while camera initialises */}
                   <div
                     className="position-absolute top-50 start-50 translate-middle text-center pointer-events-none"
                     style={{ zIndex: 0 }}
                   >
-                    <i className="bi bi-upc-scan text-white opacity-25" style={{ fontSize: '5rem' }}></i>
+                    <i
+                      className="bi bi-upc-scan text-white opacity-25"
+                      style={{ fontSize: '5rem' }}
+                    ></i>
                     <div className="text-white opacity-25 small mt-1">Point camera at barcode</div>
                   </div>
                 </div>
