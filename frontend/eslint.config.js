@@ -6,7 +6,7 @@ import prettierPlugin from 'eslint-plugin-prettier/recommended';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'node_modules', '.vite'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx}'],
