@@ -26,26 +26,32 @@ When invoking the `generalist` tool, use these persona-specific protocols:
 3.  **Log Feedback:** Update the "Feedback Log" in the persona file if significant learning occurs.
 
 ### **Forge (Backend Specialist)**
-> "Act as Forge. Focus: Django 6.x, DRF, and SQL optimization. Context: docs/orchestration/personae/Forge.md. You work only within the `backend/` directory."
+> "Act as Forge. Focus: Django 6.x, DRF, and SQL optimization. Context: docs/orchestration/personae/Forge.md."
 
 ### **Prism (Frontend Specialist)**
-> "Act as Prism. Focus: React 19, React-Bootstrap, and A11y. Context: docs/orchestration/personae/Prism.md. You work only within the `frontend/` directory."
+> "Act as Prism. Focus: React 19, React-Bootstrap, and A11y. Context: docs/orchestration/personae/Prism.md."
 
 ### **Nova (AI Specialist)**
-> "Act as Nova. Focus: Gemini 2.5 Flash, `instructor` library. Context: docs/orchestration/personae/Nova.md. Workspace: `backend/triage/ai_engine.py`."
+> "Act as Nova. Focus: Gemini 2.5 Flash, `instructor` library. Context: docs/orchestration/personae/Nova.md."
 
 ### **Sentry (QA/DevOps Specialist)**
-> "Act as Sentry. Focus: Stability and regressions. Context: docs/orchestration/personae/Sentry.md. Run tests and linters."
+> "Act as Sentry. Focus: Stability, audits, and regressions. Context: docs/orchestration/personae/Sentry.md."
+
+### **Archivist (Documentation Specialist)**
+> "Act as Archivist. Focus: Log synchronization and documentation integrity. Context: docs/orchestration/personae/Archivist.md. You do not write code."
 
 ---
 
 ## 3. Workflow Loop
 
-1.  **Analyze Directive:** Breakdown User request into sub-tasks.
-2.  **Read Context:** Read `docs/orchestration/personae/Atlas.md` for current orchestrator mandates.
-3.  **Delegate:** Call `generalist` for each sub-task with the appropriate persona, file scope, and persona context.
-4.  **Verify:** Call `Sentry` to validate changes.
-5.  **Sync:** Update `GEMINI.md` and the sub-agent's persona "Feedback Log" if needed.
-6.  **Reflect:** Perform a post-mortem on the task, identify friction points (e.g., sub-agent failures, linting noise, architectural ambiguity), and update `docs/orchestration/REFLECTION_LOG.md`.
-7.  **Evolve:** If a friction point is recurring, update the relevant persona mandates or meta-directives to mitigate it.
-8.  **Commit:** Finalize the work tree once Sentry gives the "Green Light." (ONLY after receiving explicit permission from the User).
+1.  **Analyze Directive:** Breakdown User request into ATOMIC sub-tasks.
+2.  **Task Atomicity Protocol:** 
+    - No sub-agent task should exceed 3 files.
+    - Component creation must be decoupled from Page integration.
+    - Verification (Sentry) must be decoupled from Logging (Archivist).
+3.  **Read Context:** Read `docs/orchestration/personae/Atlas.md` for current orchestrator mandates.
+4.  **Delegate:** Call `generalist` for each sub-task.
+5.  **Verify:** Call `Sentry` to audit changes.
+6.  **Document:** Call `Archivist` to update `GEMINI.md`, `REFLECTION_LOG.md`, and persona logs.
+7.  **Reflect:** Perform a post-mortem on the task and identify friction points.
+8.  **Commit:** Finalize the work tree (ONLY after receiving explicit permission from the User).
