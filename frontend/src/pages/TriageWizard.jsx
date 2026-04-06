@@ -117,21 +117,34 @@ const TriageWizard = () => {
       });
   };
 
-  // Only initialise the scanner when an active goal exists
+  // Only initialise the scanner when an active goal exists.
+  // The setTimeout(fn, 0) defers init by one tick so React Strict Mode's
+  // synchronous cleanup can cancel the timer before it fires — preventing
+  // the double-scanner that occurs when effects run twice in development.
   useEffect(() => {
-    if (step === 1 && activeGoal) {
-      const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 });
+    if (step !== 1 || !activeGoal) return;
+
+    let scanner = null;
+    let cancelled = false;
+
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      const readerEl = document.getElementById('reader');
+      if (readerEl) readerEl.innerHTML = '';
+      scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 });
       scanner.render(
         (decodedText) => {
-          handleLookup(decodedText);
-          scanner.clear();
+          if (!cancelled) handleLookup(decodedText);
         },
         () => {},
       );
-      return () => {
-        scanner.clear().catch((e) => console.error('Failed to clear scanner', e));
-      };
-    }
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      if (scanner) scanner.clear().catch(() => {});
+    };
   }, [step, activeGoal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConditionToggle = (flag) => {

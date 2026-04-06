@@ -69,7 +69,7 @@ def get_ai_recommendation(
 
     client = instructor.from_genai(
         genai.Client(api_key=api_key),
-        mode=instructor.Mode.GEMINI_JSON,
+        mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS,
     )
 
     system_prompt = (

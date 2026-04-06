@@ -5,15 +5,17 @@ import {
   Form,
   Row,
   Col,
+  Card,
   Button,
   Badge,
   Spinner,
   Dropdown,
   ButtonGroup,
+  InputGroup,
   Alert,
 } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
-import { getCatalogEntries, api } from '../services/api';
+import api, { getCatalogEntries } from '../services/api';
 import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';

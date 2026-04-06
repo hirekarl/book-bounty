@@ -1,8 +1,15 @@
 import React from 'react';
-import { Container, Navbar, Nav } from 'react-bootstrap';
-import { Link, Outlet } from 'react-router-dom';
+import { Container, Navbar, Nav, Button } from 'react-bootstrap';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { logout } from '../services/api';
 
 const Layout = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout().finally(() => navigate('/login'));
+  };
+
   return (
     <>
       <Navbar bg="dark" variant="dark" expand="lg" sticky="top" className="mb-4">
@@ -24,6 +31,9 @@ const Layout = () => {
                 Inventory
               </Nav.Link>
             </Nav>
+            <Button variant="outline-light" size="sm" onClick={handleLogout}>
+              <i className="bi bi-box-arrow-right me-1"></i>Sign Out
+            </Button>
           </Navbar.Collapse>
         </Container>
       </Navbar>
