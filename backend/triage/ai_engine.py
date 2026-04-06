@@ -61,6 +61,14 @@ class BulkRecommendationResponse(BaseModel):
     )
 
 
+class ImpactNarrative(BaseModel):
+    """Schema for the AI's structured impact narrative."""
+
+    win_summary: str = Field(
+        description="A 2-3 sentence encouraging and personalized summary of the user's progress."
+    )
+
+
 # Initialize the client at module level to avoid redundant setup on every request.
 _client = None
 
@@ -255,6 +263,62 @@ Perform a comparative analysis and provide a structured recommendation for EACH 
     return _call_gemini(
         client,
         BulkRecommendationResponse,
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+
+
+def get_impact_narrative(stats_data: dict[str, Any]) -> ImpactNarrative:
+    """Generates an encouraging summary of the user's culling impact.
+
+    Args:
+        stats_data: Dictionary containing:
+            - resolved_counts: dict of status -> count
+            - space_saved: float (e.g., in feet or meters)
+            - money_earned: float (potential or actual)
+
+    Returns:
+        An ImpactNarrative object.
+    """
+    resolved_counts = stats_data.get("resolved_counts", {})
+    total_resolved = sum(resolved_counts.values())
+
+    # Handle sparse data
+    if total_resolved == 0:
+        return ImpactNarrative(
+            win_summary="You haven't resolved any books yet. Keep going! Every book you triage brings you closer to your goal."
+        )
+
+    client = get_instructor_client()
+    if not client:
+        return ImpactNarrative(
+            win_summary=f"You've resolved {total_resolved} books so far! Keep up the great work."
+        )
+
+    system_prompt = (
+        "You are an encouraging personal organization coach. Your goal is to "
+        "motivate the user by summarizing the positive impact of their book culling "
+        "efforts based on provided statistics. Be warm, professional, and focus on the wins."
+    )
+
+    space_saved = stats_data.get("space_saved", 0)
+    money_earned = stats_data.get("money_earned", 0)
+
+    user_prompt = f"""
+User's Progress Stats:
+- Total Books Resolved: {total_resolved}
+- Breakdown: {resolved_counts}
+- Shelf Space Reclaimed: {space_saved} feet
+- Potential/Actual Earnings: ${money_earned}
+
+Generate a 2-3 sentence encouraging 'Win Summary' that personalizes these achievements.
+""".strip()
+
+    return _call_gemini(
+        client,
+        ImpactNarrative,
         [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},

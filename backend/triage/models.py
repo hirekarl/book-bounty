@@ -15,6 +15,7 @@ class Book(models.Model):
     title = models.CharField(max_length=255, db_index=True)
     author = models.CharField(max_length=255, db_index=True)
     publish_year = models.IntegerField(null=True, blank=True)
+    page_count = models.IntegerField(null=True, blank=True)
     subjects = models.JSONField(default=list, blank=True)
     cover_url = models.URLField(max_length=500, null=True, blank=True)
     cover_image = models.ImageField(upload_to="covers/", null=True, blank=True)

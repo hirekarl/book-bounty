@@ -22,6 +22,7 @@ class BookSerializer(serializers.ModelSerializer[Book]):
             "title",
             "author",
             "publish_year",
+            "page_count",
             "subjects",
             "cover_url",
             "cover_image",

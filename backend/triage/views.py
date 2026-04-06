@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from triage.ai_engine import get_ai_recommendation, get_bulk_ai_recommendation
 from triage.models import CatalogEntry, CullingGoal
 from triage.serializers import BookSerializer, CatalogEntrySerializer, CullingGoalSerializer
-from triage.services import get_or_create_book
+from triage.services import get_or_create_book, calculate_spatial_roi
 
 
 class CullingGoalViewSet(viewsets.ModelViewSet):
@@ -278,3 +278,83 @@ class RecommendBulkView(APIView):
         }
 
         return Response(results, status=status.HTTP_200_OK)
+
+
+class DashboardImpactView(APIView):
+    """View to retrieve impact metrics for the shelf dashboard."""
+
+    def get(self, _request: Request) -> Response:
+        """Calculates and returns shelf impact aggregations.
+
+        Metrics:
+            total_resolved_books: Count of all entries with resolved_at.
+            total_recovered_inches: Sum of spatial ROI for DONATE, SELL, DISCARD resolved entries.
+            total_potential_earnings: Sum of asking_price for SELL resolved entries.
+            top_donation_destinations: Frequency of donation_dest for DONATE resolved entries.
+            impact_narrative: AI-generated progress summary.
+        """
+        resolved_entries = CatalogEntry.objects.filter(resolved_at__isnull=False).select_related(
+            "book"
+        )
+
+        total_resolved_books = resolved_entries.count()
+
+        # Efficiently get resolved counts per status
+        resolved_counts = {
+            s: resolved_entries.filter(status=s).count() for s in CatalogEntry.Status.values
+        }
+
+        # Recovered inches: DONATE, SELL, DISCARD
+        removed_entries = resolved_entries.filter(
+            status__in=[
+                CatalogEntry.Status.DONATE,
+                CatalogEntry.Status.SELL,
+                CatalogEntry.Status.DISCARD,
+            ]
+        )
+
+        from triage.services import calculate_spatial_roi
+
+        total_recovered_inches = sum(
+            calculate_spatial_roi(entry.book.page_count) for entry in removed_entries
+        )
+
+        # Potential earnings: Sum of asking_price for SELL
+        from django.db.models import Sum
+
+        total_potential_earnings = (
+            resolved_entries.filter(status=CatalogEntry.Status.SELL).aggregate(
+                total=Sum("asking_price")
+            )["total"]
+            or 0.0
+        )
+
+        # Top donation destinations
+        top_donation_destinations = (
+            resolved_entries.filter(status=CatalogEntry.Status.DONATE)
+            .exclude(donation_dest="")
+            .values("donation_dest")
+            .annotate(count=Count("id"))
+            .order_by("-count")[:5]
+        )
+
+        # AI Impact Narrative
+        from triage.ai_engine import get_impact_narrative
+
+        impact_narrative = get_impact_narrative(
+            {
+                "resolved_counts": resolved_counts,
+                "space_saved": round(total_recovered_inches / 12, 2),  # in feet
+                "money_earned": float(total_potential_earnings),
+            }
+        ).win_summary
+
+        return Response(
+            {
+                "total_resolved_books": total_resolved_books,
+                "total_recovered_inches": round(total_recovered_inches, 2),
+                "total_potential_earnings": float(total_potential_earnings),
+                "top_donation_destinations": list(top_donation_destinations),
+                "impact_narrative": impact_narrative,
+            }
+        )

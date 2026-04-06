@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Container,
   Row,
@@ -14,11 +14,14 @@ import {
 import { Link } from 'react-router-dom';
 import {
   getDashboardStats,
+  getImpactStats,
   getCullingGoals,
   createCullingGoal,
   setActiveGoal,
 } from '../services/api';
 import { StatusBadge } from '../components/common/Badge';
+import ImpactStats from '../components/ImpactStats';
+import SpatialROI from '../components/SpatialROI';
 
 const ACTIVE_CARDS = [
   {
@@ -72,7 +75,8 @@ const PRESET_GOALS = [
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [impactStats, setImpactStats] = useState(null);
+  const [impactLoading, setImpactLoading] = useState(true);
 
   const [goals, setGoals] = useState([]);
   const [goalsLoading, setGoalsLoading] = useState(true);
@@ -82,45 +86,62 @@ const Dashboard = () => {
   const [newGoalDesc, setNewGoalDesc] = useState('');
   const [goalSaving, setGoalSaving] = useState(false);
 
-  const fetchGoals = () => {
-    setGoalsLoading(true);
+  const fetchGoals = useCallback(() => {
     getCullingGoals()
       .then((res) => {
         setGoals(res.data);
-        setGoalsLoading(false);
       })
-      .catch(() => setGoalsLoading(false));
-  };
+      .finally(() => setGoalsLoading(false));
+  }, []);
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
     getDashboardStats()
       .then((res) => {
         setStats(res.data);
-        setStatsLoading(false);
       })
       .catch(() => {
-        setError('Failed to fetch stats. Is the backend running?');
+        console.error('Failed to fetch dashboard stats');
+      })
+      .finally(() => {
         setStatsLoading(false);
       });
-
-    fetchGoals(); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
+
+  const fetchImpactStats = useCallback(() => {
+    getImpactStats()
+      .then((res) => {
+        setImpactStats(res.data);
+      })
+      .catch(() => {
+        // Silently log; global handler provides user notification if needed
+        console.error('Failed to fetch shelf impact stats');
+      })
+      .finally(() => setImpactLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+    fetchImpactStats();
+    fetchGoals();
+  }, [fetchStats, fetchImpactStats, fetchGoals]);
 
   const activeGoal = goals.find((g) => g.is_active) || null;
 
   const handleSetActive = (id) => {
+    setGoalsLoading(true);
     setActiveGoal(id)
       .then(() => {
         fetchGoals();
         setShowGoalList(false);
       })
-      .catch(() => setError('Failed to update goal.'));
+      .finally(() => setGoalsLoading(false));
   };
 
   const handleCreateGoal = (e) => {
     e.preventDefault();
     if (!newGoalName.trim() || !newGoalDesc.trim()) return;
     setGoalSaving(true);
+    setGoalsLoading(true);
     createCullingGoal({ name: newGoalName, description: newGoalDesc, is_active: true })
       .then(() => {
         setNewGoalName('');
@@ -128,7 +149,6 @@ const Dashboard = () => {
         setShowNewGoalForm(false);
         fetchGoals();
       })
-      .catch(() => setError('Failed to create goal.'))
       .finally(() => setGoalSaving(false));
   };
 
@@ -151,10 +171,51 @@ const Dashboard = () => {
         </Button>
       </header>
 
-      {error && (
-        <Alert variant="danger" dismissible onClose={() => setError(null)}>
-          {error}
-        </Alert>
+      {/* Shelf Impact Section */}
+      {impactLoading ? (
+        <div className="text-center py-5 mb-5">
+          <Spinner animation="grow" variant="warning" />
+          <p className="text-muted mt-2 small">Calculating your impact...</p>
+        </div>
+      ) : (
+        impactStats && (
+          <section className="mb-5">
+            <div className="d-flex align-items-center mb-4">
+              <h2 className="fw-bold mb-0">
+                <i className="bi bi-graph-up-arrow me-2 text-warning"></i>
+                Shelf Impact
+              </h2>
+              <hr className="flex-grow-1 ms-3 d-none d-md-block text-muted opacity-25" />
+            </div>
+
+            <ImpactStats
+              totalResolved={impactStats.total_resolved_books}
+              potentialEarnings={impactStats.total_potential_earnings}
+              topDestinations={impactStats.top_donation_destinations}
+            />
+
+            <Row className="g-4">
+              <Col lg={8}>
+                <SpatialROI inchesSaved={impactStats.total_recovered_inches} />
+              </Col>
+              <Col lg={4}>
+                <Card className="h-100 border-0 shadow-sm bg-warning bg-opacity-10 border-start border-4 border-warning">
+                  <Card.Body className="p-4">
+                    <h6 className="text-uppercase text-warning fw-bold small mb-3">
+                      AI Progress Insights
+                    </h6>
+                    <div className="d-flex">
+                      <i className="bi bi-quote fs-1 text-warning opacity-50 me-2"></i>
+                      <p className="mb-0 fs-5 lh-base text-dark" style={{ fontStyle: 'italic' }}>
+                        {impactStats.impact_narrative}
+                      </p>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </section>
+        )
       )}
 
       {/* Culling Goal Section */}

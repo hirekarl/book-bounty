@@ -60,6 +60,7 @@ export const updateCatalogEntry = (id, data) => api.patch(`/entries/${id}/`, dat
 export const deleteCatalogEntry = (id) => api.delete(`/entries/${id}/`);
 export const resolveEntry = (id) => api.post(`/entries/${id}/resolve/`);
 export const getDashboardStats = () => api.get('/stats/');
+export const getImpactStats = () => api.get('/impact/');
 
 // Culling goals
 export const getCullingGoals = () => api.get('/goals/');

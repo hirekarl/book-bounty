@@ -37,6 +37,7 @@ class APITests(BaseAPITestCase):
             title="Test Book",
             author="Test Author",
             publish_year=2024,
+            page_count=200,
         )
         self.entry = CatalogEntry.objects.create(
             book=self.book,
@@ -53,6 +54,7 @@ class APITests(BaseAPITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], "Test Book")
+        self.assertEqual(response.data["page_count"], 200)
         mock_fetch.assert_not_called()
 
         # Test lookup for new book
@@ -63,11 +65,13 @@ class APITests(BaseAPITestCase):
             "subjects": [],
             "cover_url": None,
             "description": "",
+            "page_count": 350,
         }
         url = reverse("book-lookup", kwargs={"isbn": "0987654321"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], "New Book")
+        self.assertEqual(response.data["page_count"], 350)
         self.assertTrue(Book.objects.filter(isbn="0987654321").exists())
 
     def test_list_entries(self) -> None:

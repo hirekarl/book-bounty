@@ -12,6 +12,7 @@ from triage.views import (
     CatalogEntryViewSet,
     CullingGoalViewSet,
     DashboardStatsView,
+    DashboardImpactView,
     RecommendBulkView,
     RecommendView,
 )
@@ -25,5 +26,6 @@ urlpatterns = [
     path("recommend/", RecommendView.as_view(), name="recommend"),
     path("recommend/bulk/", RecommendBulkView.as_view(), name="recommend-bulk"),
     path("stats/", DashboardStatsView.as_view(), name="dashboard-stats"),
+    path("impact/", DashboardImpactView.as_view(), name="dashboard-impact"),
     path("", include(router.urls)),
 ]

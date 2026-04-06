@@ -21,7 +21,7 @@ This log tracks session-level friction points, sub-agent performance, and archit
 - **Mitigation:** Updated Prism with "Zero-Defect Handover" and "Self-QA" mandates. Re-tasked Sentry as an "Auditor" (Reject vs Fix). Added "Pre-Verification Review" to Atlas.
 - **Efficiency Gain:** Future frontend tasks should reach Atlas in a production-ready state, minimizing Sentry's corrective turns.
 
-### 2026-05-01: Phase 4 (Bulk Triage Wizard)
+### 2026-04-06: Phase 4 (Bulk Triage Wizard)
 - **Task:** Implemented Comparative Bulk AI Triage (Backend + Frontend).
 - **Friction Points:** 
     1. Forge missed a Pydantic Enum serialization edge case (Enum vs String in API Response).
@@ -33,7 +33,7 @@ This log tracks session-level friction points, sub-agent performance, and archit
     3. Atlas performed a more surgical `read_file` review before the final commit.
 - **Efficiency Gain:** Parallel development halved implementation time. Enum serialization is now standardized, preventing future DRF/Pydantic collisions.
 
-### 2026-05-02: Book Cover Loading Fix
+### 2026-04-06: Book Cover Loading Fix
 - **Task:** Fixed book cover loading for ISBN 9781603582865 by improving cover download resilience and MEDIA_URL configuration.
 - **Friction Points:** Open Library URLs sometimes lack file extensions or have empty paths, causing `download_cover_image` to fail or create files with missing extensions. `MEDIA_URL` was missing a leading slash, potentially breaking frontend resolution.
 - **Mitigation:** 
@@ -42,7 +42,7 @@ This log tracks session-level friction points, sub-agent performance, and archit
     3. Added comprehensive unit tests for URL parsing edge cases.
 - **Efficiency Gain:** Improved media handling prevents broken images in the UI and ensures consistent file naming across different metadata providers.
 
-### 2026-05-03: Triage Wizard Submission Fix
+### 2026-04-06: Triage Wizard Submission Fix
 - **Task:** Fixed "Complete Triage" button by adding validation error summary and resolving `condition_flags` schema mismatch.
 - **Friction Points:** 
     1. Zod schema expected `condition_flags` as a string, while the Formik state and Backend model used an array, causing silent validation failures.
@@ -53,3 +53,14 @@ This log tracks session-level friction points, sub-agent performance, and archit
     2. Implemented a dynamic `Alert` summary in `TriageWizard.jsx` that appears on failed submission attempts.
     3. Enhanced accessibility for all custom interactive elements (Cards and Badges) with `role="button"`, `tabIndex`, and keyboard listeners.
 - **Efficiency Gain:** Submission reliability is restored, and accessibility is improved across the Triage and Inventory Edit flows.
+
+### 2026-04-06: Phase 5 (Shelf Impact Dashboard)
+- **Task:** Implemented Spatial ROI and Impact Narrative (Backend + Frontend).
+- **Friction Points:** 
+    1. Forge missed updating backend mock tests with the new `page_count` field.
+    2. Prism introduced a syntax error in `Dashboard.jsx` and a `react-hooks/set-state-in-effect` linting regression.
+    3. Sentry successfully audited and **REJECTED** the first two handovers, forcing the specialists to fix their own regressions.
+- **Mitigation:**
+    1. Enforced stricter "Zero-Defect Handover" mandates. Sentry's refusal to perform "rescue surgery" successfully shifted the burden of quality back to the specialists.
+    2. Refactored `Dashboard.jsx` to use stabilized `useCallback` hooks for all data fetching.
+- **Efficiency Gain:** The "Audit & Reject" protocol is working. While the first handover was rejected, the subsequent fixes were faster and cleaner than previous "rescue" attempts.

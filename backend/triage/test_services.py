@@ -84,6 +84,7 @@ class ServiceTests(TestCase):
                 "authors": [{"name": "Test Author"}],
                 "publish_date": "2024",
                 "subjects": [{"name": "Fiction"}],
+                "number_of_pages": 450,
             },
         }
 
@@ -92,6 +93,7 @@ class ServiceTests(TestCase):
         self.assertEqual(metadata["author"], "Test Author")
         self.assertEqual(metadata["publish_year"], 2024)
         self.assertEqual(metadata["subjects"], ["Fiction"])
+        self.assertEqual(metadata["page_count"], 450)
 
     @patch("requests.get")
     def test_fetch_book_metadata_not_found(self, mock_get: MagicMock) -> None:
@@ -122,10 +124,12 @@ class ServiceTests(TestCase):
             "subjects": ["Science"],
             "cover_url": "http://example.com/cover.jpg",
             "description": "A book description.",
+            "page_count": 300,
         }
         book, created = get_or_create_book("222")
         self.assertTrue(created)
         self.assertEqual(book.title, "Remote Book")
+        self.assertEqual(book.page_count, 300)
         self.assertTrue(Book.objects.filter(isbn="222").exists())
 
     def test_suggest_triage_outcome_discard(self) -> None:

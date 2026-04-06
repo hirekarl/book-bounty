@@ -19,6 +19,7 @@ class ModelTests(TestCase):
             title="Test Book",
             author="John Doe",
             publish_year=2024,
+            page_count=350,
             subjects=["Fiction", "Testing"],
         )
 
@@ -28,6 +29,7 @@ class ModelTests(TestCase):
         assert self.book.title == "Test Book"
         assert self.book.author == "John Doe"
         assert self.book.publish_year == 2024
+        assert self.book.page_count == 350
         assert self.book.subjects == ["Fiction", "Testing"]
         assert str(self.book) == "Test Book by John Doe (2024)"
 

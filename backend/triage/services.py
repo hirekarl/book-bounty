@@ -98,6 +98,7 @@ def fetch_book_metadata(isbn: str) -> dict[str, Any]:
             publish_year = int(year_match.group())
 
     subjects = [s["name"] for s in book_data.get("subjects", [])]
+    page_count = book_data.get("number_of_pages")
     cover_data = book_data.get("cover", {})
     cover_url = (
         cover_data.get("medium")
@@ -111,6 +112,7 @@ def fetch_book_metadata(isbn: str) -> dict[str, Any]:
         "author": authors or "Unknown Author",
         "publish_year": publish_year,
         "subjects": subjects,
+        "page_count": page_count,
         "cover_url": cover_url,
         "description": book_data.get("notes", ""),
     }
@@ -146,6 +148,7 @@ def get_or_create_book(isbn: str) -> tuple[Book, bool]:
         author=metadata["author"],
         publish_year=metadata["publish_year"],
         subjects=metadata["subjects"],
+        page_count=metadata["page_count"],
         cover_url=metadata["cover_url"],
         description=metadata["description"],
     )
@@ -169,3 +172,20 @@ def suggest_triage_outcome(condition_flags: list[str]) -> str:
     if condition_flags:
         return CatalogEntry.Status.DISCARD
     return CatalogEntry.Status.KEEP
+
+
+def calculate_spatial_roi(page_count: int | None) -> float:
+    """Calculates the estimated physical space recovered in inches.
+
+    Formula: 100 pages ≈ 0.25 inches.
+    If page_count is missing, default to 1.0 inch.
+
+    Args:
+        page_count: The number of pages in the book.
+
+    Returns:
+        The estimated thickness in inches.
+    """
+    if not page_count:
+        return 1.0
+    return (page_count / 100.0) * 0.25
