@@ -69,6 +69,7 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
             "donation_dest",
             "valuation_data",
             "ai_recommendation",
+            "resolved_at",
             "created_at",
             "updated_at",
         ]

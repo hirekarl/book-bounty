@@ -82,11 +82,35 @@ const Dashboard = () => {
       .finally(() => setGoalSaving(false));
   };
 
-  const statCards = [
-    { label: 'Keep', variant: 'success', icon: 'bi-journal-check', countKey: 'KEEP' },
-    { label: 'Donate', variant: 'info', icon: 'bi-gift', countKey: 'DONATE' },
-    { label: 'Sell', variant: 'primary', icon: 'bi-cash-coin', countKey: 'SELL' },
-    { label: 'Discard', variant: 'danger', icon: 'bi-trash3', countKey: 'DISCARD' },
+  const activeCards = [
+    {
+      label: 'Keeping',
+      variant: 'success',
+      icon: 'bi-journal-check',
+      key: 'KEEP',
+      resolvedLabel: 'Kept',
+    },
+    {
+      label: 'To Sell',
+      variant: 'primary',
+      icon: 'bi-cash-coin',
+      key: 'SELL',
+      resolvedLabel: 'Sold',
+    },
+    {
+      label: 'To Donate',
+      variant: 'info',
+      icon: 'bi-gift',
+      key: 'DONATE',
+      resolvedLabel: 'Donated',
+    },
+    {
+      label: 'To Discard',
+      variant: 'danger',
+      icon: 'bi-trash3',
+      key: 'DISCARD',
+      resolvedLabel: 'Discarded',
+    },
   ];
 
   const presetGoals = [
@@ -112,7 +136,15 @@ const Dashboard = () => {
       <header className="mb-5 text-center bg-light p-5 rounded-3 shadow-sm">
         <i className="bi bi-bookmark-star-fill display-1 text-warning mb-3"></i>
         <h1 className="display-4 fw-bold">Welcome to BookBounty</h1>
-        <p className="lead text-muted">Turn your library into a garage sale goldmine.</p>
+        <p className="lead text-muted">
+          {stats ? (
+            <>
+              <strong className="text-dark">{stats.in_collection}</strong> books in your collection
+            </>
+          ) : (
+            'Turn your library into a garage sale goldmine.'
+          )}
+        </p>
         <Button as={Link} to="/scan" variant="warning" size="lg" className="mt-3 px-5 py-3 fw-bold">
           <i className="bi bi-upc-scan me-2"></i> Start Scanning
         </Button>
@@ -264,7 +296,7 @@ const Dashboard = () => {
         </Card.Body>
       </Card>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       {statsLoading ? (
         <div className="text-center py-4">
           <Spinner animation="border" role="status" variant="warning">
@@ -272,35 +304,90 @@ const Dashboard = () => {
           </Spinner>
         </div>
       ) : (
-        <Row className="g-4 mb-5">
-          {statCards.map((card) => (
-            <Col key={card.label} xs={12} md={6} lg={3}>
-              <Card className={`text-center border-${card.variant} h-100 shadow-sm`}>
-                <Card.Header className={`bg-${card.variant} text-white py-3`}>
-                  <i className={`bi ${card.icon} fs-2`}></i>
-                </Card.Header>
-                <Card.Body>
-                  <Card.Title className="text-muted text-uppercase small fw-bold">
-                    {card.label}
-                  </Card.Title>
-                  <Card.Text className="display-5 fw-bold text-dark">
-                    {stats ? stats[card.countKey] : 0}
-                  </Card.Text>
-                </Card.Body>
-                <Card.Footer className="bg-transparent border-0 pb-3">
-                  <Button
-                    as={Link}
-                    to={`/collection?status=${card.countKey}`}
-                    variant={`outline-${card.variant}`}
-                    size="sm"
-                  >
-                    View Collection
-                  </Button>
-                </Card.Footer>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+        <>
+          {/* In-collection summary */}
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h5 className="fw-bold mb-0">
+              <i className="bi bi-bookshelf me-2 text-warning"></i>
+              Current Collection
+              <span className="ms-2 badge bg-warning text-dark fs-6">
+                {stats?.in_collection ?? 0} books
+              </span>
+            </h5>
+            <Button
+              as={Link}
+              to="/collection?in_collection=true"
+              variant="outline-warning"
+              size="sm"
+            >
+              View All
+            </Button>
+          </div>
+
+          {/* Active / pending decisions */}
+          <p className="text-muted small text-uppercase fw-bold mb-2">Active Decisions</p>
+          <Row className="g-3 mb-4">
+            {activeCards.map((card) => (
+              <Col key={card.key} xs={6} lg={3}>
+                <Card className={`text-center border-${card.variant} h-100 shadow-sm`}>
+                  <Card.Header className={`bg-${card.variant} text-white py-3`}>
+                    <i className={`bi ${card.icon} fs-2`}></i>
+                  </Card.Header>
+                  <Card.Body className="py-3">
+                    <Card.Title className="text-muted text-uppercase small fw-bold">
+                      {card.label}
+                    </Card.Title>
+                    <Card.Text className="display-5 fw-bold text-dark">
+                      {stats?.active?.[card.key] ?? 0}
+                    </Card.Text>
+                  </Card.Body>
+                  <Card.Footer className="bg-transparent border-0 pb-3">
+                    <Button
+                      as={Link}
+                      to={`/collection?status=${card.key}&resolved=false`}
+                      variant={`outline-${card.variant}`}
+                      size="sm"
+                    >
+                      View
+                    </Button>
+                  </Card.Footer>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {/* Resolved / legacy */}
+          <p className="text-muted small text-uppercase fw-bold mb-2">Resolved</p>
+          <Row className="g-3 mb-5">
+            {activeCards.map((card) => (
+              <Col key={card.key} xs={6} lg={3}>
+                <Card className="text-center border-light h-100 shadow-sm">
+                  <Card.Header className="bg-light text-muted py-3">
+                    <i className={`bi ${card.icon} fs-2`}></i>
+                  </Card.Header>
+                  <Card.Body className="py-3">
+                    <Card.Title className="text-muted text-uppercase small fw-bold">
+                      {card.resolvedLabel}
+                    </Card.Title>
+                    <Card.Text className="display-5 fw-bold text-muted">
+                      {stats?.resolved?.[card.key] ?? 0}
+                    </Card.Text>
+                  </Card.Body>
+                  <Card.Footer className="bg-transparent border-0 pb-3">
+                    <Button
+                      as={Link}
+                      to={`/collection?status=${card.key}&resolved=true`}
+                      variant="outline-secondary"
+                      size="sm"
+                    >
+                      View
+                    </Button>
+                  </Card.Footer>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </>
       )}
     </Container>
   );

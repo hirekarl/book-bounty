@@ -108,7 +108,7 @@ Provide a structured recommendation.
     for attempt in range(max_retries):
         try:
             return client.chat.completions.create(
-                model="gemini-2.5-flash-latest",
+                model="gemini-2.5-flash",
                 response_model=TriageRecommendation,
                 messages=[
                     {"role": "system", "content": system_prompt},

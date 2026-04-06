@@ -85,6 +85,7 @@ class CatalogEntry(models.Model):
     donation_dest = models.CharField(max_length=255, blank=True)
     valuation_data = models.JSONField(default=dict, blank=True)
     ai_recommendation = models.JSONField(default=dict, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -43,6 +43,7 @@ export const logout = () =>
 export const getBookMetadata = (isbn) => api.get(`/lookup/${isbn}/`);
 export const getCatalogEntries = (params) => api.get('/entries/', { params });
 export const createCatalogEntry = (data) => api.post('/entries/', data);
+export const resolveEntry = (id) => api.post(`/entries/${id}/resolve/`);
 export const getDashboardStats = () => api.get('/stats/');
 
 // Culling goals

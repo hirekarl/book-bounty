@@ -134,7 +134,7 @@ The full `TriageRecommendation` JSON is stored in the `ai_recommendation` field 
 | Backend framework | Django 6.x + Django REST Framework |
 | Package manager | `uv` |
 | Database | SQLite (dev) |
-| AI model | Gemini 2.5 Flash (`gemini-2.5-flash-latest`) |
+| AI model | Gemini 2.5 Flash (`gemini-2.5-flash`) |
 | AI SDK | `google-genai` + `instructor` (structured outputs) |
 | Book metadata | Open Library API |
 | Frontend framework | React 19 + Vite |

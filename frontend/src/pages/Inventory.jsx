@@ -15,28 +15,55 @@ import {
   Alert,
 } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
-import api, { getCatalogEntries } from '../services/api';
+import api, { getCatalogEntries, resolveEntry } from '../services/api';
 import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
+const STATUS_VARIANTS = { KEEP: 'success', DONATE: 'info', SELL: 'primary', DISCARD: 'danger' };
+
+const RESOLVE_LABELS = {
+  KEEP: 'Mark as Kept',
+  SELL: 'Mark as Sold',
+  DONATE: 'Mark as Donated',
+  DISCARD: 'Mark as Discarded',
+};
+
+const VIEW_OPTIONS = [
+  { label: 'All', params: {} },
+  { label: 'In Collection', params: { in_collection: 'true' } },
+  { label: 'Pending', params: { resolved: 'false' } },
+  { label: 'Resolved', params: { resolved: 'true' } },
+];
+
 const Inventory = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const initialStatus = queryParams.get('status') || '';
+
+  // Initialise filters from URL params (Dashboard links pass these in)
+  const [statusFilter, setStatusFilter] = useState(queryParams.get('status') || '');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewParams, setViewParams] = useState(() => {
+    const p = {};
+    if (queryParams.get('resolved')) p.resolved = queryParams.get('resolved');
+    if (queryParams.get('in_collection')) p.in_collection = queryParams.get('in_collection');
+    return p;
+  });
+  const [activeView, setActiveView] = useState(() => {
+    if (queryParams.get('in_collection') === 'true') return 'In Collection';
+    if (queryParams.get('resolved') === 'true') return 'Resolved';
+    if (queryParams.get('resolved') === 'false') return 'Pending';
+    return 'All';
+  });
 
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState(initialStatus);
-  const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState(null);
-
-  // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState([]);
 
   const fetchEntries = useCallback(() => {
     setLoading(true);
-    getCatalogEntries({ status: statusFilter, search: searchQuery })
+    getCatalogEntries({ status: statusFilter, search: searchQuery, ...viewParams })
       .then((res) => {
         setEntries(res.data);
         setLoading(false);
@@ -45,23 +72,24 @@ const Inventory = () => {
         setError('Failed to fetch collection.');
         setLoading(false);
       });
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, searchQuery, viewParams]);
 
   useEffect(() => {
     fetchEntries(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [fetchEntries]);
 
-  const getStatusBadge = (status) => {
-    const variants = { KEEP: 'success', DONATE: 'info', SELL: 'primary', DISCARD: 'danger' };
-    return <Badge bg={variants[status] || 'secondary'}>{status}</Badge>;
+  const handleViewChange = (opt) => {
+    setActiveView(opt.label);
+    setViewParams(opt.params);
+    setSelectedIds([]);
   };
 
+  const getStatusBadge = (status) => (
+    <Badge bg={STATUS_VARIANTS[status] || 'secondary'}>{status}</Badge>
+  );
+
   const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(entries.map((ent) => ent.id));
-    } else {
-      setSelectedIds([]);
-    }
+    setSelectedIds(e.target.checked ? entries.map((ent) => ent.id) : []);
   };
 
   const handleSelectOne = (id) => {
@@ -70,12 +98,8 @@ const Inventory = () => {
 
   const handleBulkUpdate = (newStatus) => {
     if (selectedIds.length === 0) return;
-
     api
-      .patch('/entries/bulk_update_status/', {
-        ids: selectedIds,
-        status: newStatus,
-      })
+      .patch('/entries/bulk_update_status/', { ids: selectedIds, status: newStatus })
       .then(() => {
         setSelectedIds([]);
         fetchEntries();
@@ -83,13 +107,29 @@ const Inventory = () => {
       .catch(() => setError('Bulk update failed.'));
   };
 
+  const handleResolve = (id) => {
+    resolveEntry(id)
+      .then(() => fetchEntries())
+      .catch(() => setError('Failed to resolve entry.'));
+  };
+
   const exportToCSV = () => {
-    const headers = ['ISBN', 'Title', 'Author', 'Status', 'Asking Price', 'Donation Dest', 'Notes'];
+    const headers = [
+      'ISBN',
+      'Title',
+      'Author',
+      'Status',
+      'Resolved',
+      'Asking Price',
+      'Donation Dest',
+      'Notes',
+    ];
     const rows = entries.map((e) => [
       e.book.isbn,
       e.book.title,
       e.book.author,
       e.status,
+      e.resolved_at ? new Date(e.resolved_at).toLocaleDateString() : '',
       e.asking_price || '',
       e.donation_dest || '',
       e.notes,
@@ -110,6 +150,7 @@ const Inventory = () => {
       { header: 'Title', key: 'title', width: 30 },
       { header: 'Author', key: 'author', width: 20 },
       { header: 'Status', key: 'status', width: 10 },
+      { header: 'Resolved', key: 'resolved', width: 15 },
       { header: 'Asking Price', key: 'price', width: 12 },
       { header: 'Donation Dest', key: 'dest', width: 20 },
       { header: 'Notes', key: 'notes', width: 30 },
@@ -120,6 +161,7 @@ const Inventory = () => {
         title: e.book.title,
         author: e.book.author,
         status: e.status,
+        resolved: e.resolved_at ? new Date(e.resolved_at).toLocaleDateString() : '',
         price: e.asking_price,
         dest: e.donation_dest,
         notes: e.notes,
@@ -138,11 +180,12 @@ const Inventory = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text('BookBounty Inventory', 14, 15);
-    const tableColumn = ['Title', 'Author', 'Status', 'Price/Dest'];
+    const tableColumn = ['Title', 'Author', 'Status', 'Resolved', 'Price/Dest'];
     const tableRows = entries.map((e) => [
       e.book.title,
       e.book.author,
       e.status,
+      e.resolved_at ? new Date(e.resolved_at).toLocaleDateString() : '-',
       e.status === 'SELL' ? `$${e.asking_price}` : e.donation_dest || '-',
     ]);
     doc.autoTable(tableColumn, tableRows, { startY: 20 });
@@ -187,6 +230,20 @@ const Inventory = () => {
 
       <Card className="shadow-sm border-0 mb-4">
         <Card.Body>
+          {/* View toggle */}
+          <div className="d-flex gap-2 mb-3">
+            {VIEW_OPTIONS.map((opt) => (
+              <Button
+                key={opt.label}
+                size="sm"
+                variant={activeView === opt.label ? 'warning' : 'outline-secondary'}
+                onClick={() => handleViewChange(opt)}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+
           <Row className="g-3">
             <Col md={4}>
               <InputGroup>
@@ -212,7 +269,7 @@ const Inventory = () => {
             </Col>
             <Col md={5} className="text-end d-flex align-items-center justify-content-end">
               <span className="text-muted small">
-                Total items: <strong>{entries.length}</strong>
+                {entries.length} {entries.length === 1 ? 'book' : 'books'}
               </span>
             </Col>
           </Row>
@@ -238,75 +295,114 @@ const Inventory = () => {
                 <th>Book Details</th>
                 <th>Status</th>
                 <th>Condition</th>
-                <th>Price/Dest</th>
+                <th>Price / Dest</th>
                 <th>Notes</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {entries.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-5 text-muted">
+                  <td colSpan="7" className="text-center py-5 text-muted">
                     <i className="bi bi-book fs-1 d-block mb-2 opacity-25"></i>
-                    No books found in this collection.
+                    No books found.
                   </td>
                 </tr>
               ) : (
-                entries.map((e) => (
-                  <tr key={e.id}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={selectedIds.includes(e.id)}
-                        onChange={() => handleSelectOne(e.id)}
-                      />
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        {e.book.cover_url ? (
-                          <img
-                            src={e.book.cover_url}
-                            alt=""
-                            className="rounded me-3"
-                            style={{ width: '40px', height: '60px', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <div
-                            className="bg-light rounded me-3 d-flex align-items-center justify-content-center"
-                            style={{ width: '40px', height: '60px' }}
-                          >
-                            <i className="bi bi-book text-muted small"></i>
+                entries.map((e) => {
+                  const isResolved = !!e.resolved_at;
+                  return (
+                    <tr key={e.id} className={isResolved ? 'text-muted' : ''}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          checked={selectedIds.includes(e.id)}
+                          onChange={() => handleSelectOne(e.id)}
+                        />
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          {e.book.cover_url ? (
+                            <img
+                              src={e.book.cover_url}
+                              alt=""
+                              className={`rounded me-3 ${isResolved ? 'opacity-50' : ''}`}
+                              style={{ width: '40px', height: '60px', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div
+                              className="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                              style={{ width: '40px', height: '60px' }}
+                            >
+                              <i className="bi bi-book text-muted small"></i>
+                            </div>
+                          )}
+                          <div>
+                            <div className={`fw-bold ${isResolved ? 'text-muted' : 'text-dark'}`}>
+                              {e.book.title}
+                            </div>
+                            <div className="text-muted small">by {e.book.author}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {getStatusBadge(e.status)}
+                        {isResolved && (
+                          <div className="mt-1">
+                            <Badge
+                              bg="secondary"
+                              className="fw-normal"
+                              style={{ fontSize: '0.7rem' }}
+                            >
+                              {RESOLVE_LABELS[e.status]?.replace('Mark as ', '') ?? 'Resolved'}
+                              {' · '}
+                              {new Date(e.resolved_at).toLocaleDateString()}
+                            </Badge>
                           </div>
                         )}
-                        <div>
-                          <div className="fw-bold text-dark">{e.book.title}</div>
-                          <div className="text-muted small">by {e.book.author}</div>
+                      </td>
+                      <td>
+                        <Badge bg="light" text="dark" className="border">
+                          {e.condition_grade}
+                        </Badge>
+                      </td>
+                      <td className="small">
+                        {e.status === 'SELL' && e.asking_price && (
+                          <span className={isResolved ? 'text-muted' : 'text-primary fw-bold'}>
+                            ${e.asking_price}
+                          </span>
+                        )}
+                        {e.status === 'DONATE' && e.donation_dest && (
+                          <span className="text-muted">{e.donation_dest}</span>
+                        )}
+                        {!(
+                          (e.status === 'SELL' && e.asking_price) ||
+                          (e.status === 'DONATE' && e.donation_dest)
+                        ) && <span className="text-muted">-</span>}
+                      </td>
+                      <td className="small text-muted" style={{ maxWidth: '160px' }}>
+                        <div className="text-truncate" title={e.notes}>
+                          {e.notes || '-'}
                         </div>
-                      </div>
-                    </td>
-                    <td>{getStatusBadge(e.status)}</td>
-                    <td>
-                      <Badge bg="light" text="dark" className="border">
-                        {e.condition_grade}
-                      </Badge>
-                    </td>
-                    <td className="small">
-                      {e.status === 'SELL' && (
-                        <span className="text-primary fw-bold">${e.asking_price}</span>
-                      )}
-                      {e.status === 'DONATE' && (
-                        <span className="text-info">{e.donation_dest}</span>
-                      )}
-                      {e.status !== 'SELL' && e.status !== 'DONATE' && (
-                        <span className="text-muted text-center">-</span>
-                      )}
-                    </td>
-                    <td className="small text-muted" style={{ maxWidth: '200px' }}>
-                      <div className="text-truncate" title={e.notes}>
-                        {e.notes || '-'}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td>
+                        {isResolved ? (
+                          <Badge bg="light" text="muted" className="border fw-normal">
+                            <i className="bi bi-check2 me-1"></i>Done
+                          </Badge>
+                        ) : (
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => handleResolve(e.id)}
+                          >
+                            {RESOLVE_LABELS[e.status] ?? 'Resolve'}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </Table>

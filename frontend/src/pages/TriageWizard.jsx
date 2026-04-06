@@ -134,7 +134,9 @@ const TriageWizard = () => {
       scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 });
       scanner.render(
         (decodedText) => {
-          if (!cancelled) handleLookup(decodedText);
+          if (cancelled) return;
+          scanner.clear().catch(() => {});
+          handleLookup(decodedText);
         },
         () => {},
       );

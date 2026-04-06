@@ -1,7 +1,7 @@
 # BookBounty v2: AI Engine Specification
 
 ## 1. Technical Stack
-- **Model:** Gemini 2.5 Flash (`gemini-2.5-flash-latest`)
+- **Model:** Gemini 2.5 Flash (`gemini-2.5-flash`)
 - **Library:** `instructor` (for structured outputs)
 - **SDK:** `google-genai` (Google's official Python SDK)
 

@@ -5,7 +5,8 @@ entries, and retrieving dashboard statistics.
 """
 
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Q
+from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -112,18 +113,50 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
     serializer_class = CatalogEntrySerializer
 
     def get_queryset(self) -> models.QuerySet[CatalogEntry]:
-        """Optionally filters entries by status."""
+        """Filters entries by status, resolved state, search query, or in-collection view."""
         queryset = super().get_queryset()
+
         status_filter = self.request.query_params.get("status")
         if status_filter:
             queryset = queryset.filter(status=status_filter.upper())
+
         search_query = self.request.query_params.get("search")
         if search_query:
             queryset = (
                 queryset.filter(book__title__icontains=search_query)
                 | queryset.filter(book__author__icontains=search_query)
             )
+
+        resolved_filter = self.request.query_params.get("resolved")
+        if resolved_filter == "true":
+            queryset = queryset.filter(resolved_at__isnull=False)
+        elif resolved_filter == "false":
+            queryset = queryset.filter(resolved_at__isnull=True)
+
+        if self.request.query_params.get("in_collection") == "true":
+            # Unresolved entries are still physically present; resolved KEEPs stay forever.
+            queryset = queryset.filter(
+                Q(resolved_at__isnull=True) | Q(status=CatalogEntry.Status.KEEP)
+            )
+
         return queryset
+
+    @action(detail=True, methods=["post"])
+    def resolve(self, request: Request, pk: int | None = None) -> Response:
+        """Marks a catalog entry as resolved (action completed).
+
+        Sets resolved_at to the current timestamp. Idempotent — resolving
+        an already-resolved entry returns 400.
+        """
+        entry = self.get_object()
+        if entry.resolved_at is not None:
+            return Response(
+                {"error": "Entry is already resolved."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        entry.resolved_at = timezone.now()
+        entry.save(update_fields=["resolved_at", "updated_at"])
+        return Response(CatalogEntrySerializer(entry).data)
 
     @action(detail=False, methods=["patch"])
     def bulk_update_status(self, request: Request) -> Response:
@@ -154,29 +187,36 @@ class DashboardStatsView(APIView):
     """View to retrieve dashboard statistics."""
 
     def get(self, _request: Request) -> Response:
-        """Retrieves counts of catalog entries grouped by status.
-
-        Args:
-            _request: The API request.
+        """Retrieves dashboard statistics split by resolved state.
 
         Returns:
-            A Response containing the statistics counts.
+            active:       counts of unresolved entries per status (pending decisions)
+            resolved:     counts of resolved entries per status (legacy record)
+            in_collection: books physically still present (unresolved + resolved KEEPs)
         """
-        stats = (
-            CatalogEntry.objects.values("status")
-            .annotate(count=Count("status"))
-            .order_by("status")
+        zero = {s: 0 for s in CatalogEntry.Status.values}
+
+        active: dict[str, int] = dict(zero)
+        for row in (
+            CatalogEntry.objects.filter(resolved_at__isnull=True)
+            .values("status")
+            .annotate(count=Count("id"))
+        ):
+            active[row["status"]] = row["count"]
+
+        resolved: dict[str, int] = dict(zero)
+        for row in (
+            CatalogEntry.objects.filter(resolved_at__isnull=False)
+            .values("status")
+            .annotate(count=Count("id"))
+        ):
+            resolved[row["status"]] = row["count"]
+
+        in_collection = (
+            CatalogEntry.objects.filter(resolved_at__isnull=True).count()
+            + CatalogEntry.objects.filter(
+                resolved_at__isnull=False, status=CatalogEntry.Status.KEEP
+            ).count()
         )
 
-        # Convert to a more convenient dictionary
-        # e.g., {"KEEP": 5, "DONATE": 2, ...}
-        stats_dict = {
-            CatalogEntry.Status.KEEP: 0,
-            CatalogEntry.Status.DONATE: 0,
-            CatalogEntry.Status.SELL: 0,
-            CatalogEntry.Status.DISCARD: 0,
-        }
-        for item in stats:
-            stats_dict[item["status"]] = item["count"]
-
-        return Response(stats_dict)
+        return Response({"active": active, "resolved": resolved, "in_collection": in_collection})

@@ -24,7 +24,7 @@
 - **Color Logic:** Success (Keep), Info (Donate), Primary (Sell), Danger (Discard).
 
 ### AI Engine (v2)
-- **Model:** Gemini 2.5 Flash (`gemini-2.5-flash-latest`) via `google-genai` SDK.
+- **Model:** Gemini 2.5 Flash (`gemini-2.5-flash`) via `google-genai` SDK.
 - **Structured Output:** `instructor` library enforces Pydantic-validated responses.
 - **Core Flow:** User sets a Culling Goal → scans a book → AI recommends a triage outcome (KEEP/DONATE/SELL/DISCARD) with confidence score and reasoning → user accepts or overrides.
 - **Key Endpoint:** `POST /api/recommend/` — accepts `isbn`, optional `culling_goal_id`, `condition_grade`, `condition_flags`.
