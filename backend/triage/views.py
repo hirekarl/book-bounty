@@ -110,7 +110,9 @@ class RecommendView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
-        return Response(recommendation.model_dump(mode="json"), status=status.HTTP_200_OK)
+        data = recommendation.model_dump(mode="json")
+        data["valuation_data"] = valuation_data
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class BookLookupView(APIView):
@@ -187,18 +189,21 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
         return queryset
 
     def perform_create(self, serializer: CatalogEntrySerializer) -> None:
-        """Saves the entry, extracting marketplace_description if needed."""
+        """Saves the entry, extracting marketplace_description and valuation_data if needed."""
         ai_rec = self.request.data.get("ai_recommendation")
         marketplace_description = self.request.data.get("marketplace_description")
+        valuation_data = self.request.data.get("valuation_data") or {}
 
         # If not provided directly but exists in AI rec, pull it forward
         if not marketplace_description and isinstance(ai_rec, dict):
             marketplace_description = ai_rec.get("marketplace_description")
 
+        save_kwargs: dict = {}
         if marketplace_description:
-            serializer.save(marketplace_description=marketplace_description)
-        else:
-            serializer.save()
+            save_kwargs["marketplace_description"] = marketplace_description
+        if valuation_data:
+            save_kwargs["valuation_data"] = valuation_data
+        serializer.save(**save_kwargs)
 
     def perform_update(self, serializer: CatalogEntrySerializer) -> None:
         """Updates the entry, extracting marketplace_description if needed."""

@@ -62,6 +62,7 @@ const TriageWizard = () => {
 
   // AI recommendation state
   const [aiRec, setAiRec] = useState(null);
+  const [aiValuationData, setAiValuationData] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [overriding, setOverriding] = useState(false);
@@ -99,15 +100,18 @@ const TriageWizard = () => {
       setAiLoading(true);
       setAiError(null);
       setAiRec(null);
+      setAiValuationData(null);
       getRecommendation({ isbn: bookIsbn, condition_grade: grade, condition_flags: flags })
         .then((res) => {
-          setAiRec(res.data);
-          formik.setFieldValue('status', res.data.status);
-          if (res.data.suggested_price) {
-            formik.setFieldValue('asking_price', String(res.data.suggested_price));
+          const { valuation_data, ...rec } = res.data;
+          setAiRec(rec);
+          setAiValuationData(valuation_data || null);
+          formik.setFieldValue('status', rec.status);
+          if (rec.suggested_price) {
+            formik.setFieldValue('asking_price', String(rec.suggested_price));
           }
-          if (res.data.marketplace_description) {
-            formik.setFieldValue('marketplace_description', res.data.marketplace_description);
+          if (rec.marketplace_description) {
+            formik.setFieldValue('marketplace_description', rec.marketplace_description);
           }
           setAiLoading(false);
         })
@@ -231,6 +235,7 @@ const TriageWizard = () => {
       asking_price: values.status === 'SELL' ? values.asking_price : null,
       donation_dest: values.status === 'DONATE' ? values.donation_dest : '',
       ai_recommendation: aiRec || {},
+      valuation_data: aiValuationData || {},
     };
 
     createCatalogEntry(data)
@@ -244,6 +249,7 @@ const TriageWizard = () => {
     setIsbn('');
     formik.resetForm();
     setAiRec(null);
+    setAiValuationData(null);
     setAiError(null);
     setAiLoading(false);
     setOverriding(false);
@@ -447,6 +453,7 @@ const TriageWizard = () => {
                     formik.values.condition_flags,
                   )
                 }
+                valuationData={aiValuationData}
               />
 
               {(overriding || (!aiRec && !aiLoading)) && (
