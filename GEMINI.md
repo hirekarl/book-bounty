@@ -104,18 +104,22 @@ Reference `.env.example` in the root or within subdirectories for required varia
     - **Lifecycle:** Toggle "Resolved" state (allows un-resolving) and "Delete Record" support.
   - `services/api.js`: Axios API client with token interceptor and 401 redirect. Includes `updateCatalogEntry` (PATCH) and `deleteCatalogEntry` (DELETE).
 - `docs/`:
-  - `CODE_REVIEW.md`: Senior Dev audit findings.
-  - `REMEDIATION_PLAN.md`: Strategic plan for fixing identified issues.
-  - `REMEDIATION_REPORT.md`: Final summary of performance and security improvements.
+  - `proposals/`:
+    - `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace.
   - `legacy/`: Archived planning documents.
 - `v2_PRODUCT_VISION.md`: Current product vision (AI-driven culling).
 - `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
-- `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace — does NOT inform current implementation.
 - `CLAUDE.md`: Project context file for Claude Code sessions.
 
 ---
 
-## 6. Multi-Agent Orchestration
+## 6. Project Status
+- **Phase 1 through Phase 6:** Completed. The application is fully functional with AI triage, inventory management, and export capabilities.
+- **Current Focus:** Maintenance and future planning for Phase 7+.
+
+---
+
+## 7. Multi-Agent Orchestration
 This project uses a multi-agent "staff" model. 
 - **Atlas (Principal Architect):** Your primary persona. You orchestrate tasks and delegate to specialized sub-agents.
 - **Mandate:** Before starting any task, you **MUST** read and follow the instructions in `docs/orchestration/GEMINI_METADIRECTIVE.md`.

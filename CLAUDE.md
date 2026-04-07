@@ -20,9 +20,11 @@ book-bounty/
 │           ├── Inventory/ # EditRecordModal
 │           └── TriageWizard/ # RecommendationCard, ConditionForm
 │       └── services/  # api.js (Axios client)
+├── docs/
+│   └── proposals/
+│       └── v3_PRODUCT_VISION.md # B2B marketplace proposal
 ├── v2_PRODUCT_VISION.md   # current product vision (AI culling)
 ├── v2_AI_ENGINE_SPEC.md   # AI engine technical spec
-├── v3_PRODUCT_VISION.md   # aspirational B2B institutional marketplace (does NOT inform current impl)
 ├── GEMINI.md              # context file for Gemini CLI
 └── CLAUDE.md              # this file
 ```
@@ -311,7 +313,7 @@ cd frontend && npx prettier --write .
 ## 10. Product Scope Notes
 
 - **v2_PRODUCT_VISION.md** and **v2_AI_ENGINE_SPEC.md** define the current implementation target.
-- **v3_PRODUCT_VISION.md** is aspirational only (B2B institutional acquisition marketplace). It does NOT inform any current implementation decisions.
+- **docs/proposals/v3_PRODUCT_VISION.md** is aspirational only (B2B institutional acquisition marketplace). It does NOT inform any current implementation decisions.
 - This is a **single-user app** — no multi-tenancy, no sharing. One Django user per install.
 
 ---
@@ -338,3 +340,9 @@ This project uses a multi-agent "staff" model.
 - **Senior Dev Audit (April 2026):** Codebase underwent a comprehensive stability and performance audit.
 - **Remediation:** Monolithic components were decomposed, ORM queries optimized, and API resilience improved with timeouts and shared clients.
 - **Testing:** Always run `uv run python manage.py test` before pushing changes. API tests require `BaseAPITestCase` for authenticated context.
+
+---
+
+## 14. Project Status
+- **Phase 1 through Phase 6:** Completed. The application is fully functional with AI triage, inventory management, and export capabilities.
+- **Current Focus:** Maintenance and future planning for Phase 7+.
