@@ -2,9 +2,12 @@
 # Exit on error
 set -o errexit
 
-# Sync dependencies and ensure the .venv is clean
+# Fix: Explicitly target the local .venv to silence the mismatch warning
+export UV_PROJECT_ENVIRONMENT=.venv
+
+# Sync dependencies (this will now include psycopg)
 uv sync --frozen
 
-# Use 'uv run' to execute commands within the synced environment
+# Run Django tasks
 uv run python manage.py migrate
 uv run python manage.py collectstatic --no-input
