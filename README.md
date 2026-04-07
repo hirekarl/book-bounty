@@ -465,7 +465,8 @@ book-bounty/
 │           └── api.js          # Axios API client with token interceptor
 │
 ├── docs/
-│   ├── architecture/           # Living strategy (Vision, AI Spec, Orchestration)
+│   ├── architecture/           # Living strategy (Vision, AI Spec, Orchestration, Deployment)
+│   │   └── DEPLOYMENT.md       # Render Blueprint deployment checklist
 │   ├── staff/                  # Multi-agent team context (Personas, Directives, Reflection)
 │   ├── roadmap/                # Planning (Proposals and completed phase archives)
 │   └── fellowship/             # User's personal fellowship workspace

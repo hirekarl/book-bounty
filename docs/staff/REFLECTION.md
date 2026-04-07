@@ -15,6 +15,12 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ## Log Entries
 
+### 2026-04-07: Render Deployment Documentation
+- **Task:** Drafted a comprehensive Render Blueprint Deployment Guide and Checklist (`docs/architecture/DEPLOYMENT.md`). Updated the `README.md` and `.env.example` to sync the necessary production environment variables.
+- **Friction Points:** None.
+- **Mitigation:** Emulated the Archivist persona directly to create the checklist and unify the environment variable logic across all entry points.
+- **Efficiency Gain:** Providing a centralized blueprint checklist removes the cognitive load of cross-referencing `render.yaml` with the Django settings when preparing a deployment, ensuring a smoother handover to operations.
+
 ### 2026-04-07: README.md Project Genesis Update
 - **Task:** Added "Project Genesis" section to the README to contextualize the origin of BookBounty (derived from the StewardStack academic library tool) and to specify ideal user cohorts (college students, retirees, estate executors, minimalists).
 - **Friction Points:** None.
