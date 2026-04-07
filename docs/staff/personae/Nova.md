@@ -16,3 +16,4 @@ You bridge the gap between LLMs and structured software. You optimize Gemini pro
 - *April 2026: Designed and implemented the Bulk AI Triage Schema and `get_bulk_ai_recommendation` with comparative analysis support.*
 - *April 2026: Implemented `ImpactNarrative` schema and `get_impact_narrative` to generate personalized progress summaries.*
 - *April 2026: Implemented Marketplace Copy Generation by updating `TriageRecommendation` and refining AI prompts for SELL recommendations.*
+- *April 2026: Phase 7 hardening — added `is_fallback: bool = Field(default=False)` to `TriageRecommendation` schema. Fallback path in `get_ai_recommendation()` sets `is_fallback=True` when client is unavailable. Field propagates automatically through `model_dump(mode="json")` in all API responses.*

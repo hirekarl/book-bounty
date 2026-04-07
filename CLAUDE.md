@@ -336,5 +336,5 @@ This project uses a multi-agent "staff" model.
 ---
 
 ## 14. Project Status
-- **Phase 1 through Phase 6:** Completed.
+- **Phase 1 through Phase 7:** Completed.
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
