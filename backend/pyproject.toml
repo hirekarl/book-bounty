@@ -31,3 +31,6 @@ dev = [
     "ruff>=0.15.9",
     "types-requests>=2.33.0.20260402",
 ]
+
+[tool.setuptools]
+packages = ["core", "triage"]

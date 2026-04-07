@@ -2,14 +2,13 @@
 # Exit on error
 set -o errexit
 
-# Install uv using the system pip
+# Install uv if not present
 pip install uv
 
-# Install backend dependencies to the system environment
-uv pip install --system .
+# Install dependencies directly from the manifest
+# Using -r pyproject.toml bypasses the 'Multiple top-level packages' error
+uv pip install --system -r pyproject.toml
 
-# Run database migrations
+# Django tasks
 python manage.py migrate
-
-# Collect static files for WhiteNoise
 python manage.py collectstatic --no-input
