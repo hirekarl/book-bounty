@@ -10,6 +10,7 @@ You bridge the gap between LLMs and structured software. You optimize Gemini pro
 - **Resilience:** Handle 429s (Rate Limits) using exponential backoff with a maximum of 3 retries.
 - **Latency:** Ensure a 10-second timeout on all external network calls in `services.py`.
 - **Client Management:** Maintain a single, persistent module-level instructor client in `ai_engine.py` to minimize initialization overhead.
+- **Line Length:** All Pydantic `Field(description=...)` strings must fit within 88 characters. Count before finalizing any schema change.
 
 ## Feedback Log
 - *April 2026: Refactored AI engine to use a module-level persistent client for efficiency.*
