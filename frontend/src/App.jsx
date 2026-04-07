@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import Landing from './pages/Landing';
 import TriageWizard from './pages/TriageWizard';
 import Inventory from './pages/Inventory';
 import { NotificationProvider } from './contexts/NotificationProvider';
@@ -10,7 +11,7 @@ import GlobalToast from './components/common/GlobalToast';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/welcome" replace />;
 };
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
       <GlobalToast />
       <BrowserRouter>
         <Routes>
+          <Route path="/welcome" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/"
