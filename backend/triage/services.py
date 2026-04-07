@@ -94,7 +94,9 @@ def fetch_valuation_data(isbn: str) -> dict:
             headers={"Authorization": f"Bearer {token}"},
             params={
                 "gtin": isbn,
-                "filter": "conditionIds:{3000|4000|5000}",
+                # Condition IDs for Books category:
+                # 1000=New, 2000=Like New, 2500=Very Good, 3000=Good, 4000=Acceptable
+                "filter": "conditionIds:{1000|2000|2500|3000|4000}",
                 "limit": 20,
             },
             timeout=timeout,
