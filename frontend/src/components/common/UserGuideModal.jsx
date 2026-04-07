@@ -71,7 +71,7 @@ const UserGuideModal = ({ show, onHide }) => {
           </p>
         </section>
 
-        <section>
+        <section className="mb-4">
           <h5 className="d-flex align-items-center mb-3">
             <i className="bi bi-currency-dollar text-primary me-2"></i>
             Selling Books
@@ -80,6 +80,21 @@ const UserGuideModal = ({ show, onHide }) => {
             For books recommended for sale, you can track the asking price and any physical defects.
             BookBounty helps you manage the lifecycle of your collection from scanning to final
             sale.
+          </p>
+        </section>
+
+        <section>
+          <h5 className="d-flex align-items-center mb-3">
+            <i className="bi bi-graph-up text-success me-2"></i>
+            Market Pricing
+          </h5>
+          <p className="text-muted">
+            BookBounty fetches real market pricing data from eBay for SELL-recommended books. In the
+            Edit Record panel, you{`'`}ll see a <strong>Market Pricing</strong> card showing current
+            listing price ranges. The AI uses this data to anchor its suggested price to real
+            comparables. A <strong>High Value</strong> badge appears when the market median exceeds
+            $25 — a prompt to double-check before donating. Use the <strong>Refresh Pricing</strong>{' '}
+            button to fetch updated data at any time.
           </p>
         </section>
       </Modal.Body>

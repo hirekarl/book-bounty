@@ -64,14 +64,16 @@ Base URL: `http://localhost:8000/api/`
 |--------|------|-------------|
 | POST | `auth/login/` | dj-rest-auth login — returns `{"key": "..."}` |
 | POST | `auth/logout/` | Invalidates token |
-| GET | `lookup/{isbn}/` | Fetch/cache book metadata; includes `metadata_found` flag |
-| GET/POST/PATCH | `entries/` | List (with filters) / create / update catalog entries |
+| GET | `lookup/{isbn}/` | Fetch/cache book metadata; includes `metadata_found` flag. Validates ISBN format (400 on invalid). |
+| GET/POST/PATCH | `entries/` | List (paginated, page_size=50) / create / update catalog entries |
 | DELETE | `entries/{id}/` | Delete a catalog entry record |
 | POST | `entries/{id}/resolve/` | Stamp `resolved_at = now()` (idempotent guard: 400 if already resolved) |
+| POST | `entries/{id}/valuation/` | Fetch/refresh eBay market pricing into `valuation_data` |
 | PATCH | `entries/bulk_update_status/` | `{"ids": [...], "status": "SELL"}` |
 | GET | `stats/` | Dashboard counts: `{active: {...}, resolved: {...}, in_collection: N}` |
 | GET/POST/PATCH | `goals/` | CRUD for culling goals |
 | POST | `recommend/` | AI recommendation — see below |
+| POST | `recommend/bulk/` | Bulk AI recommendations for multiple entries |
 
 ### `POST /api/recommend/`
 ```json
@@ -85,19 +87,24 @@ Base URL: `http://localhost:8000/api/`
 Returns `TriageRecommendation` schema (see ai_engine.py):
 ```json
 {
-  "action": "KEEP",
+  "status": "KEEP",
   "confidence": 0.85,
   "reasoning": "...",
   "suggested_price": null,
-  "suggested_donation_dest": null
+  "suggested_donation_dest": null,
+  "notable_tags": [],
+  "marketplace_description": null,
+  "is_fallback": false
 }
 ```
+`is_fallback: true` when the AI client is unavailable — the UI surfaces a warning banner in this case.
 
 ### Query params for `GET /api/entries/`
 - `?status=KEEP|DONATE|SELL|DISCARD`
 - `?search=query` (title or author, case-insensitive)
 - `?resolved=true|false`
 - `?in_collection=true`
+- `?page=N` / `?page_size=N` (default 50, max 200) — response is `{count, next, previous, results}`
 
 ---
 
@@ -233,10 +240,12 @@ useEffect(() => {
 - Initialized from URL params (Dashboard links pass `?status=...&resolved=...`)
 - Resolved rows styled with `text-muted`, `opacity-50` cover image, secondary "Kept · date" badge
 - Action column: "Resolve" button OR "Done" badge, plus a pencil icon for editing
+- Paginated: loads 50 entries per page; "Load More" button appends next page; shows "Showing X of Y books"
 - **Edit Record Modal:**
   - Triggered by clicking the book title (accessible via keyboard/role) or pencil icon.
   - Allows editing of status, condition, flags, notes, price, and donation destination.
   - Supports toggling resolution state (un-resolve) and record deletion.
+  - Shows **Market Pricing** card when `valuation_data` is present: eBay range, AbeBooks range, BooksRun buyback price, staleness warning if data > 30 days old, "Refresh Pricing" button.
 - Bulk status change, export to CSV/Excel/PDF
 
 ### `Login.jsx`
