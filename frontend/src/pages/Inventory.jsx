@@ -209,7 +209,6 @@ const Inventory = () => {
   };
 
   const handleDeleteEntry = () => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
     deleteCatalogEntry(selectedEntry.id)
       .then(() => {
         setShowEditModal(false);

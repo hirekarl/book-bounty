@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Button, Row, Col, Form, Badge, InputGroup, Spinner } from 'react-bootstrap';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useFormik } from 'formik';
 import { catalogSchema, validateWithZod } from '../../schemas/catalogSchema';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -98,6 +99,7 @@ const EditRecordModal = ({
   isRefreshingValuation = false,
 }) => {
   const { showNotification } = useNotification();
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -155,236 +157,250 @@ const EditRecordModal = ({
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered>
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold">Edit Record</Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="pt-2">
-        <Row>
-          <Col md={4} className="text-center mb-3">
-            {(entry.book.cover_image ?? entry.book.cover_url) ? (
-              <img
-                src={entry.book.cover_image ?? entry.book.cover_url ?? undefined}
-                alt=""
-                className="img-fluid rounded shadow-sm"
-                style={{ maxHeight: '200px' }}
-                loading="lazy"
-              />
-            ) : (
-              <div
-                className="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
-                style={{ height: '200px', width: '140px' }}
-              >
-                <i className="bi bi-book display-4 text-muted"></i>
-              </div>
-            )}
-            <div className="mt-2 small text-muted">ISBN: {entry.book.isbn}</div>
-          </Col>
-          <Col md={8}>
-            <h5 className="fw-bold mb-1">{entry.book.title}</h5>
-            <p className="text-muted mb-3">by {entry.book.author}</p>
-
-            <Form noValidate onSubmit={formik.handleSubmit}>
-              <Row className="g-3 mb-3">
-                <Col md={6}>
-                  <Form.Group controlId="edit-status">
-                    <Form.Label className="small fw-bold text-muted text-uppercase">
-                      Status
-                    </Form.Label>
-                    <Form.Select
-                      name="status"
-                      value={formik.values.status}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    >
-                      <option value="KEEP">Keep</option>
-                      <option value="DONATE">Donate</option>
-                      <option value="SELL">Sell</option>
-                      <option value="DISCARD">Discard</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="edit-condition">
-                    <Form.Label className="small fw-bold text-muted text-uppercase">
-                      Condition
-                    </Form.Label>
-                    <Form.Select
-                      name="condition_grade"
-                      value={formik.values.condition_grade}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    >
-                      {CONDITION_GRADES.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="small fw-bold text-muted text-uppercase d-block">
-                  Condition Flags
-                </Form.Label>
-                <div className="d-flex flex-wrap gap-2">
-                  {CONDITION_FLAGS.map((flag) => {
-                    const key = flagKey(flag);
-                    const isActive = formik.values.condition_flags.includes(key);
-                    return (
-                      <Badge
-                        key={flag}
-                        bg={isActive ? 'warning' : 'light'}
-                        text={isActive ? 'dark' : 'muted'}
-                        className={`border cursor-pointer px-2 py-1 ${isActive ? '' : 'opacity-75'}`}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleToggleFlag(key)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleToggleFlag(key);
-                          }
-                        }}
-                        role="button"
-                        tabIndex="0"
-                        aria-pressed={isActive}
-                      >
-                        {flag}
-                      </Badge>
-                    );
-                  })}
+    <>
+      <Modal show={show} onHide={onHide} size="lg" centered>
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold">Edit Record</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-2">
+          <Row>
+            <Col md={4} className="text-center mb-3">
+              {(entry.book.cover_image ?? entry.book.cover_url) ? (
+                <img
+                  src={entry.book.cover_image ?? entry.book.cover_url ?? undefined}
+                  alt=""
+                  className="img-fluid rounded shadow-sm"
+                  style={{ maxHeight: '200px' }}
+                  loading="lazy"
+                />
+              ) : (
+                <div
+                  className="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
+                  style={{ height: '200px', width: '140px' }}
+                >
+                  <i className="bi bi-book display-4 text-muted"></i>
                 </div>
-              </Form.Group>
+              )}
+              <div className="mt-2 small text-muted">ISBN: {entry.book.isbn}</div>
+            </Col>
+            <Col md={8}>
+              <h5 className="fw-bold mb-1">{entry.book.title}</h5>
+              <p className="text-muted mb-3">by {entry.book.author}</p>
 
-              {formik.values.status === 'SELL' && (
-                <>
-                  <Form.Group className="mb-3" controlId="edit-asking-price">
+              <Form noValidate onSubmit={formik.handleSubmit}>
+                <Row className="g-3 mb-3">
+                  <Col md={6}>
+                    <Form.Group controlId="edit-status">
+                      <Form.Label className="small fw-bold text-muted text-uppercase">
+                        Status
+                      </Form.Label>
+                      <Form.Select
+                        name="status"
+                        value={formik.values.status}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      >
+                        <option value="KEEP">Keep</option>
+                        <option value="DONATE">Donate</option>
+                        <option value="SELL">Sell</option>
+                        <option value="DISCARD">Discard</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group controlId="edit-condition">
+                      <Form.Label className="small fw-bold text-muted text-uppercase">
+                        Condition
+                      </Form.Label>
+                      <Form.Select
+                        name="condition_grade"
+                        value={formik.values.condition_grade}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      >
+                        {CONDITION_GRADES.map((g) => (
+                          <option key={g} value={g}>
+                            {g}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-muted text-uppercase d-block">
+                    Condition Flags
+                  </Form.Label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {CONDITION_FLAGS.map((flag) => {
+                      const key = flagKey(flag);
+                      const isActive = formik.values.condition_flags.includes(key);
+                      return (
+                        <Badge
+                          key={flag}
+                          bg={isActive ? 'warning' : 'light'}
+                          text={isActive ? 'dark' : 'muted'}
+                          className={`border cursor-pointer px-2 py-1 ${isActive ? '' : 'opacity-75'}`}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => handleToggleFlag(key)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleToggleFlag(key);
+                            }
+                          }}
+                          role="button"
+                          tabIndex="0"
+                          aria-pressed={isActive}
+                        >
+                          {flag}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </Form.Group>
+
+                {formik.values.status === 'SELL' && (
+                  <>
+                    <Form.Group className="mb-3" controlId="edit-asking-price">
+                      <Form.Label className="small fw-bold text-muted text-uppercase">
+                        Asking Price ($)
+                      </Form.Label>
+                      <Form.Control
+                        name="asking_price"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        required
+                        value={formik.values.asking_price}
+                        isInvalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                        aria-invalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        aria-describedby="asking-price-feedback"
+                      />
+                      <Form.Control.Feedback type="invalid" id="asking-price-feedback">
+                        {formik.errors.asking_price}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <Form.Group className="mb-3" controlId="edit-marketplace-description">
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <Form.Label className="small fw-bold text-muted text-uppercase mb-0">
+                          Marketplace Listing
+                        </Form.Label>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 text-decoration-none small"
+                          onClick={handleCopyDescription}
+                          disabled={!formik.values.marketplace_description}
+                        >
+                          <i className="bi bi-clipboard me-1"></i>Copy Description
+                        </Button>
+                      </div>
+                      <Form.Control
+                        name="marketplace_description"
+                        as="textarea"
+                        rows={4}
+                        placeholder="AI-generated marketplace description..."
+                        value={formik.values.marketplace_description}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                    </Form.Group>
+                  </>
+                )}
+
+                {formik.values.status === 'DONATE' && (
+                  <Form.Group className="mb-3" controlId="edit-donation-dest">
                     <Form.Label className="small fw-bold text-muted text-uppercase">
-                      Asking Price ($)
+                      Donation Destination
                     </Form.Label>
                     <Form.Control
-                      name="asking_price"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
+                      name="donation_dest"
                       required
-                      value={formik.values.asking_price}
-                      isInvalid={formik.touched.asking_price && !!formik.errors.asking_price}
-                      aria-invalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                      value={formik.values.donation_dest}
+                      isInvalid={formik.touched.donation_dest && !!formik.errors.donation_dest}
+                      aria-invalid={formik.touched.donation_dest && !!formik.errors.donation_dest}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      aria-describedby="asking-price-feedback"
+                      aria-describedby="donation-dest-feedback"
                     />
-                    <Form.Control.Feedback type="invalid" id="asking-price-feedback">
-                      {formik.errors.asking_price}
+                    <Form.Control.Feedback type="invalid" id="donation-dest-feedback">
+                      {formik.errors.donation_dest}
                     </Form.Control.Feedback>
                   </Form.Group>
+                )}
 
-                  <Form.Group className="mb-3" controlId="edit-marketplace-description">
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <Form.Label className="small fw-bold text-muted text-uppercase mb-0">
-                        Marketplace Listing
-                      </Form.Label>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="p-0 text-decoration-none small"
-                        onClick={handleCopyDescription}
-                        disabled={!formik.values.marketplace_description}
-                      >
-                        <i className="bi bi-clipboard me-1"></i>Copy Description
-                      </Button>
-                    </div>
-                    <Form.Control
-                      name="marketplace_description"
-                      as="textarea"
-                      rows={4}
-                      placeholder="AI-generated marketplace description..."
-                      value={formik.values.marketplace_description}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
-                  </Form.Group>
-                </>
-              )}
-
-              {formik.values.status === 'DONATE' && (
-                <Form.Group className="mb-3" controlId="edit-donation-dest">
-                  <Form.Label className="small fw-bold text-muted text-uppercase">
-                    Donation Destination
-                  </Form.Label>
+                <Form.Group className="mb-3" controlId="edit-notes">
+                  <Form.Label className="small fw-bold text-muted text-uppercase">Notes</Form.Label>
                   <Form.Control
-                    name="donation_dest"
-                    required
-                    value={formik.values.donation_dest}
-                    isInvalid={formik.touched.donation_dest && !!formik.errors.donation_dest}
-                    aria-invalid={formik.touched.donation_dest && !!formik.errors.donation_dest}
+                    name="notes"
+                    as="textarea"
+                    rows={2}
+                    value={formik.values.notes}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    aria-describedby="donation-dest-feedback"
                   />
-                  <Form.Control.Feedback type="invalid" id="donation-dest-feedback">
-                    {formik.errors.donation_dest}
-                  </Form.Control.Feedback>
                 </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    name="is_resolved"
+                    type="switch"
+                    id="resolved-switch"
+                    label="Mark as Resolved"
+                    checked={formik.values.is_resolved}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  <Form.Text className="text-muted">
+                    {formik.values.is_resolved
+                      ? 'This book will be marked as processed.'
+                      : 'This book will remain in your active triage list.'}
+                  </Form.Text>
+                </Form.Group>
+              </Form>
+
+              {entry.valuation_data && Object.keys(entry.valuation_data).length > 0 && (
+                <MarketPricingSection
+                  valuationData={entry.valuation_data}
+                  onRefreshValuation={onRefreshValuation}
+                  isRefreshingValuation={isRefreshingValuation}
+                />
               )}
-
-              <Form.Group className="mb-3" controlId="edit-notes">
-                <Form.Label className="small fw-bold text-muted text-uppercase">Notes</Form.Label>
-                <Form.Control
-                  name="notes"
-                  as="textarea"
-                  rows={2}
-                  value={formik.values.notes}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Check
-                  name="is_resolved"
-                  type="switch"
-                  id="resolved-switch"
-                  label="Mark as Resolved"
-                  checked={formik.values.is_resolved}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-                <Form.Text className="text-muted">
-                  {formik.values.is_resolved
-                    ? 'This book will be marked as processed.'
-                    : 'This book will remain in your active triage list.'}
-                </Form.Text>
-              </Form.Group>
-            </Form>
-
-            {entry.valuation_data && Object.keys(entry.valuation_data).length > 0 && (
-              <MarketPricingSection
-                valuationData={entry.valuation_data}
-                onRefreshValuation={onRefreshValuation}
-                isRefreshingValuation={isRefreshingValuation}
-              />
-            )}
-          </Col>
-        </Row>
-      </Modal.Body>
-      <Modal.Footer className="border-0 pt-0 justify-content-between">
-        <Button variant="outline-danger" onClick={onDelete} size="sm">
-          <i className="bi bi-trash3 me-1"></i>Delete Record
-        </Button>
-        <div className="d-flex gap-2">
-          <Button variant="secondary" onClick={onHide}>
-            Cancel
+            </Col>
+          </Row>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0 justify-content-between">
+          <Button variant="outline-danger" onClick={() => setShowConfirmDelete(true)} size="sm">
+            <i className="bi bi-trash3 me-1"></i>Delete Record
           </Button>
-          <Button variant="warning" onClick={formik.handleSubmit} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
-      </Modal.Footer>
-    </Modal>
+          <div className="d-flex gap-2">
+            <Button variant="secondary" onClick={onHide}>
+              Cancel
+            </Button>
+            <Button variant="warning" onClick={formik.handleSubmit} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+      <ConfirmModal
+        show={showConfirmDelete}
+        onConfirm={() => {
+          setShowConfirmDelete(false);
+          onDelete();
+        }}
+        onCancel={() => setShowConfirmDelete(false)}
+        title="Delete this record?"
+        message="This action cannot be undone. The catalog entry will be permanently removed."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+      />
+    </>
   );
 };
 
