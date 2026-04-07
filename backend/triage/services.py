@@ -30,7 +30,7 @@ def download_cover_image(book: Book, url: str) -> None:
         return
 
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=int(os.getenv("REQUESTS_TIMEOUT", "10")))
         response.raise_for_status()
 
         # Extract filename from URL
@@ -59,7 +59,7 @@ def download_cover_image(book: Book, url: str) -> None:
         book.cover_image.save(filename, ContentFile(response.content), save=True)
     except requests.RequestException as e:
         logger.error("Failed to download cover image for ISBN %s: %s", book.isbn, e)
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Unexpected error downloading cover image for ISBN %s", book.isbn)
 
 
@@ -79,7 +79,7 @@ def fetch_book_metadata(isbn: str) -> dict[str, Any]:
     headers = {"User-Agent": f"BookBounty/1.0 ({contact_email})"}
     url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data"
 
-    response = requests.get(url, headers=headers, timeout=10)
+    response = requests.get(url, headers=headers, timeout=int(os.getenv("REQUESTS_TIMEOUT", "10")))
     response.raise_for_status()
     data = response.json()
 

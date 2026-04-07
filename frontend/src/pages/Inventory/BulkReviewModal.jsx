@@ -44,8 +44,15 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
           };
           return updateCatalogEntry(id, payload);
         });
-        await Promise.all(promises);
-        onComplete();
+        const results = await Promise.allSettled(promises);
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          setError(
+            `Failed to save ${failed.length} of ${promises.length} entries. Please try again.`,
+          );
+        } else {
+          onComplete();
+        }
       } catch (err) {
         setError('Failed to save some changes. Please try again.');
         console.error(err);
@@ -162,9 +169,9 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
                 <ListGroup.Item key={entry.id} className="px-0 py-4 border-bottom">
                   <Row className="align-items-start">
                     <Col md={3} lg={2} className="text-center">
-                      {entry.book.cover_image || entry.book.cover_url ? (
+                      {(entry.book.cover_image ?? entry.book.cover_url) ? (
                         <img
-                          src={entry.book.cover_image || entry.book.cover_url}
+                          src={entry.book.cover_image ?? entry.book.cover_url ?? undefined}
                           alt={`Cover for ${entry.book.title}`}
                           className="img-fluid rounded shadow-sm"
                           style={{ maxHeight: '120px' }}

@@ -6,7 +6,6 @@ and triage suggestion services.
 
 from unittest.mock import MagicMock, patch
 
-from django.core.files.base import ContentFile
 from django.test import TestCase
 
 from triage.models import Book, CatalogEntry

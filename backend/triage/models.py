@@ -74,7 +74,7 @@ class CatalogEntry(models.Model):
         related_name="entries",
     )
     status = models.CharField(
-        max_length=10, choices=Status.choices, default=Status.KEEP, db_index=True
+        max_length=10, choices=Status.choices, default=Status.KEEP, db_index=True,
     )
     condition_grade = models.CharField(
         max_length=10, choices=Condition.choices, default=Condition.GOOD,

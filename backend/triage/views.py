@@ -4,8 +4,11 @@ This module defines the API views for looking up books, managing catalog
 entries, and retrieving dashboard statistics.
 """
 
-from django.db import models
-from django.db.models import Count, Q
+import re
+
+from django.db import models, transaction
+from django.db.models import Count, F, FloatField, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -13,10 +16,18 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from triage.ai_engine import get_ai_recommendation, get_bulk_ai_recommendation
+from triage.ai_engine import (
+    get_ai_recommendation,
+    get_bulk_ai_recommendation,
+    get_impact_narrative,
+)
 from triage.models import CatalogEntry, CullingGoal
-from triage.serializers import BookSerializer, CatalogEntrySerializer, CullingGoalSerializer
-from triage.services import get_or_create_book, calculate_spatial_roi
+from triage.serializers import (
+    BookSerializer,
+    CatalogEntrySerializer,
+    CullingGoalSerializer,
+)
+from triage.services import get_or_create_book
 
 
 class CullingGoalViewSet(viewsets.ModelViewSet):
@@ -27,9 +38,10 @@ class CullingGoalViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer: CullingGoalSerializer) -> None:
         """Ensures only one goal is active at a time."""
-        instance = serializer.save()
-        if instance.is_active:
-            CullingGoal.objects.exclude(pk=instance.pk).update(is_active=False)
+        with transaction.atomic():
+            instance = serializer.save()
+            if instance.is_active:
+                CullingGoal.objects.exclude(pk=instance.pk).update(is_active=False)
 
 
 class RecommendView(APIView):
@@ -90,6 +102,8 @@ class RecommendView(APIView):
 class BookLookupView(APIView):
     """View to handle ISBN lookup and metadata fetching."""
 
+    _ISBN_RE = re.compile(r"^(\d{9}[\dX]|\d{13})$")
+
     def get(self, _request: Request, isbn: str) -> Response:
         """Looks up a book by ISBN, fetching and caching if necessary.
 
@@ -100,6 +114,12 @@ class BookLookupView(APIView):
         Returns:
             A Response containing the serialized Book metadata.
         """
+        if not self._ISBN_RE.match(isbn):
+            return Response(
+                {"error": "Invalid ISBN format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         book, _ = get_or_create_book(isbn)
         data = dict(BookSerializer(book).data)
         data["metadata_found"] = not (book.title == "Unknown Book" and book.author == "Unknown")
@@ -125,7 +145,7 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
             queryset = (
                 queryset.filter(book__title__icontains=search_query)
                 | queryset.filter(book__author__icontains=search_query)
-            )
+            ).distinct()
 
         resolved_filter = self.request.query_params.get("resolved")
         if resolved_filter == "true":
@@ -136,7 +156,7 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
         if self.request.query_params.get("in_collection") == "true":
             # Unresolved entries are still physically present; resolved KEEPs stay forever.
             queryset = queryset.filter(
-                Q(resolved_at__isnull=True) | Q(status=CatalogEntry.Status.KEEP)
+                Q(resolved_at__isnull=True) | Q(status=CatalogEntry.Status.KEEP),
             )
 
         return queryset
@@ -246,7 +266,7 @@ class DashboardStatsView(APIView):
                 "active": active,
                 "resolved": resolved,
                 "in_collection": stats_agg["in_collection"],
-            }
+            },
         )
 
 
@@ -265,7 +285,7 @@ class RecommendBulkView(APIView):
         entry_ids = request.data.get("entry_ids", [])
         if not entry_ids:
             return Response(
-                {"error": "entry_ids is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "entry_ids is required"}, status=status.HTTP_400_BAD_REQUEST,
             )
 
         culling_goal_id = request.data.get("culling_goal_id")
@@ -282,7 +302,7 @@ class RecommendBulkView(APIView):
 
         # Fetch entries efficiently, ensuring they aren't already resolved
         entries = CatalogEntry.objects.filter(
-            id__in=entry_ids, resolved_at__isnull=True
+            id__in=entry_ids, resolved_at__isnull=True,
         ).select_related("book")
 
         if not entries.exists():
@@ -305,6 +325,21 @@ class RecommendBulkView(APIView):
             for rec in bulk_recommendation.recommendations
         }
 
+        # Validate that the AI returned recommendations for all requested entry IDs
+        fetched_entry_ids = set(entries.values_list("id", flat=True))
+        returned_ids = set(results.keys())
+        missing_ids = fetched_entry_ids - returned_ids
+        if missing_ids:
+            return Response(
+                {
+                    "error": (
+                        "AI response is incomplete. Missing recommendations for entry IDs: "
+                        f"{sorted(missing_ids)}"
+                    ),
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
         return Response(results, status=status.HTTP_200_OK)
 
 
@@ -322,7 +357,7 @@ class DashboardImpactView(APIView):
             impact_narrative: AI-generated progress summary.
         """
         resolved_entries = CatalogEntry.objects.filter(resolved_at__isnull=False).select_related(
-            "book"
+            "book",
         )
 
         total_resolved_books = resolved_entries.count()
@@ -333,26 +368,28 @@ class DashboardImpactView(APIView):
         }
 
         # Recovered inches: DONATE, SELL, DISCARD
+        # calculate_spatial_roi formula: (page_count / 100.0) * 0.25 = page_count * 0.0025
+        # NULL page_count defaults to 1.0 inch per the original function.
         removed_entries = resolved_entries.filter(
             status__in=[
                 CatalogEntry.Status.DONATE,
                 CatalogEntry.Status.SELL,
                 CatalogEntry.Status.DISCARD,
-            ]
+            ],
         )
 
-        from triage.services import calculate_spatial_roi
-
-        total_recovered_inches = sum(
-            calculate_spatial_roi(entry.book.page_count) for entry in removed_entries
+        agg = removed_entries.aggregate(
+            total=Sum(
+                Coalesce(F("book__page_count") * Value(0.0025), Value(1.0)),
+                output_field=FloatField(),
+            ),
         )
+        total_recovered_inches = agg["total"] or 0.0
 
         # Potential earnings: Sum of asking_price for SELL
-        from django.db.models import Sum
-
         total_potential_earnings = (
             resolved_entries.filter(status=CatalogEntry.Status.SELL).aggregate(
-                total=Sum("asking_price")
+                total=Sum("asking_price"),
             )["total"]
             or 0.0
         )
@@ -367,14 +404,12 @@ class DashboardImpactView(APIView):
         )
 
         # AI Impact Narrative
-        from triage.ai_engine import get_impact_narrative
-
         impact_narrative = get_impact_narrative(
             {
                 "resolved_counts": resolved_counts,
                 "space_saved": round(total_recovered_inches / 12, 2),  # in feet
                 "money_earned": float(total_potential_earnings),
-            }
+            },
         ).win_summary
 
         return Response(
@@ -384,5 +419,5 @@ class DashboardImpactView(APIView):
                 "total_potential_earnings": float(total_potential_earnings),
                 "top_donation_destinations": list(top_donation_destinations),
                 "impact_narrative": impact_narrative,
-            }
+            },
         )

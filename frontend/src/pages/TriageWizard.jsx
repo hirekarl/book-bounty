@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Container,
   Row,
@@ -51,6 +51,8 @@ const TriageWizard = () => {
 
   // Camera toggle — off by default so the camera doesn't start unexpectedly
   const [cameraEnabled, setCameraEnabled] = useState(false);
+  // Stable ref to the active Html5Qrcode instance so cleanup can always reach it
+  const qrRef = useRef(null);
 
   // Book state
   const [isbn, setIsbn] = useState('');
@@ -153,6 +155,7 @@ const TriageWizard = () => {
       qr = new Html5Qrcode('reader', {
         formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13],
       });
+      qrRef.current = qr;
       startPromise = qr
         .start(
           { facingMode: 'environment' },
@@ -161,6 +164,7 @@ const TriageWizard = () => {
             if (cancelled) return;
             const instance = qr;
             qr = null;
+            qrRef.current = null;
             instance.stop().catch(() => {});
             handleLookup(decodedText);
           },
@@ -180,15 +184,17 @@ const TriageWizard = () => {
         .catch((err) => {
           if (!cancelled) setLookupError(`Camera error: ${err?.message || err}`);
           qr = null;
+          qrRef.current = null;
         });
     }, 0);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      if (qr) {
-        const instance = qr;
+      const instance = qr || qrRef.current;
+      if (instance) {
         qr = null;
+        qrRef.current = null;
         (startPromise || Promise.resolve()).then(() => instance.stop().catch(() => {}));
       }
     };

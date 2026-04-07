@@ -55,6 +55,14 @@ const RecommendationCard = ({
           </Alert>
         )}
 
+        {aiRec && !aiLoading && aiRec.is_fallback === true && (
+          <Alert variant="warning" className="mb-3">
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            AI engine was unreachable. This recommendation is a safe default — please review
+            manually.
+          </Alert>
+        )}
+
         {aiRec && !aiLoading && (
           <>
             <div className="d-flex align-items-start gap-3 mb-3">

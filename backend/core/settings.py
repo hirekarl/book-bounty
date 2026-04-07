@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -25,7 +26,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure--injcmidh92mrla8x&f1a1q@m-z=8#muq75jlkrgw91+yp6@pi")
+_secret_key = os.getenv("SECRET_KEY")
+if not _secret_key:
+    raise ImproperlyConfigured(
+        "The SECRET_KEY environment variable is not set. "
+        "Set it in your .env file or shell environment before starting Django."
+    )
+SECRET_KEY = _secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
@@ -68,6 +75,13 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS: list[str] = os.getenv(
     "CORS_ALLOWED_ORIGINS", "http://localhost:5173"
 ).split(",")
+
+if not DEBUG and CORS_ALLOWED_ORIGINS == ["http://localhost:5173"]:
+    raise ImproperlyConfigured(
+        "CORS_ALLOWED_ORIGINS is still set to the default localhost value in a non-DEBUG "
+        "environment. Set the CORS_ALLOWED_ORIGINS environment variable to your production "
+        "origin(s) before deploying."
+    )
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

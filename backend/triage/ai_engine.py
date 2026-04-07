@@ -48,6 +48,10 @@ class TriageRecommendation(BaseModel):
         default_factory=list,
         description="Descriptive tags (e.g., 'Collectible', 'Outdated').",
     )
+    is_fallback: bool = Field(
+        default=False,
+        description="True if returned by the fallback path (AI unavailable).",
+    )
 
 
 class BulkTriageRecommendation(TriageRecommendation):
@@ -169,6 +173,7 @@ def get_ai_recommendation(
             status=TriageStatus.KEEP,
             confidence=0.5,
             reasoning="AI engine unavailable (missing API key or init error). Defaulting to KEEP.",
+            is_fallback=True,
         )
 
     system_prompt = (

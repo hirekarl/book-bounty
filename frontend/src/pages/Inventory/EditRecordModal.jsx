@@ -74,9 +74,9 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
       <Modal.Body className="pt-2">
         <Row>
           <Col md={4} className="text-center mb-3">
-            {entry.book.cover_image || entry.book.cover_url ? (
+            {(entry.book.cover_image ?? entry.book.cover_url) ? (
               <img
-                src={entry.book.cover_image || entry.book.cover_url}
+                src={entry.book.cover_image ?? entry.book.cover_url ?? undefined}
                 alt=""
                 className="img-fluid rounded shadow-sm"
                 style={{ maxHeight: '200px' }}

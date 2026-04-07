@@ -11,8 +11,8 @@ from triage.views import (
     BookLookupView,
     CatalogEntryViewSet,
     CullingGoalViewSet,
-    DashboardStatsView,
     DashboardImpactView,
+    DashboardStatsView,
     RecommendBulkView,
     RecommendView,
 )
