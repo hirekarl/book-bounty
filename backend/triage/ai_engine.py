@@ -35,11 +35,14 @@ class TriageRecommendation(BaseModel):
 
     status: TriageStatus = Field(description="The recommended outcome for the book.")
     confidence: float = Field(
-        ge=0, le=1, description="Confidence score of the recommendation (0.0 to 1.0)."
+        ge=0, le=1, description="Confidence score of the recommendation (0.0 to 1.0).",
     )
     reasoning: str = Field(description="A 1-sentence explanation for the user.")
     suggested_price: float | None = Field(
-        None, description="Suggested asking price if status is SELL."
+        None, description="Suggested asking price if status is SELL.",
+    )
+    marketplace_description: str | None = Field(
+        None, description="A professional marketplace description if status is SELL.",
     )
     notable_tags: list[str] = Field(
         default_factory=list,
@@ -57,7 +60,7 @@ class BulkRecommendationResponse(BaseModel):
     """Schema for the AI's structured bulk recommendation."""
 
     recommendations: list[BulkTriageRecommendation] = Field(
-        description="A list of recommendations, one for each input book."
+        description="A list of recommendations, one for each input book.",
     )
 
 
@@ -65,7 +68,7 @@ class ImpactNarrative(BaseModel):
     """Schema for the AI's structured impact narrative."""
 
     win_summary: str = Field(
-        description="A 2-3 sentence encouraging and personalized summary of the user's progress."
+        description="A 2-3 sentence encouraging and personalized summary of the user's progress.",
     )
 
 
@@ -170,9 +173,12 @@ def get_ai_recommendation(
 
     system_prompt = (
         "You are an expert personal librarian and professional downsizing consultant. "
-        "Your task is to analyze a book's metadata and physical condition against a user's "
-        "specific 'Culling Goal'. You provide objective, high-utility recommendations to help "
-        "the user achieve their goal efficiently."
+        "Your task is to analyze a book's metadata and physical condition against a "
+        "user's specific 'Culling Goal'. You provide objective, high-utility "
+        "recommendations to help the user achieve their goal efficiently. If the "
+        "recommended status is SELL, you must also generate a professional, "
+        "high-conversion marketplace description that incorporates the book's title, "
+        "author, condition grade, and any condition flags."
     )
 
     title = book_metadata.get("title", "Unknown")
@@ -231,7 +237,10 @@ def get_bulk_ai_recommendation(
         "You are an expert personal librarian and professional downsizing consultant. "
         "Your task is to analyze a set of books and provide triage recommendations "
         "based on a user's 'Culling Goal'. Perform a comparative analysis to decide "
-        "which books are most valuable to KEEP versus those that should be SOLD, DONATED, or DISCARDED."
+        "which books are most valuable to KEEP versus those that should be SOLD, "
+        "DONATED, or DISCARDED. For any book recommended for SALE, generate a "
+        "professional, high-conversion marketplace description incorporating the "
+        "title, author, condition grade, and any condition flags."
     )
 
     books_data = []
@@ -246,7 +255,7 @@ Year: {book.publish_year}
 Subjects: {", ".join(book.subjects)}
 Description: {book.description}
 Condition: {entry.condition_grade} (Flags: {", ".join(entry.condition_flags)})
-""".strip()
+""".strip(),
         )
 
     user_prompt = f"""
@@ -288,13 +297,13 @@ def get_impact_narrative(stats_data: dict[str, Any]) -> ImpactNarrative:
     # Handle sparse data
     if total_resolved == 0:
         return ImpactNarrative(
-            win_summary="You haven't resolved any books yet. Keep going! Every book you triage brings you closer to your goal."
+            win_summary="You haven't resolved any books yet. Keep going! Every book you triage brings you closer to your goal.",
         )
 
     client = get_instructor_client()
     if not client:
         return ImpactNarrative(
-            win_summary=f"You've resolved {total_resolved} books so far! Keep up the great work."
+            win_summary=f"You've resolved {total_resolved} books so far! Keep up the great work.",
         )
 
     system_prompt = (

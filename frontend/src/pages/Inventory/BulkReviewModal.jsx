@@ -14,11 +14,13 @@ import {
 import { useFormik } from 'formik';
 import { updateCatalogEntry, getBulkRecommendation } from '../../services/api';
 import { StatusBadge } from '../../components/common/Badge';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const { showNotification } = useNotification();
 
   const formik = useFormik({
     initialValues: {
@@ -35,6 +37,7 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
             condition_grade: item.condition_grade,
             condition_flags: item.condition_flags,
             notes: item.notes,
+            marketplace_description: item.status === 'SELL' ? item.marketplace_description : '',
             asking_price: item.status === 'SELL' ? item.asking_price : null,
             donation_dest: item.status === 'DONATE' ? item.donation_dest : '',
             resolved_at: item.is_resolved ? new Date().toISOString() : null,
@@ -67,11 +70,14 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
               condition_grade: entry.condition_grade || 'GOOD',
               condition_flags: [...(entry.condition_flags || [])],
               notes: suggestion?.reasoning || entry.notes || '',
+              marketplace_description:
+                suggestion?.marketplace_description || entry.marketplace_description || '',
               asking_price: suggestion?.suggested_price || entry.asking_price || '',
               donation_dest: entry.donation_dest || '',
               is_resolved: true,
               ai_status: suggestion?.status,
               ai_reason: suggestion?.reasoning,
+              ai_marketplace_description: suggestion?.marketplace_description,
               confidence: suggestion?.confidence,
             };
           });
@@ -93,14 +99,34 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
       if (item.ai_reason) {
         formik.setFieldValue(`items.${id}.notes`, item.ai_reason);
       }
+      if (item.ai_marketplace_description) {
+        formik.setFieldValue(
+          `items.${id}.marketplace_description`,
+          item.ai_marketplace_description,
+        );
+      }
     }
   };
 
   const handleStatusChange = (id, newStatus) => {
     formik.setFieldValue(`items.${id}.status`, newStatus);
-    // Clear price/dest if they don't match status
-    if (newStatus !== 'SELL') formik.setFieldValue(`items.${id}.asking_price`, '');
+    // Clear price/dest/desc if they don't match status
+    if (newStatus !== 'SELL') {
+      formik.setFieldValue(`items.${id}.asking_price`, '');
+      formik.setFieldValue(`items.${id}.marketplace_description`, '');
+    }
     if (newStatus !== 'DONATE') formik.setFieldValue(`items.${id}.donation_dest`, '');
+  };
+
+  const handleCopyDescription = (text) => {
+    if (text) {
+      navigator.clipboard.writeText(text);
+      showNotification({
+        message: 'Description copied to clipboard!',
+        type: 'success',
+        duration: 2000,
+      });
+    }
   };
 
   return (
@@ -239,26 +265,61 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
 
                       <Row className="mt-3 g-2">
                         {item.status === 'SELL' && (
-                          <Col md={4}>
-                            <Form.Group controlId={`price-${entry.id}`}>
-                              <Form.Label className="small fw-bold text-muted text-uppercase">
-                                Asking Price ($)
-                              </Form.Label>
-                              <Form.Control
-                                size="sm"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={item.asking_price}
-                                onChange={(e) =>
-                                  formik.setFieldValue(
-                                    `items.${entry.id}.asking_price`,
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                            </Form.Group>
-                          </Col>
+                          <>
+                            <Col md={4}>
+                              <Form.Group controlId={`price-${entry.id}`}>
+                                <Form.Label className="small fw-bold text-muted text-uppercase">
+                                  Asking Price ($)
+                                </Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  value={item.asking_price}
+                                  onChange={(e) =>
+                                    formik.setFieldValue(
+                                      `items.${entry.id}.asking_price`,
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col md={8}>
+                              <Form.Group controlId={`desc-${entry.id}`}>
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                  <Form.Label className="small fw-bold text-muted text-uppercase mb-0">
+                                    Marketplace Listing
+                                  </Form.Label>
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="p-0 text-decoration-none small text-muted"
+                                    onClick={() =>
+                                      handleCopyDescription(item.marketplace_description)
+                                    }
+                                    disabled={!item.marketplace_description}
+                                  >
+                                    <i className="bi bi-clipboard me-1"></i>Copy
+                                  </Button>
+                                </div>
+                                <Form.Control
+                                  size="sm"
+                                  as="textarea"
+                                  rows={2}
+                                  placeholder="Marketplace description..."
+                                  value={item.marketplace_description}
+                                  onChange={(e) =>
+                                    formik.setFieldValue(
+                                      `items.${entry.id}.marketplace_description`,
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </Form.Group>
+                            </Col>
+                          </>
                         )}
                         {item.status === 'DONATE' && (
                           <Col md={4}>
@@ -280,21 +341,23 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
                             </Form.Group>
                           </Col>
                         )}
-                        <Col md={item.status === 'SELL' || item.status === 'DONATE' ? 8 : 12}>
-                          <Form.Group controlId={`notes-${entry.id}`}>
-                            <Form.Label className="small fw-bold text-muted text-uppercase">
-                              Notes
-                            </Form.Label>
-                            <Form.Control
-                              size="sm"
-                              placeholder="Additional notes..."
-                              value={item.notes}
-                              onChange={(e) =>
-                                formik.setFieldValue(`items.${entry.id}.notes`, e.target.value)
-                              }
-                            />
-                          </Form.Group>
-                        </Col>
+                        {item.status !== 'SELL' && (
+                          <Col md={item.status === 'DONATE' ? 8 : 12}>
+                            <Form.Group controlId={`notes-${entry.id}`}>
+                              <Form.Label className="small fw-bold text-muted text-uppercase">
+                                Notes
+                              </Form.Label>
+                              <Form.Control
+                                size="sm"
+                                placeholder="Additional notes..."
+                                value={item.notes}
+                                onChange={(e) =>
+                                  formik.setFieldValue(`items.${entry.id}.notes`, e.target.value)
+                                }
+                              />
+                            </Form.Group>
+                          </Col>
+                        )}
                       </Row>
                     </Col>
                   </Row>

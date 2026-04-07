@@ -1,19 +1,23 @@
 import React, { useEffect } from 'react';
-import { Modal, Button, Row, Col, Form, Badge } from 'react-bootstrap';
+import { Modal, Button, Row, Col, Form, Badge, InputGroup } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import { catalogSchema, validateWithZod } from '../../schemas/catalogSchema';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
 
 const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
+  const { showNotification } = useNotification();
+
   const formik = useFormik({
     initialValues: {
       status: 'KEEP',
       condition_grade: 'GOOD',
       condition_flags: [],
       notes: '',
+      marketplace_description: '',
       asking_price: '',
       donation_dest: '',
       is_resolved: false,
@@ -32,6 +36,7 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
         condition_grade: entry.condition_grade || 'GOOD',
         condition_flags: [...(entry.condition_flags || [])],
         notes: entry.notes || '',
+        marketplace_description: entry.marketplace_description || '',
         asking_price: entry.asking_price || '',
         donation_dest: entry.donation_dest || '',
         is_resolved: !!entry.resolved_at,
@@ -48,6 +53,17 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
       ? currentFlags.filter((f) => f !== key)
       : [...currentFlags, key];
     formik.setFieldValue('condition_flags', nextFlags);
+  };
+
+  const handleCopyDescription = () => {
+    if (formik.values.marketplace_description) {
+      navigator.clipboard.writeText(formik.values.marketplace_description);
+      showNotification({
+        message: 'Description copied to clipboard!',
+        type: 'success',
+        duration: 2000,
+      });
+    }
   };
 
   return (
@@ -155,27 +171,55 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
               </Form.Group>
 
               {formik.values.status === 'SELL' && (
-                <Form.Group className="mb-3" controlId="edit-asking-price">
-                  <Form.Label className="small fw-bold text-muted text-uppercase">
-                    Asking Price ($)
-                  </Form.Label>
-                  <Form.Control
-                    name="asking_price"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    required
-                    value={formik.values.asking_price}
-                    isInvalid={formik.touched.asking_price && !!formik.errors.asking_price}
-                    aria-invalid={formik.touched.asking_price && !!formik.errors.asking_price}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    aria-describedby="asking-price-feedback"
-                  />
-                  <Form.Control.Feedback type="invalid" id="asking-price-feedback">
-                    {formik.errors.asking_price}
-                  </Form.Control.Feedback>
-                </Form.Group>
+                <>
+                  <Form.Group className="mb-3" controlId="edit-asking-price">
+                    <Form.Label className="small fw-bold text-muted text-uppercase">
+                      Asking Price ($)
+                    </Form.Label>
+                    <Form.Control
+                      name="asking_price"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      required
+                      value={formik.values.asking_price}
+                      isInvalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                      aria-invalid={formik.touched.asking_price && !!formik.errors.asking_price}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      aria-describedby="asking-price-feedback"
+                    />
+                    <Form.Control.Feedback type="invalid" id="asking-price-feedback">
+                      {formik.errors.asking_price}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3" controlId="edit-marketplace-description">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <Form.Label className="small fw-bold text-muted text-uppercase mb-0">
+                        Marketplace Listing
+                      </Form.Label>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="p-0 text-decoration-none small"
+                        onClick={handleCopyDescription}
+                        disabled={!formik.values.marketplace_description}
+                      >
+                        <i className="bi bi-clipboard me-1"></i>Copy Description
+                      </Button>
+                    </div>
+                    <Form.Control
+                      name="marketplace_description"
+                      as="textarea"
+                      rows={4}
+                      placeholder="AI-generated marketplace description..."
+                      value={formik.values.marketplace_description}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    />
+                  </Form.Group>
+                </>
               )}
 
               {formik.values.status === 'DONATE' && (

@@ -141,6 +141,34 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
 
         return queryset
 
+    def perform_create(self, serializer: CatalogEntrySerializer) -> None:
+        """Saves the entry, extracting marketplace_description if needed."""
+        ai_rec = self.request.data.get("ai_recommendation")
+        marketplace_description = self.request.data.get("marketplace_description")
+
+        # If not provided directly but exists in AI rec, pull it forward
+        if not marketplace_description and isinstance(ai_rec, dict):
+            marketplace_description = ai_rec.get("marketplace_description")
+
+        if marketplace_description:
+            serializer.save(marketplace_description=marketplace_description)
+        else:
+            serializer.save()
+
+    def perform_update(self, serializer: CatalogEntrySerializer) -> None:
+        """Updates the entry, extracting marketplace_description if needed."""
+        ai_rec = self.request.data.get("ai_recommendation")
+        marketplace_description = self.request.data.get("marketplace_description")
+
+        # If not provided directly but exists in AI rec, pull it forward
+        if not marketplace_description and isinstance(ai_rec, dict):
+            marketplace_description = ai_rec.get("marketplace_description")
+
+        if marketplace_description:
+            serializer.save(marketplace_description=marketplace_description)
+        else:
+            serializer.save()
+
     @action(detail=True, methods=["post"])
     def resolve(self, request: Request, pk: int | None = None) -> Response:
         """Marks a catalog entry as resolved (action completed).

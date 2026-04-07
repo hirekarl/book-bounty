@@ -15,3 +15,4 @@ You bridge the gap between LLMs and structured software. You optimize Gemini pro
 - *April 2026: Refactored AI engine to use a module-level persistent client for efficiency.*
 - *April 2026: Designed and implemented the Bulk AI Triage Schema and `get_bulk_ai_recommendation` with comparative analysis support.*
 - *April 2026: Implemented `ImpactNarrative` schema and `get_impact_narrative` to generate personalized progress summaries.*
+- *April 2026: Implemented Marketplace Copy Generation by updating `TriageRecommendation` and refining AI prompts for SELL recommendations.*

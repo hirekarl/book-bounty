@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Button, Form, Row, Col } from 'react-bootstrap';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
@@ -14,6 +15,18 @@ const ConditionForm = ({
   getAmazonLink,
 }) => {
   const { values, errors, touched, handleChange, handleBlur, setFieldValue } = formik;
+  const { showNotification } = useNotification();
+
+  const handleCopyDescription = () => {
+    if (values.marketplace_description) {
+      navigator.clipboard.writeText(values.marketplace_description);
+      showNotification({
+        message: 'Description copied to clipboard!',
+        type: 'success',
+        duration: 2000,
+      });
+    }
+  };
 
   return (
     <Card className="shadow-sm border-0 mb-4">
@@ -63,49 +76,77 @@ const ConditionForm = ({
         <hr className="my-4" />
 
         {values.status === 'SELL' && (
-          <Form.Group className="mb-4" controlId="triage-asking-price">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <Form.Label className="fw-bold text-muted small text-uppercase mb-0">
-                Asking Price ($)
-              </Form.Label>
-              <div className="small">
-                <a
-                  href={getEbayLink()}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="me-3 text-decoration-none"
-                >
-                  <i className="bi bi-search me-1"></i>eBay
-                </a>
-                <a
-                  href={getAmazonLink()}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-decoration-none"
-                >
-                  <i className="bi bi-search me-1"></i>Amazon
-                </a>
+          <>
+            <Form.Group className="mb-4" controlId="triage-asking-price">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <Form.Label className="fw-bold text-muted small text-uppercase mb-0">
+                  Asking Price ($)
+                </Form.Label>
+                <div className="small">
+                  <a
+                    href={getEbayLink()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="me-3 text-decoration-none"
+                  >
+                    <i className="bi bi-search me-1"></i>eBay
+                  </a>
+                  <a
+                    href={getAmazonLink()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-decoration-none"
+                  >
+                    <i className="bi bi-search me-1"></i>Amazon
+                  </a>
+                </div>
               </div>
-            </div>
-            <Form.Control
-              name="asking_price"
-              type="number"
-              step="0.01"
-              min="0.01"
-              required
-              placeholder="0.00"
-              value={values.asking_price}
-              isInvalid={touched.asking_price && !!errors.asking_price}
-              aria-invalid={touched.asking_price && !!errors.asking_price}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              size="lg"
-              aria-describedby="triage-asking-price-feedback"
-            />
-            <Form.Control.Feedback type="invalid" id="triage-asking-price-feedback">
-              {errors.asking_price}
-            </Form.Control.Feedback>
-          </Form.Group>
+              <Form.Control
+                name="asking_price"
+                type="number"
+                step="0.01"
+                min="0.01"
+                required
+                placeholder="0.00"
+                value={values.asking_price}
+                isInvalid={touched.asking_price && !!errors.asking_price}
+                aria-invalid={touched.asking_price && !!errors.asking_price}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                size="lg"
+                aria-describedby="triage-asking-price-feedback"
+              />
+              <Form.Control.Feedback type="invalid" id="triage-asking-price-feedback">
+                {errors.asking_price}
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-4" controlId="triage-marketplace-description">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <Form.Label className="fw-bold text-muted small text-uppercase mb-0">
+                  Marketplace Listing
+                </Form.Label>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="p-0 text-decoration-none small"
+                  onClick={handleCopyDescription}
+                  disabled={!values.marketplace_description}
+                >
+                  <i className="bi bi-clipboard me-1"></i>Copy Description
+                </Button>
+              </div>
+              <Form.Control
+                name="marketplace_description"
+                as="textarea"
+                rows={4}
+                placeholder="AI-generated marketplace description..."
+                value={values.marketplace_description}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+            </Form.Group>
+          </>
         )}
 
         {values.status === 'DONATE' && (

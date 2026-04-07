@@ -72,6 +72,7 @@ const TriageWizard = () => {
       condition_grade: 'GOOD',
       condition_flags: [],
       notes: '',
+      marketplace_description: '',
       asking_price: '',
       donation_dest: '',
     },
@@ -102,6 +103,9 @@ const TriageWizard = () => {
           formik.setFieldValue('status', res.data.status);
           if (res.data.suggested_price) {
             formik.setFieldValue('asking_price', String(res.data.suggested_price));
+          }
+          if (res.data.marketplace_description) {
+            formik.setFieldValue('marketplace_description', res.data.marketplace_description);
           }
           setAiLoading(false);
         })
@@ -203,6 +207,9 @@ const TriageWizard = () => {
     if (aiRec.suggested_price) {
       formik.setFieldValue('asking_price', String(aiRec.suggested_price));
     }
+    if (aiRec.marketplace_description) {
+      formik.setFieldValue('marketplace_description', aiRec.marketplace_description);
+    }
     setOverriding(false);
   };
 
@@ -214,6 +221,7 @@ const TriageWizard = () => {
       condition_grade: values.condition_grade,
       condition_flags: values.condition_flags,
       notes: values.notes,
+      marketplace_description: values.status === 'SELL' ? values.marketplace_description : '',
       asking_price: values.status === 'SELL' ? values.asking_price : null,
       donation_dest: values.status === 'DONATE' ? values.donation_dest : '',
       ai_recommendation: aiRec || {},

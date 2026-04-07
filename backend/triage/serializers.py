@@ -68,6 +68,7 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
             "condition_flags",
             "notes",
             "asking_price",
+            "marketplace_description",
             "donation_dest",
             "valuation_data",
             "ai_recommendation",

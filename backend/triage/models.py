@@ -84,6 +84,7 @@ class CatalogEntry(models.Model):
     asking_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True,
     )
+    marketplace_description = models.TextField(blank=True)
     donation_dest = models.CharField(max_length=255, blank=True)
     valuation_data = models.JSONField(default=dict, blank=True)
     ai_recommendation = models.JSONField(default=dict, blank=True)

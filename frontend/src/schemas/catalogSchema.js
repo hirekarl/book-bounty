@@ -10,6 +10,7 @@ export const catalogSchema = z
     }),
     condition_flags: z.array(z.string()).optional(),
     notes: z.string().optional(),
+    marketplace_description: z.string().optional(),
     asking_price: z
       .number()
       .min(0.01, 'Price must be greater than 0')

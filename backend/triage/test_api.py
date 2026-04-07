@@ -171,6 +171,7 @@ class APITests(BaseAPITestCase):
                     confidence=0.8,
                     reasoning="High resale value.",
                     suggested_price=20.0,
+                    marketplace_description="Bulk recommended selling.",
                     notable_tags=["High Value"],
                 ),
             ]
@@ -186,3 +187,69 @@ class APITests(BaseAPITestCase):
         self.assertEqual(str(response.data[self.entry.id]["status"]), "KEEP")
         self.assertEqual(str(response.data[another_entry.id]["status"]), "SELL")
         self.assertEqual(response.data[another_entry.id]["suggested_price"], 20.0)
+        self.assertEqual(response.data[another_entry.id]["marketplace_description"], "Bulk recommended selling.")
+
+    @patch("triage.views.get_ai_recommendation")
+    def test_recommend_view_includes_description(self, mock_get_rec: MagicMock) -> None:
+        """Test that RecommendView includes marketplace_description."""
+        from triage.ai_engine import TriageRecommendation, TriageStatus
+        from triage.models import CullingGoal
+
+        CullingGoal.objects.create(name="Goal", description="D", is_active=True)
+
+        mock_get_rec.return_value = TriageRecommendation(
+            status=TriageStatus.SELL,
+            confidence=0.85,
+            reasoning="Good resale.",
+            marketplace_description="This is a great book for your collection.",
+            notable_tags=["Resale"],
+        )
+
+        url = reverse("recommend")
+        data = {"isbn": "1234567890"}
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["marketplace_description"],
+            "This is a great book for your collection.",
+        )
+
+    def test_create_entry_with_ai_rec_description(self) -> None:
+        """Test creating an entry where description is extracted from AI rec."""
+        new_book = Book.objects.create(
+            isbn="222333",
+            title="AI Book",
+            author="AI Author",
+        )
+        url = reverse("catalog-entries-list")
+        data = {
+            "book_id": new_book.id,
+            "status": CatalogEntry.Status.SELL,
+            "ai_recommendation": {
+                "status": "SELL",
+                "marketplace_description": "Extracted from AI",
+                "confidence": 0.9,
+                "reasoning": "Resellable",
+            },
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        entry = CatalogEntry.objects.get(book=new_book)
+        self.assertEqual(entry.marketplace_description, "Extracted from AI")
+
+    def test_update_entry_with_ai_rec_description(self) -> None:
+        """Test updating an entry where description is extracted from AI rec."""
+        url = reverse("catalog-entries-detail", kwargs={"pk": self.entry.id})
+        data = {
+            "ai_recommendation": {
+                "status": "KEEP",
+                "marketplace_description": "Keep this gem",
+                "confidence": 0.95,
+                "reasoning": "Rare",
+            }
+        }
+        response = self.client.patch(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.marketplace_description, "Keep this gem")
