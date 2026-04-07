@@ -4,16 +4,16 @@ services:
     name: bookbounty-api
     runtime: python
     plan: free
-    rootDir: backend #
+    rootDir: backend
     buildCommand: ./build.sh
-    startCommand: gunicorn core.wsgi #
+    startCommand: gunicorn core.wsgi
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: bookbounty-db
           property: connectionString
       - key: PYTHON_VERSION
-        value: "3.12" #
+        value: "3.12"
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -22,22 +22,22 @@ services:
         value: "bookbounty-api.onrender.com"
       - key: CORS_ALLOWED_ORIGINS
         value: "https://bookbounty-ui.onrender.com"
-      # Application Specific Config
       - key: OPEN_LIBRARY_CONTACT
         sync: false
       - key: GEMINI_API_KEY
         sync: false
 
-  # --- Frontend: Static Site ---
-  - type: static
+  # --- Frontend: Static Site (Fixed Type) ---
+  - type: web # Render requires 'web' for both services and static sites
     name: bookbounty-ui
+    runtime: static # This tells Render it's a Static Site
     plan: free
-    rootDir: frontend #
-    buildCommand: npm install && npm run build #
-    staticPublishDir: dist #
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist # Use 'staticPublishPath' for the build output
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://bookbounty-api.onrender.com/api #
+        value: https://bookbounty-api.onrender.com/api
 
 # --- Managed PostgreSQL Database ---
 databases:
