@@ -54,6 +54,7 @@ export const logout = () =>
 
 // Books & triage
 export const getBookMetadata = (isbn) => api.get(`/lookup/${isbn}/`);
+export const searchBooks = (params) => api.get('/search/', { params });
 export const getCatalogEntries = (params) => api.get('/entries/', { params });
 export const createCatalogEntry = (data) => api.post('/entries/', data);
 export const updateCatalogEntry = (id, data) => api.patch(`/entries/${id}/`, data);

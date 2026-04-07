@@ -20,6 +20,7 @@ import {
   createCatalogEntry,
   getRecommendation,
   getCullingGoals,
+  searchBooks,
 } from '../services/api';
 import RecommendationCard from './TriageWizard/RecommendationCard';
 import ConditionForm from './TriageWizard/ConditionForm';
@@ -59,6 +60,13 @@ const TriageWizard = () => {
   const [book, setBook] = useState(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState(null);
+
+  // Title/author search state
+  const [searchTitle, setSearchTitle] = useState('');
+  const [searchAuthor, setSearchAuthor] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
 
   // AI recommendation state
   const [aiRec, setAiRec] = useState(null);
@@ -143,6 +151,22 @@ const TriageWizard = () => {
     },
     [fetchAiRecommendation],
   );
+
+  const handleSearch = useCallback(() => {
+    if (!searchTitle.trim() && !searchAuthor.trim()) return;
+    setSearchLoading(true);
+    setSearchError(null);
+    setSearchResults(null);
+    searchBooks({ title: searchTitle.trim(), author: searchAuthor.trim() })
+      .then((res) => {
+        setSearchResults(res.data);
+        setSearchLoading(false);
+      })
+      .catch(() => {
+        setSearchError('Search failed. Please try again.');
+        setSearchLoading(false);
+      });
+  }, [searchTitle, searchAuthor]);
 
   useEffect(() => {
     if (step !== 1 || !activeGoal || !cameraEnabled) return;
@@ -255,6 +279,10 @@ const TriageWizard = () => {
     setOverriding(false);
     setSubmitError(null);
     setCameraEnabled(true);
+    setSearchTitle('');
+    setSearchAuthor('');
+    setSearchResults(null);
+    setSearchError(null);
   };
 
   const getEbayLink = () =>
@@ -363,6 +391,115 @@ const TriageWizard = () => {
                   <Alert variant="danger" className="mt-4">
                     {lookupError}
                   </Alert>
+                )}
+
+                <hr className="my-4" />
+
+                <p className="text-muted small text-uppercase fw-bold mb-3">
+                  <i className="bi bi-search me-1"></i>Search by Title / Author
+                </p>
+                <p className="text-muted small mb-3">
+                  No barcode? Search by title or author to find and select the correct edition.
+                </p>
+                <Form.Group className="mb-2">
+                  <Form.Control
+                    placeholder="Title..."
+                    value={searchTitle}
+                    onChange={(e) => setSearchTitle(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Control
+                    placeholder="Author (optional)..."
+                    value={searchAuthor}
+                    onChange={(e) => setSearchAuthor(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </Form.Group>
+                <Button
+                  variant="outline-warning"
+                  className="w-100"
+                  onClick={handleSearch}
+                  disabled={searchLoading || (!searchTitle.trim() && !searchAuthor.trim())}
+                >
+                  {searchLoading ? (
+                    <Spinner animation="border" size="sm" className="me-2" />
+                  ) : (
+                    <i className="bi bi-search me-2"></i>
+                  )}
+                  Search
+                </Button>
+
+                {searchError && (
+                  <Alert variant="danger" className="mt-3">
+                    {searchError}
+                  </Alert>
+                )}
+
+                {searchResults !== null && (
+                  <div className="mt-3">
+                    {searchResults.length === 0 ? (
+                      <Alert variant="warning" className="mb-0">
+                        No results found. Try different search terms.
+                      </Alert>
+                    ) : (
+                      <div className="list-group">
+                        {searchResults.map((result, idx) => (
+                          <div
+                            key={idx}
+                            className="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+                          >
+                            {result.cover_url ? (
+                              <img
+                                src={result.cover_url}
+                                alt={result.title}
+                                style={{ width: '40px', height: '56px', objectFit: 'cover' }}
+                                className="rounded flex-shrink-0"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div
+                                className="bg-light rounded d-flex align-items-center justify-content-center flex-shrink-0"
+                                style={{ width: '40px', height: '56px' }}
+                              >
+                                <i className="bi bi-book text-muted small"></i>
+                              </div>
+                            )}
+                            <div className="flex-grow-1 min-width-0">
+                              <div className="fw-bold text-truncate small">{result.title}</div>
+                              <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                {result.author}
+                                {result.publish_year && ` · ${result.publish_year}`}
+                              </div>
+                              {!result.isbn && (
+                                <span
+                                  className="badge bg-secondary mt-1"
+                                  style={{ fontSize: '0.65rem' }}
+                                >
+                                  No ISBN
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              variant={result.isbn ? 'outline-warning' : 'outline-secondary'}
+                              size="sm"
+                              className="flex-shrink-0"
+                              disabled={!result.isbn}
+                              onClick={() => result.isbn && handleLookup(result.isbn)}
+                              title={
+                                result.isbn
+                                  ? `Look up ISBN ${result.isbn}`
+                                  : 'No ISBN available for this edition'
+                              }
+                            >
+                              Select
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </Card.Body>
             </Card>

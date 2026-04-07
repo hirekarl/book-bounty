@@ -298,6 +298,65 @@ def get_or_create_book(isbn: str) -> tuple[Book, bool]:
     return book, True
 
 
+def search_books_by_title_author(title: str, author: str = "") -> list[dict[str, Any]]:
+    """Searches Open Library by title and/or author for disambiguation.
+
+    Uses the Open Library search.json endpoint and returns a normalized list
+    of candidate books. Each result includes an isbn field (ISBN-13 preferred)
+    that can be fed directly into get_or_create_book.
+
+    Args:
+        title: Book title to search for.
+        author: Author name to narrow the search (optional).
+
+    Returns:
+        A list of dicts with keys: title, author, publish_year, isbn,
+        subjects (truncated to 5), and cover_url. isbn may be None if
+        Open Library has no ISBN for that edition.
+
+    Raises:
+        requests.RequestException: If the API request fails.
+    """
+    contact_email = getattr(settings, "OPEN_LIBRARY_CONTACT", "anonymous@example.com")
+    headers = {"User-Agent": f"BookBounty/1.0 ({contact_email})"}
+    params = {
+        "q": f"{title} {author}".strip(),
+        "fields": "title,author_name,first_publish_year,isbn,subject,cover_i",
+        "limit": 10,
+    }
+    timeout = int(os.getenv("REQUESTS_TIMEOUT", "10"))
+    response = requests.get(
+        "https://openlibrary.org/search.json",
+        headers=headers,
+        params=params,
+        timeout=timeout,
+    )
+    response.raise_for_status()
+
+    docs = response.json().get("docs", [])
+    results = []
+    for doc in docs:
+        isbn_list = doc.get("isbn", [])
+        # Prefer ISBN-13; fall back to ISBN-10
+        isbn = next((i for i in isbn_list if len(i) == 13), None) or next(
+            (i for i in isbn_list if len(i) == 10), None,
+        )
+        cover_i = doc.get("cover_i")
+        results.append(
+            {
+                "title": doc.get("title", "Unknown Title"),
+                "author": ", ".join(doc.get("author_name", [])) or "Unknown Author",
+                "publish_year": doc.get("first_publish_year"),
+                "isbn": isbn,
+                "subjects": doc.get("subject", [])[:5],
+                "cover_url": (
+                    f"https://covers.openlibrary.org/b/id/{cover_i}-M.jpg" if cover_i else None
+                ),
+            },
+        )
+    return results
+
+
 def suggest_triage_outcome(condition_flags: list[str]) -> str:
     """Suggests a triage outcome based on condition flags.
 

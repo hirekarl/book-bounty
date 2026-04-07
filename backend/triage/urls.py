@@ -9,6 +9,7 @@ from rest_framework.routers import DefaultRouter
 
 from triage.views import (
     BookLookupView,
+    BookSearchView,
     CatalogEntryViewSet,
     CullingGoalViewSet,
     DashboardImpactView,
@@ -24,6 +25,7 @@ router.register(r"goals", CullingGoalViewSet, basename="culling-goals")
 
 urlpatterns = [
     path("lookup/<str:isbn>/", BookLookupView.as_view(), name="book-lookup"),
+    path("search/", BookSearchView.as_view(), name="book-search"),
     path("recommend/", RecommendView.as_view(), name="recommend"),
     path("recommend/bulk/", RecommendBulkView.as_view(), name="recommend-bulk"),
     path("entries/<int:pk>/valuation/", ValuationView.as_view(), name="entry-valuation"),

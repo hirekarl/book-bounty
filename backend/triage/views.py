@@ -6,6 +6,7 @@ entries, and retrieving dashboard statistics.
 
 import re
 
+import requests
 from django.db import models, transaction
 from django.db.models import Count, F, FloatField, Q, Sum, Value
 from django.db.models.functions import Coalesce
@@ -29,7 +30,11 @@ from triage.serializers import (
     CatalogEntrySerializer,
     CullingGoalSerializer,
 )
-from triage.services import fetch_valuation_data, get_or_create_book
+from triage.services import (
+    fetch_valuation_data,
+    get_or_create_book,
+    search_books_by_title_author,
+)
 
 
 class CatalogEntryPagination(PageNumberPagination):
@@ -140,6 +145,36 @@ class BookLookupView(APIView):
         data = dict(BookSerializer(book).data)
         data["metadata_found"] = not (book.title == "Unknown Book" and book.author == "Unknown")
         return Response(data)
+
+
+class BookSearchView(APIView):
+    """Searches Open Library by title and/or author for disambiguation."""
+
+    def get(self, request: Request) -> Response:
+        """Returns a list of candidate books matching the query.
+
+        Query params:
+            title: Book title (optional but at least one of title/author required)
+            author: Author name (optional)
+        """
+        title = request.query_params.get("title", "").strip()
+        author = request.query_params.get("author", "").strip()
+
+        if not title and not author:
+            return Response(
+                {"error": "At least one of title or author is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            results = search_books_by_title_author(title, author)
+        except requests.RequestException as exc:
+            return Response(
+                {"error": f"Search failed: {exc}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(results, status=status.HTTP_200_OK)
 
 
 class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):

@@ -171,58 +171,20 @@ const Dashboard = () => {
         </Button>
       </header>
 
-      {/* Shelf Impact Section */}
-      {impactLoading ? (
-        <div className="text-center py-5 mb-5">
-          <Spinner animation="grow" variant="warning" />
-          <p className="text-muted mt-2 small">Calculating your impact...</p>
-        </div>
-      ) : (
-        impactStats && (
-          <section className="mb-5">
-            <div className="d-flex align-items-center mb-4">
-              <h2 className="fw-bold mb-0">
-                <i className="bi bi-graph-up-arrow me-2 text-warning"></i>
-                Shelf Impact
-              </h2>
-              <hr className="flex-grow-1 ms-3 d-none d-md-block text-muted opacity-25" />
-            </div>
-
-            <ImpactStats
-              totalResolved={impactStats.total_resolved_books}
-              potentialEarnings={impactStats.total_potential_earnings}
-              topDestinations={impactStats.top_donation_destinations}
-            />
-
-            <Row className="g-4">
-              <Col lg={8}>
-                <SpatialROI inchesSaved={impactStats.total_recovered_inches} />
-              </Col>
-              <Col lg={4}>
-                <Card className="h-100 border-0 shadow-sm bg-warning bg-opacity-10 border-start border-4 border-warning">
-                  <Card.Body className="p-4">
-                    <h6 className="text-uppercase text-warning fw-bold small mb-3">
-                      AI Progress Insights
-                    </h6>
-                    <div className="d-flex">
-                      <i className="bi bi-quote fs-1 text-warning opacity-50 me-2"></i>
-                      <p className="mb-0 fs-5 lh-base text-dark" style={{ fontStyle: 'italic' }}>
-                        {impactStats.impact_narrative}
-                      </p>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </section>
-        )
-      )}
-
-      {/* Culling Goal Section */}
-      <Card className="shadow-sm border-0 mb-5">
-        <Card.Header className="bg-white d-flex justify-content-between align-items-center py-3">
+      {/* Culling Goal Section — elevated above Shelf Impact */}
+      <Card
+        className={`shadow-sm mb-5 border-2 ${activeGoal ? 'border-warning' : 'border-danger'}`}
+      >
+        <Card.Header
+          className={`d-flex justify-content-between align-items-center py-3 ${activeGoal ? 'bg-warning bg-opacity-10' : 'bg-danger bg-opacity-10'}`}
+        >
           <span className="fw-bold">
             <i className="bi bi-bullseye me-2 text-warning"></i>Culling Goal
+            {!activeGoal && !goalsLoading && (
+              <Badge bg="danger" className="ms-2 fw-normal">
+                Required before scanning
+              </Badge>
+            )}
           </span>
           <div className="d-flex gap-2">
             {goals.length > 0 && (
@@ -357,6 +319,53 @@ const Dashboard = () => {
           </Collapse>
         </Card.Body>
       </Card>
+
+      {/* Shelf Impact Section */}
+      {impactLoading ? (
+        <div className="text-center py-5 mb-5">
+          <Spinner animation="grow" variant="warning" />
+          <p className="text-muted mt-2 small">Calculating your impact...</p>
+        </div>
+      ) : (
+        impactStats && (
+          <section className="mb-5">
+            <div className="d-flex align-items-center mb-4">
+              <h2 className="fw-bold mb-0">
+                <i className="bi bi-graph-up-arrow me-2 text-warning"></i>
+                Shelf Impact
+              </h2>
+              <hr className="flex-grow-1 ms-3 d-none d-md-block text-muted opacity-25" />
+            </div>
+
+            <ImpactStats
+              totalResolved={impactStats.total_resolved_books}
+              potentialEarnings={impactStats.total_potential_earnings}
+              topDestinations={impactStats.top_donation_destinations}
+            />
+
+            <Row className="g-4">
+              <Col lg={8}>
+                <SpatialROI inchesSaved={impactStats.total_recovered_inches} />
+              </Col>
+              <Col lg={4}>
+                <Card className="h-100 border-0 shadow-sm bg-warning bg-opacity-10 border-start border-4 border-warning">
+                  <Card.Body className="p-4">
+                    <h6 className="text-uppercase text-warning fw-bold small mb-3">
+                      AI Progress Insights
+                    </h6>
+                    <div className="d-flex">
+                      <i className="bi bi-quote fs-1 text-warning opacity-50 me-2"></i>
+                      <p className="mb-0 fs-5 lh-base text-dark" style={{ fontStyle: 'italic' }}>
+                        {impactStats.impact_narrative}
+                      </p>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </section>
+        )
+      )}
 
       {/* Stats */}
       {statsLoading ? (
