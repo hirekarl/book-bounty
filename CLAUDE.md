@@ -12,21 +12,12 @@ book-bounty/
 │   ├── core/          # settings.py, urls.py
 │   └── triage/        # main app: models, views, serializers, ai_engine
 ├── frontend/          # React 19 + Vite SPA
-│   └── src/
-│       ├── components/ 
-│       │   ├── common/ # Badge.jsx (StatusBadge, ConditionBadge)
-│       │   └── Layout.jsx
-│       └── pages/     # Dashboard, Inventory, Login, TriageWizard.jsx
-│           ├── Inventory/ # EditRecordModal
-│           └── TriageWizard/ # RecommendationCard, ConditionForm
-│       └── services/  # api.js (Axios client)
 ├── docs/
-│   └── proposals/
-│       └── v3_PRODUCT_VISION.md # B2B marketplace proposal
-├── v2_PRODUCT_VISION.md   # current product vision (AI culling)
-├── v2_AI_ENGINE_SPEC.md   # AI engine technical spec
-├── GEMINI.md              # context file for Gemini CLI
-└── CLAUDE.md              # this file
+│   ├── architecture/  # Living strategy (VISION.md, AI_SPEC.md, ORCHESTRATION.md)
+│   ├── staff/         # Team brain (personae/, directives/, REFLECTION.md)
+│   └── roadmap/       # Planning (proposals/, completed/)
+├── GEMINI.md          # context file for Gemini CLI
+└── CLAUDE.md          # this file
 ```
 
 **Stack:**
@@ -312,8 +303,8 @@ cd frontend && npx prettier --write .
 
 ## 10. Product Scope Notes
 
-- **v2_PRODUCT_VISION.md** and **v2_AI_ENGINE_SPEC.md** define the current implementation target.
-- **docs/proposals/v3_PRODUCT_VISION.md** is aspirational only (B2B institutional acquisition marketplace). It does NOT inform any current implementation decisions.
+- `docs/architecture/VISION.md` and `docs/architecture/AI_SPEC.md` define the current implementation target.
+- `docs/roadmap/proposals/v3_VISION.md` is aspirational only.
 - This is a **single-user app** — no multi-tenancy, no sharing. One Django user per install.
 
 ---
@@ -321,7 +312,7 @@ cd frontend && npx prettier --write .
 ## 11. Multi-Agent Orchestration
 This project uses a multi-agent "staff" model. 
 - **Atlas (Principal Architect):** Your primary persona. You orchestrate tasks and delegate to specialized sub-agents.
-- **Mandate:** Before starting any session or task, you **MUST** read and follow the instructions in `docs/orchestration/CLAUDE_METADIRECTIVE.md` and `docs/orchestration/personae/Atlas.md`.
+- **Mandate:** Before starting any session or task, you **MUST** read and follow the instructions in `docs/staff/directives/CLAUDE.md` and `docs/staff/personae/Atlas.md`.
 - **Consent:** Never commit changes to the repository without receiving explicit permission from the user first.
 
 ---
@@ -344,5 +335,5 @@ This project uses a multi-agent "staff" model.
 ---
 
 ## 14. Project Status
-- **Phase 1 through Phase 6:** Completed. The application is fully functional with AI triage, inventory management, and export capabilities.
-- **Current Focus:** Maintenance and future planning for Phase 7+.
+- **Phase 1 through Phase 6:** Completed.
+- **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.

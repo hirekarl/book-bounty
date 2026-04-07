@@ -21,24 +21,24 @@
 
 When invoking the `generalist` tool, use these persona-specific protocols:
 
-1.  **Read Persona Context:** Read the corresponding file in `docs/orchestration/personae/` (e.g., `Forge.md`) before starting.
+1.  **Read Persona Context:** Read the corresponding file in `docs/staff/personae/` (e.g., `Forge.md`) before starting.
 2.  **Assign Identity:** Pass the persona's focus and mandates to the sub-agent.
 3.  **Log Feedback:** Update the "Feedback Log" in the persona file if significant learning occurs.
 
 ### **Forge (Backend Specialist)**
-> "Act as Forge. Focus: Django 6.x, DRF, and SQL optimization. Context: docs/orchestration/personae/Forge.md."
+> "Act as Forge. Focus: Django 6.x, DRF, and SQL optimization. Context: docs/staff/personae/Forge.md."
 
 ### **Prism (Frontend Specialist)**
-> "Act as Prism. Focus: React 19, React-Bootstrap, and A11y. Context: docs/orchestration/personae/Prism.md."
+> "Act as Prism. Focus: React 19, React-Bootstrap, and A11y. Context: docs/staff/personae/Prism.md."
 
 ### **Nova (AI Specialist)**
-> "Act as Nova. Focus: Gemini 2.5 Flash, `instructor` library. Context: docs/orchestration/personae/Nova.md."
+> "Act as Nova. Focus: Gemini 2.5 Flash, `instructor` library. Context: docs/staff/personae/Nova.md."
 
 ### **Sentry (QA/DevOps Specialist)**
-> "Act as Sentry. Focus: Stability, audits, and regressions. Context: docs/orchestration/personae/Sentry.md."
+> "Act as Sentry. Focus: Stability, audits, and regressions. Context: docs/staff/personae/Sentry.md."
 
 ### **Archivist (Documentation Specialist)**
-> "Act as Archivist. Focus: Log synchronization and documentation integrity. Context: docs/orchestration/personae/Archivist.md. You do not write code."
+> "Act as Archivist. Focus: Log synchronization and documentation integrity. Context: docs/staff/personae/Archivist.md. You do not write code."
 
 ---
 
@@ -49,9 +49,9 @@ When invoking the `generalist` tool, use these persona-specific protocols:
     - No sub-agent task should exceed 3 files.
     - Component creation must be decoupled from Page integration.
     - Verification (Sentry) must be decoupled from Logging (Archivist).
-3.  **Read Context:** Read `docs/orchestration/personae/Atlas.md` for current orchestrator mandates.
+3.  **Read Context:** Read `docs/staff/personae/Atlas.md` for current orchestrator mandates.
 4.  **Delegate:** Call `generalist` for each sub-task.
 5.  **Verify:** Call `Sentry` to audit changes.
-6.  **Document:** Call `Archivist` to update `GEMINI.md`, `REFLECTION_LOG.md`, and persona logs.
+6.  **Document:** Call `Archivist` to update `GEMINI.md`, `docs/staff/REFLECTION.md`, and persona logs.
 7.  **Reflect:** Perform a post-mortem on the task and identify friction points.
-8.  **Commit:** Finalize the work tree (ONLY after receiving explicit permission from the User).
+8.  **Commit:** Finalize the work treepermission from eiving explicit permission from the User).

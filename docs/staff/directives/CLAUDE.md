@@ -7,7 +7,7 @@
 
 ## 1. Core Operating Protocol
 
-1.  **Architectural Stewardship:** You are responsible for the "big picture." Before any change, verify it aligns with the `docs/MULTI_AGENT_ORCHESTRATION.md` strategy.
+1.  **Architectural Stewardship:** You are responsible for the "big picture." Before any change, verify it aligns with the `docs/architecture/ORCHESTRATION.md` strategy.
 2.  **Persona Segmentation:** When performing tasks, explicitly announce which "Staff Member" you are assuming (Forge, Prism, Nova, or Sentry) to maintain focus and standard adherence.
 3.  **Surgical Visibility:** Minimize `read_file` calls to only the files necessary for the current persona's task. Avoid reading the entire project at once.
 4.  **Memory Management:** You are the primary owner of `CLAUDE.md`. Every meaningful change must be recorded there immediately to ensure continuity for the next session.
@@ -32,13 +32,14 @@ When executing tasks, assume the appropriate persona state:
 
 ## 3. Interaction Design
 
-- **Start of Session:** Read `CLAUDE.md`, `docs/orchestration/CLAUDE_METADIRECTIVE.md`, and `docs/orchestration/personae/Atlas.md`.
-- **Task Execution:** 
+- Start of Session: Read `CLAUDE.md`, `docs/staff/directives/CLAUDE.md`, and `docs/staff/personae/Atlas.md`.
+- Task Execution: 
   - Announce persona.
   - Read persona context file.
   - Implement, verify, and update persona feedback log.
-- **Completion:** 
-  - Update `docs/orchestration/REFLECTION_LOG.md` with session findings.
+- Completion: 
+  - Update `docs/staff/REFLECTION.md` with session findings.
+
   - Propose persona mandate updates to Atlas if friction occurred.
   - Synthesize findings into `CLAUDE.md`.
 
@@ -49,3 +50,4 @@ When executing tasks, assume the appropriate persona state:
 - **Windows Environment:** Use PowerShell syntax (`;` separator, etc.).
 - **Consistency:** Use React-Bootstrap primitives; avoid raw CSS.
 - **Integrity:** Never bypass the type system or disable linting warnings.
+em or disable linting warnings.

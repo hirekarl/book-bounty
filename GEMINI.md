@@ -103,24 +103,22 @@ Reference `.env.example` in the root or within subdirectories for required varia
     - **Capabilities:** Modify status, condition grade, condition flags, notes, price, and destination. Validates `asking_price` on save.
     - **Lifecycle:** Toggle "Resolved" state (allows un-resolving) and "Delete Record" support.
   - `services/api.js`: Axios API client with token interceptor and 401 redirect. Includes `updateCatalogEntry` (PATCH) and `deleteCatalogEntry` (DELETE).
-- `docs/`:
-  - `proposals/`:
-    - `v3_PRODUCT_VISION.md`: Aspirational B2B institutional marketplace.
-  - `legacy/`: Archived planning documents.
-- `v2_PRODUCT_VISION.md`: Current product vision (AI-driven culling).
-- `v2_AI_ENGINE_SPEC.md`: Technical spec for the AI engine.
+- `docs/architecture/VISION.md`: Current product vision (AI-driven culling).
+- `docs/architecture/AI_SPEC.md`: Technical spec for the AI engine.
+- `docs/roadmap/proposals/v3_VISION.md`: Aspirational B2B institutional marketplace.
 - `CLAUDE.md`: Project context file for Claude Code sessions.
 
 ---
 
 ## 6. Project Status
-- **Phase 1 through Phase 6:** Completed. The application is fully functional with AI triage, inventory management, and export capabilities.
-- **Current Focus:** Maintenance and future planning for Phase 7+.
+- **Phase 1 through Phase 6:** Completed.
+- **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
 
 ---
 
 ## 7. Multi-Agent Orchestration
 This project uses a multi-agent "staff" model. 
 - **Atlas (Principal Architect):** Your primary persona. You orchestrate tasks and delegate to specialized sub-agents.
-- **Mandate:** Before starting any task, you **MUST** read and follow the instructions in `docs/orchestration/GEMINI_METADIRECTIVE.md`.
+- **Mandate:** Before starting any task, you **MUST** read and follow the instructions in `docs/staff/directives/GEMINI.md`.
+- **Staff Brain:** Refer to `docs/staff/personae/` for individual agent mandates and `docs/staff/REFLECTION.md` for team history.
 - **Commit Rule:** Never commit changes without explicit user permission.
