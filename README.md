@@ -216,10 +216,17 @@ cp .env.example .env
 | `DEBUG` | Yes | Set to `True` for local development, `False` in production. |
 | `ALLOWED_HOSTS` | Yes | Comma-separated list of allowed hostnames. |
 | `CORS_ALLOWED_ORIGINS` | Yes | The frontend origin (e.g. `http://localhost:5173`). |
+| `DATABASE_URL` | No | Connection string for a PostgreSQL database. Defaults to local SQLite if omitted. |
 | `OPEN_LIBRARY_CONTACT` | Yes | Your email address, included in Open Library API request headers per their usage policy. |
 | `GEMINI_API_KEY` | Yes | Your Gemini API key. Required for AI recommendations. Without it, the engine returns a safe KEEP fallback. |
+| `EBAY_CLIENT_ID` | No | eBay Browse API Client ID for fetching real market pricing data. |
+| `EBAY_CLIENT_SECRET` | No | eBay Browse API Client Secret. |
+| `REQUESTS_TIMEOUT` | No | Timeout in seconds for external API calls (Open Library, eBay). Defaults to 10. |
 | `VITE_API_BASE_URL` | Yes | The backend API base URL as seen by the browser (e.g. `http://localhost:8000/api`). |
 | `DEMO_MODE` | No | Set to `True` to mock market valuation and pricing data. This returns deterministic mock pricing (seeded from ISBN) to simulate real market indicators without hitting external API rate limits. |
+| `DJANGO_SUPERUSER_USERNAME` | No | Username for automated superuser creation on first run. |
+| `DJANGO_SUPERUSER_EMAIL` | No | Email for automated superuser creation on first run. |
+| `DJANGO_SUPERUSER_PASSWORD` | No | Password for automated superuser creation on first run. |
 
 > **Note:** `VITE_API_BASE_URL` is read at **build time** by Vite. If you change it, restart the dev server.
 
