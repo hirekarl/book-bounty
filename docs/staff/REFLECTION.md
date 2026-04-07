@@ -15,6 +15,12 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ## Log Entries
 
+### 2026-04-07: Archival, DEMO_MODE, and Valuation Wiring Fix
+- **Task:** (1) Reconstructed Phase 1–5 completed roadmap documents from git commit history. (2) Implemented DEMO_MODE — when `DEMO_MODE` is set in the environment, `fetch_valuation_data()` returns deterministic mock eBay pricing (seeded from ISBN digit-sum) with `_demo: True` marker. (3) Fixed three separate wiring gaps that caused demo (and real) market indicators to never appear in the UI.
+- **Friction Points:** All three demo indicators were built correctly but none were visible — because: (a) `RecommendView` fetched `valuation_data` for the AI prompt but never included it in the API response; (b) `TriageWizard` never passed `valuationData` prop to `RecommendationCard` despite the prop being defined; (c) `perform_create` didn't save `valuation_data` on entry creation, so EditRecordModal showed nothing until "Refresh Pricing" was manually clicked. All three gaps were silent — no errors, just invisible UI.
+- **Mitigation:** Diagnosed by reading the full data path (backend view → frontend wizard → component prop). Fixed all three in sequence: RecommendView returns `valuation_data` in response body; TriageWizard stores it in `aiValuationData` state and passes it to both RecommendationCard and createCatalogEntry; perform_create saves it via save_kwargs pattern.
+- **Efficiency Gain:** Pattern established: when building feature flags that gate UI display, trace the full data path (DB → view → response → state → prop → render) before closing. A flag that works on the backend but never reaches the component is invisible by definition.
+
 ### 2026-04-07: Phase 8 (Valuation Intelligence)
 - **Task:** Integrated eBay Browse API for real market pricing data. Activated dormant `valuation_data` field. Bundled inventory pagination (Phase 7 deferral). Added valuation UI across EditRecordModal and TriageWizard Step 2.
 - **Friction Points:** Prism-B2 hit a rate limit mid-task; Atlas completed the remaining JSX (Load More button, count display, onRefreshValuation wiring) directly. One Prettier formatting fix needed on the Load More button.

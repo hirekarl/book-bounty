@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prettier:*)",
+      "Bash(npm run:*)",
+      "Bash(uv run:*)",
+      "WebSearch"
+    ]
+  }
+}
