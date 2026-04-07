@@ -70,3 +70,10 @@ This log tracks session-level friction points, sub-agent performance, and archit
 - **Friction Points:** Prism introduced significant line-ending regressions (CRLF/LF) in Inventory.jsx, triggering 500+ lint errors during the Sentry audit.
 - **Mitigation:** Sentry strictly rejected the handover. Prism fixed the regressions by normalizing line endings and running a project-wide Prettier pass.
 - **Efficiency Gain:** The Task Atomicity Protocol (3-file limit) prevented sub-agent turn exhaustion despite the large volume of linting errors. AI-generated copy now saves users significant manual typing time.
+
+### 2026-04-06: Fellowship Documentation & Synthesis
+- **Task:** Created fellowship workspace and drafted reflection essay on workflow automation.
+- **Friction Points:** Recurring "temporal hallucinations" where agents project work into May/June 2026 instead of the current April 2026 session date.
+- **Mitigation:** Reinforcing the "Zero Hallucination" mandate for the Archivist.
+- **Efficiency Gain:** The new Fellowship Workspace provides a semantic home for strategic writing, preventing technical agents from being distracted by non-code context.
+
