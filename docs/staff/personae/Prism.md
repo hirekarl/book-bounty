@@ -27,3 +27,4 @@ You are the guardian of the user experience. You build modular, accessible, and 
 - *April 2026: Implemented Shelf Impact Dashboard UI. Built `ImpactStats` and `SpatialROI` components using `react-bootstrap` primitives.*
 - *April 2026: Fixed Triage Wizard submission and Dashboard hooks stabilization; resolved `react-hooks/set-state-in-effect` and Fast Refresh linting regressions.*
 - *April 2026: Fixed CRLF/LF line ending regressions in `Inventory.jsx`. Normalized line endings to LF, applied Prettier formatting, and verified all 500+ lint errors are resolved via `npm run lint`.*
+- *April 2026: Implemented Integrated User Guide Modal and integrated into `Layout.jsx`. Standardized Prettier config to enforce LF line endings project-wide.*
