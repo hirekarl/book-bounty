@@ -436,12 +436,19 @@ book-bounty/
 │       └── services/
 │           └── api.js          # Axios API client with token interceptor
 │
-├── docs/legacy/                # Archived planning documents
+├── docs/
+│   ├── architecture/           # Living strategy (Vision, AI Spec, Orchestration)
+│   ├── staff/                  # Multi-agent team context (Personas, Directives, Reflection)
+│   ├── roadmap/                # Planning (Proposals and completed phase archives)
+│   └── fellowship/             # User's personal fellowship workspace
 ├── .env.example                # Environment variable template
-├── v2_PRODUCT_VISION.md        # Current product vision
-├── v2_AI_ENGINE_SPEC.md        # AI engine technical specification
-├── v3_PRODUCT_VISION.md        # Aspirational B2B marketplace vision (not current impl)
 ├── CLAUDE.md                   # Project context for Claude Code
 ├── GEMINI.md                   # Project context for Gemini CLI
 └── README.md                   # This file
 ```
+
+---
+
+## Fellowship Workspace
+
+The `docs/fellowship/` directory is reserved for the user's personal fellowship-related reflections, research, and deliverables. This workspace is integrated into the project for ease of access but is semantically separated from technical specifications.

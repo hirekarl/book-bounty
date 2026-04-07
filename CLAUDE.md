@@ -15,7 +15,8 @@ book-bounty/
 ├── docs/
 │   ├── architecture/  # Living strategy (VISION.md, AI_SPEC.md, ORCHESTRATION.md)
 │   ├── staff/         # Team brain (personae/, directives/, REFLECTION.md)
-│   └── roadmap/       # Planning (proposals/, completed/)
+│   ├── roadmap/       # Planning (proposals/, completed/)
+│   └── fellowship/    # User's personal domain (reflections/, research/, deliverables/)
 ├── GEMINI.md          # context file for Gemini CLI
 └── CLAUDE.md          # this file
 ```

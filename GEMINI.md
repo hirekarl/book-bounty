@@ -106,11 +106,19 @@ Reference `.env.example` in the root or within subdirectories for required varia
 - `docs/architecture/VISION.md`: Current product vision (AI-driven culling).
 - `docs/architecture/AI_SPEC.md`: Technical spec for the AI engine.
 - `docs/roadmap/proposals/v3_VISION.md`: Aspirational B2B institutional marketplace.
+- `docs/fellowship/`: User's personal fellowship workspace (reflections, research, deliverables).
 - `CLAUDE.md`: Project context file for Claude Code sessions.
 
 ---
 
 ## 6. Project Status
+...
+---
+
+## 8. Fellowship Workspace
+The `docs/fellowship/` directory is the User's personal domain for fellowship-related content.
+- **Role:** Agents may be asked to edit these documents, but they must **never** use them as a primary source for technical architecture or system mandates.
+- **Context:** Reach for context in `docs/architecture/` and `docs/staff/` first.
 - **Phase 1 through Phase 6:** Completed.
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
 
