@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Container, Navbar, Nav, Button } from 'react-bootstrap';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { logout } from '../services/api';
+import UserGuideModal from './common/UserGuideModal';
 
 const Layout = () => {
   const navigate = useNavigate();
+  const [showGuide, setShowGuide] = useState(false);
 
   const handleLogout = () => {
     logout().finally(() => navigate('/login'));
@@ -31,15 +33,27 @@ const Layout = () => {
                 Inventory
               </Nav.Link>
             </Nav>
-            <Button variant="outline-light" size="sm" onClick={handleLogout}>
-              <i className="bi bi-box-arrow-right me-1"></i>Sign Out
-            </Button>
+            <div className="d-flex gap-2">
+              <Button
+                variant="outline-light"
+                size="sm"
+                onClick={() => setShowGuide(true)}
+                aria-label="User Guide"
+                title="User Guide"
+              >
+                <i className="bi bi-question-circle"></i>
+              </Button>
+              <Button variant="outline-light" size="sm" onClick={handleLogout}>
+                <i className="bi bi-box-arrow-right me-1"></i>Sign Out
+              </Button>
+            </div>
           </Navbar.Collapse>
         </Container>
       </Navbar>
       <main>
         <Outlet />
       </main>
+      <UserGuideModal show={showGuide} onHide={() => setShowGuide(false)} />
     </>
   );
 };
