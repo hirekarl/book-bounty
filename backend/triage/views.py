@@ -98,8 +98,12 @@ class RecommendView(APIView):
             "flags": request.data.get("condition_flags", []),
         }
 
+        valuation_data = fetch_valuation_data(isbn)
+
         try:
-            recommendation = get_ai_recommendation(goal.description, book_metadata, condition)
+            recommendation = get_ai_recommendation(
+                goal.description, book_metadata, condition, valuation_data=valuation_data
+            )
         except Exception as exc:
             return Response(
                 {"error": f"AI engine error: {exc}"},
@@ -332,8 +336,14 @@ class RecommendBulkView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        valuation_map = {
+            entry.id: fetch_valuation_data(entry.book.isbn) for entry in entries
+        }
+
         try:
-            bulk_recommendation = get_bulk_ai_recommendation(list(entries), goal)
+            bulk_recommendation = get_bulk_ai_recommendation(
+                list(entries), goal, valuation_map=valuation_map
+            )
         except Exception as exc:
             return Response(
                 {"error": f"AI engine error: {exc}"},
