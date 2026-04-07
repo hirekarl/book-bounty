@@ -9,9 +9,11 @@ import re
 from django.db import models, transaction
 from django.db.models import Count, F, FloatField, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -27,7 +29,15 @@ from triage.serializers import (
     CatalogEntrySerializer,
     CullingGoalSerializer,
 )
-from triage.services import get_or_create_book
+from triage.services import fetch_valuation_data, get_or_create_book
+
+
+class CatalogEntryPagination(PageNumberPagination):
+    """Pagination class for CatalogEntry list responses."""
+
+    page_size = 50
+    page_size_query_param = "page_size"
+    max_page_size = 200
 
 
 class CullingGoalViewSet(viewsets.ModelViewSet):
@@ -131,6 +141,17 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
 
     queryset = CatalogEntry.objects.all().select_related("book").order_by("-created_at")
     serializer_class = CatalogEntrySerializer
+    pagination_class = CatalogEntryPagination
+
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Returns a paginated list of catalog entries."""
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def get_queryset(self) -> models.QuerySet[CatalogEntry]:
         """Filters entries by status, resolved state, search query, or in-collection view."""
@@ -341,6 +362,18 @@ class RecommendBulkView(APIView):
             )
 
         return Response(results, status=status.HTTP_200_OK)
+
+
+class ValuationView(APIView):
+    """Fetch or refresh market valuation data for a catalog entry."""
+
+    def post(self, _request: Request, pk: int) -> Response:
+        """Fetches market valuation data for the given entry and persists it."""
+        entry = get_object_or_404(CatalogEntry.objects.select_related("book"), pk=pk)
+        valuation_data = fetch_valuation_data(entry.book.isbn)
+        entry.valuation_data = valuation_data
+        entry.save(update_fields=["valuation_data", "updated_at"])
+        return Response(valuation_data, status=status.HTTP_200_OK)
 
 
 class DashboardImpactView(APIView):

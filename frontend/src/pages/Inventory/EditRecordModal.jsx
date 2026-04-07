@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Button, Row, Col, Form, Badge, InputGroup } from 'react-bootstrap';
+import { Modal, Button, Row, Col, Form, Badge, InputGroup, Spinner } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import { catalogSchema, validateWithZod } from '../../schemas/catalogSchema';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -8,7 +8,95 @@ const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
 const flagKey = (f) => f.toUpperCase().replace(' ', '_');
 
-const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
+const fmt = (n) => Number(n).toFixed(2);
+
+const isStale = (fetchedAt) => {
+  if (!fetchedAt) return false;
+  const fetched = new Date(fetchedAt);
+  const now = new Date();
+  const diffDays = (now - fetched) / (1000 * 60 * 60 * 24);
+  return diffDays > 30;
+};
+
+const MarketPricingSection = ({ valuationData, onRefreshValuation, isRefreshingValuation }) => {
+  const { ebay, abebooks, booksrun } = valuationData || {};
+
+  return (
+    <div className="mt-4 pt-3 border-top">
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <h6 className="fw-bold mb-0">
+          <i className="bi bi-graph-up me-2 text-success"></i>Market Pricing
+        </h6>
+        <Button
+          variant="outline-secondary"
+          size="sm"
+          onClick={onRefreshValuation}
+          disabled={isRefreshingValuation}
+        >
+          {isRefreshingValuation ? (
+            <>
+              <Spinner size="sm" animation="border" className="me-1" />
+              Refreshing…
+            </>
+          ) : (
+            'Refresh Pricing'
+          )}
+        </Button>
+      </div>
+
+      <div className="d-flex flex-column gap-1 small">
+        {ebay && (
+          <div>
+            <span>
+              eBay: ${fmt(ebay.low)} – ${fmt(ebay.high)} ({ebay.sample_size} listings)
+            </span>
+            {isStale(ebay.fetched_at) && (
+              <span className="text-muted ms-2">
+                — Data from {new Date(ebay.fetched_at).toLocaleDateString()} — may be outdated
+              </span>
+            )}
+          </div>
+        )}
+        {abebooks && (
+          <div>
+            <span>
+              AbeBooks: ${fmt(abebooks.low)} – ${fmt(abebooks.high)} (median ${fmt(abebooks.median)}
+              )
+            </span>
+            {isStale(abebooks.fetched_at) && (
+              <span className="text-muted ms-2">
+                — Data from {new Date(abebooks.fetched_at).toLocaleDateString()} — may be outdated
+              </span>
+            )}
+          </div>
+        )}
+        {booksrun && (
+          <div>
+            <span>
+              Buyback offer: ${fmt(booksrun.buyback_price)} ({booksrun.condition})
+            </span>
+            {isStale(booksrun.fetched_at) && (
+              <span className="text-muted ms-2">
+                — Data from {new Date(booksrun.fetched_at).toLocaleDateString()} — may be outdated
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const EditRecordModal = ({
+  show,
+  onHide,
+  entry,
+  onSave,
+  onDelete,
+  saving,
+  onRefreshValuation,
+  isRefreshingValuation = false,
+}) => {
   const { showNotification } = useNotification();
 
   const formik = useFormik({
@@ -272,6 +360,14 @@ const EditRecordModal = ({ show, onHide, entry, onSave, onDelete, saving }) => {
                 </Form.Text>
               </Form.Group>
             </Form>
+
+            {entry.valuation_data && Object.keys(entry.valuation_data).length > 0 && (
+              <MarketPricingSection
+                valuationData={entry.valuation_data}
+                onRefreshValuation={onRefreshValuation}
+                isRefreshingValuation={isRefreshingValuation}
+              />
+            )}
           </Col>
         </Row>
       </Modal.Body>

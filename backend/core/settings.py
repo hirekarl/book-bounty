@@ -42,6 +42,10 @@ ALLOWED_HOSTS: list[str] = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").spl
 # Open Library API Contact
 OPEN_LIBRARY_CONTACT = os.getenv("OPEN_LIBRARY_CONTACT", "anonymous@example.com")
 
+# eBay Marketplace API credentials
+EBAY_CLIENT_ID: str = os.getenv("EBAY_CLIENT_ID", "")
+EBAY_CLIENT_SECRET: str = os.getenv("EBAY_CLIENT_SECRET", "")
+
 
 # Application definition
 

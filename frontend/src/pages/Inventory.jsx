@@ -66,6 +66,9 @@ const Inventory = () => {
 
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextPageUrl, setNextPageUrl] = useState(null);
+  const [totalCount, setTotalCount] = useState(null);
   const [error, setError] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -74,12 +77,24 @@ const Inventory = () => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [isRefreshingValuation, setIsRefreshingValuation] = useState(false);
 
   const fetchEntries = useCallback(() => {
     setLoading(true);
+    setNextPageUrl(null);
+    setTotalCount(null);
     getCatalogEntries({ status: statusFilter, search: searchQuery, ...viewParams })
       .then((res) => {
-        setEntries(res.data);
+        const data = res.data;
+        if (data && typeof data === 'object' && 'results' in data) {
+          setEntries(data.results);
+          setNextPageUrl(data.next ?? null);
+          setTotalCount(data.count ?? null);
+        } else {
+          setEntries(data);
+          setNextPageUrl(null);
+          setTotalCount(null);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -87,6 +102,25 @@ const Inventory = () => {
         setLoading(false);
       });
   }, [statusFilter, searchQuery, viewParams]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!nextPageUrl || loadingMore) return;
+    setLoadingMore(true);
+    api
+      .get(nextPageUrl)
+      .then((res) => {
+        const data = res.data;
+        if (data && typeof data === 'object' && 'results' in data) {
+          setEntries((prev) => [...prev, ...data.results]);
+          setNextPageUrl(data.next ?? null);
+        }
+        setLoadingMore(false);
+      })
+      .catch(() => {
+        setError('Failed to load more entries.');
+        setLoadingMore(false);
+      });
+  }, [nextPageUrl, loadingMore]);
 
   useEffect(() => {
     fetchEntries(); // eslint-disable-line react-hooks/set-state-in-effect
@@ -156,6 +190,21 @@ const Inventory = () => {
       .catch(() => {
         setError('Failed to update entry.');
         setSaving(false);
+      });
+  };
+
+  const handleRefreshValuation = () => {
+    if (!selectedEntry) return;
+    setIsRefreshingValuation(true);
+    api
+      .post(`/entries/${selectedEntry.id}/valuation/`)
+      .then((res) => {
+        setSelectedEntry((prev) => ({ ...prev, valuation_data: res.data }));
+        setIsRefreshingValuation(false);
+      })
+      .catch(() => {
+        setError('Failed to refresh valuation data.');
+        setIsRefreshingValuation(false);
       });
   };
 
@@ -330,7 +379,9 @@ const Inventory = () => {
             </Col>
             <Col md={5} className="text-end d-flex align-items-center justify-content-end">
               <span className="text-muted small">
-                {entries.length} {entries.length === 1 ? 'book' : 'books'}
+                {totalCount !== null
+                  ? `Showing ${entries.length} of ${totalCount} books`
+                  : `${entries.length} ${entries.length === 1 ? 'book' : 'books'}`}
               </span>
             </Col>
           </Row>
@@ -485,6 +536,21 @@ const Inventory = () => {
         </div>
       )}
 
+      {nextPageUrl && (
+        <div className="text-center mt-3">
+          <Button variant="outline-secondary" onClick={handleLoadMore} disabled={loadingMore}>
+            {loadingMore ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Loading...
+              </>
+            ) : (
+              'Load More'
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Edit Record Modal */}
       <EditRecordModal
         show={showEditModal}
@@ -493,6 +559,8 @@ const Inventory = () => {
         onSave={handleSaveEdit}
         onDelete={handleDeleteEntry}
         saving={saving}
+        onRefreshValuation={handleRefreshValuation}
+        isRefreshingValuation={isRefreshingValuation}
       />
 
       {/* Bulk Review Modal */}

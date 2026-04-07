@@ -15,6 +15,7 @@ from triage.views import (
     DashboardStatsView,
     RecommendBulkView,
     RecommendView,
+    ValuationView,
 )
 
 router = DefaultRouter()
@@ -25,6 +26,7 @@ urlpatterns = [
     path("lookup/<str:isbn>/", BookLookupView.as_view(), name="book-lookup"),
     path("recommend/", RecommendView.as_view(), name="recommend"),
     path("recommend/bulk/", RecommendBulkView.as_view(), name="recommend-bulk"),
+    path("entries/<int:pk>/valuation/", ValuationView.as_view(), name="entry-valuation"),
     path("stats/", DashboardStatsView.as_view(), name="dashboard-stats"),
     path("impact/", DashboardImpactView.as_view(), name="dashboard-impact"),
     path("", include(router.urls)),

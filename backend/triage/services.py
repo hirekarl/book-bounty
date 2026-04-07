@@ -4,9 +4,12 @@ This module contains business logic for looking up book metadata from the
 Open Library API and determining suggested triage outcomes.
 """
 
+import base64
 import logging
 import os
 import re
+import time
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -17,6 +20,107 @@ from django.core.files.base import ContentFile
 from triage.models import Book, CatalogEntry
 
 logger = logging.getLogger(__name__)
+
+_ebay_token: str | None = None
+_ebay_token_expiry: float = 0.0
+
+
+def _get_ebay_token() -> str | None:
+    """Returns a valid eBay OAuth client-credentials token, fetching one if needed.
+
+    Reads EBAY_CLIENT_ID and EBAY_CLIENT_SECRET from the environment. Returns
+    None gracefully if credentials are absent or the request fails.
+
+    Returns:
+        A bearer token string, or None if unavailable.
+    """
+    global _ebay_token, _ebay_token_expiry
+
+    client_id = os.getenv("EBAY_CLIENT_ID")
+    client_secret = os.getenv("EBAY_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        return None
+
+    if _ebay_token and time.time() < _ebay_token_expiry:
+        return _ebay_token
+
+    try:
+        credentials = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+        timeout = int(os.getenv("REQUESTS_TIMEOUT", "10"))
+        response = requests.post(
+            "https://api.ebay.com/identity/v1/oauth2/token",
+            headers={
+                "Authorization": f"Basic {credentials}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            data={
+                "grant_type": "client_credentials",
+                "scope": "https://api.ebay.com/oauth/api_scope",
+            },
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        _ebay_token = payload["access_token"]
+        _ebay_token_expiry = time.time() + payload["expires_in"] - 60
+        return _ebay_token
+    except Exception:
+        logger.warning("Failed to obtain eBay OAuth token", exc_info=True)
+        return None
+
+
+def fetch_valuation_data(isbn: str) -> dict:
+    """Fetches eBay sold-listing price data for a book by ISBN (GTIN).
+
+    Uses the eBay Browse API item_summary/search endpoint filtered to used
+    condition IDs (3000, 4000, 5000). Returns an empty dict if credentials are
+    absent, fewer than 2 price data points are available, or any error occurs.
+
+    Args:
+        isbn: The book's ISBN (used as the GTIN query parameter).
+
+    Returns:
+        A dict with an "ebay" key containing low, high, sample_size, and
+        fetched_at fields, or an empty dict on failure / insufficient data.
+    """
+    token = _get_ebay_token()
+    if token is None:
+        return {}
+
+    try:
+        timeout = int(os.getenv("REQUESTS_TIMEOUT", "10"))
+        response = requests.get(
+            "https://api.ebay.com/buy/browse/v1/item_summary/search",
+            headers={"Authorization": f"Bearer {token}"},
+            params={
+                "gtin": isbn,
+                "filter": "conditionIds:{3000|4000|5000}",
+                "limit": 20,
+            },
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        items = response.json().get("itemSummaries", [])
+        prices = [
+            float(item["price"]["value"])
+            for item in items
+            if "price" in item
+        ]
+        if len(prices) < 2:
+            return {}
+        return {
+            "ebay": {
+                "low": round(min(prices), 2),
+                "high": round(max(prices), 2),
+                "sample_size": len(prices),
+                "fetched_at": datetime.now(tz=UTC).isoformat(),
+            },
+        }
+    except (requests.RequestException, ValueError, KeyError):
+        logger.warning(
+            "Failed to fetch eBay valuation data for ISBN %s", isbn, exc_info=True,
+        )
+        return {}
 
 
 def download_cover_image(book: Book, url: str) -> None:
@@ -60,7 +164,9 @@ def download_cover_image(book: Book, url: str) -> None:
     except requests.RequestException as e:
         logger.error("Failed to download cover image for ISBN %s: %s", book.isbn, e)
     except Exception:
-        logger.exception("Unexpected error downloading cover image for ISBN %s", book.isbn)
+        logger.exception(
+            "Unexpected error downloading cover image for ISBN %s", book.isbn,
+        )
 
 
 def fetch_book_metadata(isbn: str) -> dict[str, Any]:
@@ -79,7 +185,8 @@ def fetch_book_metadata(isbn: str) -> dict[str, Any]:
     headers = {"User-Agent": f"BookBounty/1.0 ({contact_email})"}
     url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn}&format=json&jscmd=data"
 
-    response = requests.get(url, headers=headers, timeout=int(os.getenv("REQUESTS_TIMEOUT", "10")))
+    timeout = int(os.getenv("REQUESTS_TIMEOUT", "10"))
+    response = requests.get(url, headers=headers, timeout=timeout)
     response.raise_for_status()
     data = response.json()
 

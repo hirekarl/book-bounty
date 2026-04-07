@@ -18,6 +18,7 @@ const RecommendationCard = ({
   setStatus,
   handleAcceptSuggestion,
   fetchAiRecommendation,
+  valuationData,
 }) => {
   const effectiveStatus = overriding ? status : aiRec?.status || status;
   const statusConfig = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.KEEP;
@@ -82,6 +83,30 @@ const RecommendationCard = ({
                     Suggested price: ${aiRec.suggested_price}
                   </p>
                 )}
+                {(() => {
+                  const ebay = valuationData?.ebay;
+                  const abebooks = valuationData?.abebooks;
+                  const source = ebay || abebooks;
+                  if (!source) return null;
+                  const low = source.low;
+                  const high = source.high;
+                  const midpoint = ebay
+                    ? (ebay.low + ebay.high) / 2
+                    : (abebooks.median ?? (abebooks.low + abebooks.high) / 2);
+                  const isHighValue = midpoint > 25;
+                  return (
+                    <div className="d-flex flex-wrap gap-1 mb-2">
+                      <Badge bg="secondary">
+                        Market: ${Number(low).toFixed(0)} – ${Number(high).toFixed(0)}
+                      </Badge>
+                      {isHighValue && (
+                        <Badge bg="warning" text="dark">
+                          High Value
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })()}
                 {aiRec.notable_tags?.length > 0 && (
                   <div className="d-flex flex-wrap gap-1">
                     {aiRec.notable_tags.map((tag) => (

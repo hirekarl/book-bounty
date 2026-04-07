@@ -15,6 +15,12 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ## Log Entries
 
+### 2026-04-07: Phase 8 (Valuation Intelligence)
+- **Task:** Integrated eBay Browse API for real market pricing data. Activated dormant `valuation_data` field. Bundled inventory pagination (Phase 7 deferral). Added valuation UI across EditRecordModal and TriageWizard Step 2.
+- **Friction Points:** Prism-B2 hit a rate limit mid-task; Atlas completed the remaining JSX (Load More button, count display, onRefreshValuation wiring) directly. One Prettier formatting fix needed on the Load More button.
+- **Mitigation:** None needed beyond Atlas completing the partial work. The per-file-cluster Forge scoping worked cleanly — zero cross-agent file conflicts in Wave A.
+- **Efficiency Gain:** Parallel Wave A (3 agents) + parallel B1/C cut wall-clock time significantly. Archivist now fires in parallel with Sentry per Phase 8 process improvements. New ruff.toml eliminated pre-existing noise from all ruff runs.
+
 ### 2026-04-06: Phase 3 (Notifications & Validation)
 - **Task:** Implemented Global Notification System and Zod/Formik validation.
 - **Friction Points:** Sentry was fixing Prism's linting and Hook errors (Double-work). Prism's Zod schema had a silent edge-case failure for empty strings.

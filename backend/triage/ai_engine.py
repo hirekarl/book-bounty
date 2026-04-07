@@ -156,6 +156,7 @@ def get_ai_recommendation(
     user_goal: str,
     book_metadata: dict[str, Any],
     condition: dict[str, Any],
+    valuation_data: dict | None = None,
 ) -> TriageRecommendation:
     """Calls Gemini to get a structured triage recommendation.
 
@@ -163,6 +164,7 @@ def get_ai_recommendation(
         user_goal: The user's stated culling goal.
         book_metadata: Dictionary of book info (title, author, year, etc.).
         condition: Dictionary of physical condition (grade, flags).
+        valuation_data: Optional dict of market pricing data keyed by source.
 
     Returns:
         A TriageRecommendation object.
@@ -172,7 +174,10 @@ def get_ai_recommendation(
         return TriageRecommendation(
             status=TriageStatus.KEEP,
             confidence=0.5,
-            reasoning="AI engine unavailable (missing API key or init error). Defaulting to KEEP.",
+            reasoning=(
+                "AI engine unavailable (missing API key or init error)."
+                " Defaulting to KEEP."
+            ),
             is_fallback=True,
         )
 
@@ -183,26 +188,57 @@ def get_ai_recommendation(
         "recommendations to help the user achieve their goal efficiently. If the "
         "recommended status is SELL, you must also generate a professional, "
         "high-conversion marketplace description that incorporates the book's title, "
-        "author, condition grade, and any condition flags."
+        "author, condition grade, and any condition flags. "
+        "When market data is available, anchor suggested_price near the median "
+        "listing price. Flag books with a median listing price above $25 with "
+        "higher confidence for SELL."
     )
 
     title = book_metadata.get("title", "Unknown")
     author = book_metadata.get("author", "Unknown")
     year = book_metadata.get("year", "Unknown")
     subjects = ", ".join(book_metadata.get("subjects", [])) or "None listed"
-    description = book_metadata.get("description", "").strip() or "No description available."
+    description = (
+        book_metadata.get("description", "").strip() or "No description available."
+    )
     grade = condition.get("grade", "Unknown")
     flags = ", ".join(condition.get("flags", [])) or "None"
 
-    user_prompt = f"""
-Culling Goal: {user_goal}
+    if valuation_data:
+        ebay = valuation_data.get("ebay", {})
+        abebooks = valuation_data.get("abebooks", {})
+        booksrun = valuation_data.get("booksrun", {})
+        market_lines = ["Market Pricing Data:"]
+        if ebay:
+            market_lines.append(
+                f"  eBay active listings: ${ebay['low']}-${ebay['high']}"
+                f" ({ebay['sample_size']} listings)",
+            )
+        if abebooks:
+            market_lines.append(
+                f"  AbeBooks listings: low ${abebooks['low']},"
+                f" median ${abebooks['median']}, high ${abebooks['high']}",
+            )
+        if booksrun:
+            market_lines.append(
+                f"  Buyback offer (BooksRun): ${booksrun['buyback_price']}"
+                f" for {booksrun['condition']} condition",
+            )
+        market_context = "\n".join(market_lines)
+    else:
+        market_context = "Market Pricing Data: Not available."
 
+    user_prompt = f"""
 Book Metadata:
   Title: {title}
   Author: {author}
   Year: {year}
   Subjects: {subjects}
   Description: {description}
+
+{market_context}
+
+Culling Goal: {user_goal}
 
 Physical Condition:
   Grade: {grade}
@@ -224,12 +260,14 @@ Provide a structured recommendation.
 def get_bulk_ai_recommendation(
     entries: list["CatalogEntry"],
     culling_goal: "CullingGoal",
+    valuation_map: dict[int, dict] | None = None,
 ) -> BulkRecommendationResponse:
     """Calls Gemini to get structured triage recommendations for multiple books.
 
     Args:
         entries: A list of CatalogEntry objects.
         culling_goal: The active CullingGoal object.
+        valuation_map: Optional mapping of entry_id -> valuation_data dict.
 
     Returns:
         A BulkRecommendationResponse object containing multiple recommendations.
@@ -245,12 +283,41 @@ def get_bulk_ai_recommendation(
         "which books are most valuable to KEEP versus those that should be SOLD, "
         "DONATED, or DISCARDED. For any book recommended for SALE, generate a "
         "professional, high-conversion marketplace description incorporating the "
-        "title, author, condition grade, and any condition flags."
+        "title, author, condition grade, and any condition flags. "
+        "When market data is available, anchor suggested_price near the median "
+        "listing price. Flag books with a median listing price above $25 with "
+        "higher confidence for SELL."
     )
 
     books_data = []
     for entry in entries:
         book = entry.book
+        valuation_data = (valuation_map or {}).get(entry.id, {})
+
+        if valuation_data:
+            ebay = valuation_data.get("ebay", {})
+            abebooks = valuation_data.get("abebooks", {})
+            booksrun = valuation_data.get("booksrun", {})
+            market_lines = ["Market Pricing Data:"]
+            if ebay:
+                market_lines.append(
+                    f"  eBay active listings: ${ebay['low']}-${ebay['high']}"
+                    f" ({ebay['sample_size']} listings)",
+                )
+            if abebooks:
+                market_lines.append(
+                    f"  AbeBooks listings: low ${abebooks['low']},"
+                    f" median ${abebooks['median']}, high ${abebooks['high']}",
+                )
+            if booksrun:
+                market_lines.append(
+                    f"  Buyback offer (BooksRun): ${booksrun['buyback_price']}"
+                    f" for {booksrun['condition']} condition",
+                )
+            market_context = "\n".join(market_lines)
+        else:
+            market_context = "Market Pricing Data: Not available."
+
         books_data.append(
             f"""
 Entry ID: {entry.id}
@@ -260,6 +327,7 @@ Year: {book.publish_year}
 Subjects: {", ".join(book.subjects)}
 Description: {book.description}
 Condition: {entry.condition_grade} (Flags: {", ".join(entry.condition_flags)})
+{market_context}
 """.strip(),
         )
 

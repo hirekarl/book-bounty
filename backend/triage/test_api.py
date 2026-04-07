@@ -5,7 +5,7 @@ endpoints for looking up books, managing catalog entries, and retrieving
 dashboard statistics.
 """
 
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -79,8 +79,8 @@ class APITests(BaseAPITestCase):
         url = reverse("catalog-entries-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["book"]["title"], "Test Book")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["book"]["title"], "Test Book")
 
     def test_create_entry(self) -> None:
         """Test creating a new catalog entry."""
@@ -127,16 +127,16 @@ class APITests(BaseAPITestCase):
         url = reverse("catalog-entries-list")
         response = self.client.get(url, {"status": "SELL"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["status"], CatalogEntry.Status.SELL)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["status"], CatalogEntry.Status.SELL)
 
     def test_search_entries(self) -> None:
         """Test searching entries by title or author."""
         url = reverse("catalog-entries-list")
         response = self.client.get(url, {"search": "Test Book"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["book"]["title"], "Test Book")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["book"]["title"], "Test Book")
 
     @patch("triage.views.get_bulk_ai_recommendation")
     def test_recommend_bulk(self, mock_get_bulk: MagicMock) -> None:
@@ -255,6 +255,94 @@ class APITests(BaseAPITestCase):
         self.assertEqual(self.entry.marketplace_description, "Keep this gem")
 
 
+class ValuationTests(BaseAPITestCase):
+    """Phase 8 — Tests for the entry valuation endpoint."""
+
+    def setUp(self) -> None:
+        """Set up a book and entry for valuation tests."""
+        super().setUp()
+        self.book = Book.objects.create(
+            isbn="9780374528379",
+            title="Thinking, Fast and Slow",
+            author="Daniel Kahneman",
+        )
+        self.entry = CatalogEntry.objects.create(
+            book=self.book,
+            status=CatalogEntry.Status.KEEP,
+        )
+
+    @patch("triage.views.fetch_valuation_data")
+    def test_valuation_endpoint_returns_200_with_mock_data(
+        self, mock_fetch: MagicMock,
+    ) -> None:
+        """Valuation endpoint returns 200 and persists data to the DB."""
+        mock_data = {
+            "ebay": {
+                "low": 5.0,
+                "high": 15.0,
+                "sample_size": 10,
+                "fetched_at": "2026-04-07T00:00:00Z",
+            },
+        }
+        mock_fetch.return_value = mock_data
+
+        url = reverse("entry-valuation", kwargs={"pk": self.entry.id})
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, mock_data)
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.valuation_data, mock_data)
+
+    def test_valuation_endpoint_404_on_bad_id(self) -> None:
+        """Valuation endpoint returns 404 for a non-existent entry ID."""
+        url = reverse("entry-valuation", kwargs={"pk": 999999})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch("triage.views.fetch_valuation_data")
+    def test_valuation_endpoint_returns_empty_when_no_data(
+        self, mock_fetch: MagicMock,
+    ) -> None:
+        """Valuation endpoint returns 200 with empty dict when no data is available."""
+        mock_fetch.return_value = {}
+
+        url = reverse("entry-valuation", kwargs={"pk": self.entry.id})
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {})
+
+    def test_paginated_entries_response_shape(self) -> None:
+        """GET /api/entries/ returns a paginated response with the expected keys."""
+        url = reverse("catalog-entries-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for key in ("count", "next", "previous", "results"):
+            self.assertIn(key, response.data)
+        self.assertIsInstance(response.data["results"], list)
+
+    def test_isbn_validation_rejects_invalid(self) -> None:
+        """BookLookupView returns 400 for an ISBN that fails regex validation."""
+        url = reverse("book-lookup", kwargs={"isbn": "notanisbn"})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    @patch("triage.views.get_or_create_book")
+    def test_isbn_validation_accepts_valid_isbn13(
+        self, mock_get_or_create: MagicMock,
+    ) -> None:
+        """BookLookupView does not return 400 for a well-formed ISBN-13."""
+        mock_get_or_create.return_value = (self.book, True)
+
+        url = reverse("book-lookup", kwargs={"isbn": "9780374528379"})
+        response = self.client.get(url)
+
+        self.assertNotEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
 class SerializerEdgeCaseTests(BaseAPITestCase):
     """D1 — Serializer edge case tests covering FK validation and un-resolve."""
 
@@ -292,8 +380,6 @@ class SerializerEdgeCaseTests(BaseAPITestCase):
 
     def test_patch_resolved_at_null_clears_resolution(self) -> None:
         """PATCHing resolved_at to null on a resolved entry must un-resolve it (Wave A1)."""
-        from django.utils import timezone
-
         # First resolve the entry via the resolve action
         resolve_url = reverse("catalog-entries-resolve", kwargs={"pk": self.entry.pk})
         resolve_response = self.client.post(resolve_url)
@@ -372,7 +458,7 @@ class HappyPathIntegrationTest(BaseAPITestCase):
         # Step 5: GET /api/entries/?resolved=true — entry must appear.
         resolved_list_response = self.client.get(entries_url, {"resolved": "true"})
         self.assertEqual(resolved_list_response.status_code, status.HTTP_200_OK)
-        resolved_ids = [e["id"] for e in resolved_list_response.data]
+        resolved_ids = [e["id"] for e in resolved_list_response.data["results"]]
         self.assertIn(entry_id, resolved_ids)
 
         # Step 6: PATCH /api/entries/{id}/ with resolved_at=null to un-resolve.
@@ -386,5 +472,5 @@ class HappyPathIntegrationTest(BaseAPITestCase):
         # Step 7: GET /api/entries/?resolved=false — entry must be back in active list.
         active_list_response = self.client.get(entries_url, {"resolved": "false"})
         self.assertEqual(active_list_response.status_code, status.HTTP_200_OK)
-        active_ids = [e["id"] for e in active_list_response.data]
+        active_ids = [e["id"] for e in active_list_response.data["results"]]
         self.assertIn(entry_id, active_ids)
