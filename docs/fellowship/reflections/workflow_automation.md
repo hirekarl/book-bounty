@@ -1,7 +1,7 @@
 # Meta-Automation: From Book Sorting to Agent Orchestration
 
 ## Introduction: The Philosophy of the Shelf
-In the Pursuit AI Native fellowship, we often discuss "automation" as the end goal—the code that sorts the books, the algorithm that predicts the price, the script that migrates the database. But as we built **BookBounty**, a platform designed to triage personal libraries, we realized that the most profound automation wasn't happening in the Python scripts or the React components. It was happening in the *workflow* itself. 
+In the Pursuit AI Native fellowship, we often discuss "automation" as the end goal—the code that sorts the books, the algorithm that predicts the price, the script that migrates the database. The genesis of our project actually began with an academic librarian at Pitts Theological Library (Emory University) who needed a better way to process massive influxes of book donations. We initially started building **StewardStack**—a specialized tool to help institutions catalog these gifts. But as we worked, we realized the core challenge—triaging books efficiently—applied just as much to college students, empty nesters, and minimalists. Thus, **BookBounty** was born as a general-use platform designed to triage personal libraries. However, we soon realized that the most profound automation wasn't happening in the Python scripts or the React components. It was happening in the *workflow* itself. 
 
 This essay reflects on our transition from manual prompting to **Agent Orchestration**, a shift that turned our development environment into a high-functioning digital newsroom.
 
@@ -49,9 +49,9 @@ Keep building, keep refining, and remember: **The best automation is the one tha
 
 ## 🚀 LinkedIn Post (Engagement Optimized)
 
-**Hook:** I thought I was building an app to sort my library. I ended up building an AI development team. 🤖📚
+**Hook:** I thought I was building an app to help a theological library process book donations. I ended up building an AI development team. 🤖📚
 
-This week in the **Pursuit AI Native fellowship**, my MVP goal was simple: Automate the process of triaging books for a garage sale. But as the project grew, I hit a wall every AI builder knows: "Context Drift."
+This week in the **Pursuit AI Native fellowship**, my MVP goal started out as "StewardStack"—a tool to automate institutional book sorting for an academic librarian friend. As it evolved into a general-use app called BookBounty for personal library triage, I hit a wall every AI builder knows: "Context Drift."
 
 The more I added, the more the AI began to "forget" earlier decisions. 
 
@@ -83,7 +83,7 @@ Check out the full journey and the "BookBounty" MVP here: [LINK TO REPO/DEMO]
 
 Hey cohort! 👋 
 
-Just wrapped up my MVP build for this week—**BookBounty**, an AI-powered library triage tool. 📚✨
+Just wrapped up my MVP build for this week—**BookBounty**, an AI-powered library triage tool that actually evolved from an earlier prototype (StewardStack) designed to help academic libraries process donations! 📚✨
 
 The biggest takeaway wasn't actually the Python or React logic, but the **workflow automation** itself. I ran into some major "Generalist Amnesia" with my agents, so I spent the last half of the build designing a **Multi-Agent Orchestration** protocol involving a 6-persona staff (led by Atlas the Orchestrator and documented by the Archivist). 
 
@@ -97,8 +97,8 @@ Would love to hear how you all are managing your agent "staff" during your build
 
 ## 🐦 X (Twitter) Post (Punchy/Viral Style)
 
-I started the week building a book-sorting app.
-I ended the week orchestrating an AI dev team of 6 personas. 🤖🧵
+I started the week building a book donation tool for an academic library.
+I ended the week orchestrating an AI dev team of 6 personas to build its consumer spin-off, BookBounty. 🤖🧵
 
 In the @Pursuit fellowship, the biggest "automation" isn't the code—it's the workflow. 
 

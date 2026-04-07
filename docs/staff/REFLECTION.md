@@ -15,6 +15,12 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ## Log Entries
 
+### 2026-04-07: README.md Project Genesis Update
+- **Task:** Added "Project Genesis" section to the README to contextualize the origin of BookBounty (derived from the StewardStack academic library tool) and to specify ideal user cohorts (college students, retirees, estate executors, minimalists).
+- **Friction Points:** None.
+- **Mitigation:** Emulated Archivist persona directly to execute semantic updates via `replace` tool, avoiding unnecessary multi-turn delegation overhead.
+- **Efficiency Gain:** Historical context and target user personas are now structurally embedded in the primary documentation, providing better grounding for future architectural decisions.
+
 ### 2026-04-07: Archival, DEMO_MODE, and Valuation Wiring Fix
 - **Task:** (1) Reconstructed Phase 1–5 completed roadmap documents from git commit history. (2) Implemented DEMO_MODE — when `DEMO_MODE` is set in the environment, `fetch_valuation_data()` returns deterministic mock eBay pricing (seeded from ISBN digit-sum) with `_demo: True` marker. (3) Fixed three separate wiring gaps that caused demo (and real) market indicators to never appear in the UI.
 - **Friction Points:** All three demo indicators were built correctly but none were visible — because: (a) `RecommendView` fetched `valuation_data` for the AI prompt but never included it in the API response; (b) `TriageWizard` never passed `valuationData` prop to `RecommendationCard` despite the prop being defined; (c) `perform_create` didn't save `valuation_data` on entry creation, so EditRecordModal showed nothing until "Refresh Pricing" was manually clicked. All three gaps were silent — no errors, just invisible UI.

@@ -4,21 +4,24 @@
 
 ---
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://bookbounty-ui.onrender.com/)
+
 ## Table of Contents
 
 1. [What It Does](#what-it-does)
-2. [Features](#features)
-3. [Workflow](#workflow)
-4. [How the AI Works](#how-the-ai-works)
-5. [Tech Stack](#tech-stack)
-6. [Prerequisites](#prerequisites)
-7. [Installation](#installation)
-8. [Environment Configuration](#environment-configuration)
-9. [Running the App](#running-the-app)
-10. [Usage Guide](#usage-guide)
-11. [API Reference](#api-reference)
-12. [Development](#development)
-13. [Project Structure](#project-structure)
+2. [Project Genesis](#project-genesis)
+3. [Features](#features)
+4. [Workflow](#workflow)
+5. [How the AI Works](#how-the-ai-works)
+6. [Tech Stack](#tech-stack)
+7. [Prerequisites](#prerequisites)
+8. [Installation](#installation)
+9. [Environment Configuration](#environment-configuration)
+10. [Running the App](#running-the-app)
+11. [Usage Guide](#usage-guide)
+12. [API Reference](#api-reference)
+13. [Development](#development)
+14. [Project Structure](#project-structure)
 
 ---
 
@@ -27,6 +30,22 @@
 BookBounty is a single-user web application that helps you work through a personal book collection and decide what to do with each book. Rather than evaluating every title by hand, you define a **Culling Goal** — a plain-language statement of your intent ("I'm moving into a tiny house and need to cut 80% of my collection") — and the AI engine uses that goal as context when analyzing each book you scan.
 
 The result is a fast, opinionated triage loop: scan a barcode, get a recommendation with reasoning, accept it or override it, save the outcome. Repeat until your shelves are clear.
+
+---
+
+## Project Genesis
+
+The idea for this project was born when an academic librarian friend at Pitts Theological Library (Emory University's Candler School of Theology) shared a persistent challenge: processing massive influxes of book donations. While their institutional workflow was clear, the interface to their internal catalog was heavily manual and error-prone. 
+
+Around the time Pursuit issued a mandate to build a workflow automation application, work began on **StewardStack**—a specialized solution designed to help libraries be good stewards of their institutional gifts.
+
+**BookBounty** emerged from that same DNA but with a different, general-use mission. Rather than helping institutions catalog donations, BookBounty helps individuals triage and downsize their personal collections.
+
+### Ideal Users
+- **College Students:** Perfect for the end-of-semester purge or post-graduation move, helping students quickly decide which textbooks and novels to keep, sell, or donate.
+- **Retirees & Empty Nesters:** Streamlining the emotional and logistical process of downsizing a home library.
+- **Estate Executors:** Providing an objective, efficient way to manage and triage a loved one's book collection.
+- **Minimalists & Bibliophiles:** Assisting anyone looking to curate a more focused, intentional personal library.
 
 ---
 
@@ -46,6 +65,7 @@ The result is a fast, opinionated triage loop: scan a barcode, get a recommendat
 - **Full inventory management** — search, filter by status or resolution state, view toggles, bulk status updates
 - **Export** — CSV, Excel (.xlsx), and PDF
 - **Dashboard** with live counts split by active decisions and resolved outcomes
+- **Market Valuation & Demo Mode** — fetches real pricing data using the eBay Browse API, with a deterministic mock fallback when `DEMO_MODE=True` is set in the backend environment.
 
 ---
 
@@ -140,7 +160,7 @@ The full `TriageRecommendation` JSON is stored in the `ai_recommendation` field 
 | Backend runtime | Python 3.12+ |
 | Backend framework | Django 6.x + Django REST Framework |
 | Package manager | `uv` |
-| Database | SQLite (dev) |
+| Database | PostgreSQL (Production) / SQLite (Dev) |
 | AI model | Gemini 2.5 Flash (`gemini-2.5-flash`) |
 | AI SDK | `google-genai` + `instructor` (structured outputs) |
 | Book metadata | Open Library API |
@@ -199,6 +219,7 @@ cp .env.example .env
 | `OPEN_LIBRARY_CONTACT` | Yes | Your email address, included in Open Library API request headers per their usage policy. |
 | `GEMINI_API_KEY` | Yes | Your Gemini API key. Required for AI recommendations. Without it, the engine returns a safe KEEP fallback. |
 | `VITE_API_BASE_URL` | Yes | The backend API base URL as seen by the browser (e.g. `http://localhost:8000/api`). |
+| `DEMO_MODE` | No | Set to `True` to mock market valuation and pricing data. This returns deterministic mock pricing (seeded from ISBN) to simulate real market indicators without hitting external API rate limits. |
 
 > **Note:** `VITE_API_BASE_URL` is read at **build time** by Vite. If you change it, restart the dev server.
 
