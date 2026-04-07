@@ -86,6 +86,7 @@ const RecommendationCard = ({
                 {(() => {
                   const ebay = valuationData?.ebay;
                   const abebooks = valuationData?.abebooks;
+                  const isDemo = valuationData?._demo;
                   const source = ebay || abebooks;
                   if (!source) return null;
                   const low = source.low;
@@ -96,10 +97,15 @@ const RecommendationCard = ({
                   const isHighValue = midpoint > 25;
                   return (
                     <div className="d-flex flex-wrap gap-1 mb-2">
-                      <Badge bg="secondary">
+                      <Badge
+                        bg={isDemo ? 'warning' : 'secondary'}
+                        text={isDemo ? 'dark' : undefined}
+                      >
+                        {isDemo && <i className="bi bi-flask me-1"></i>}
                         Market: ${Number(low).toFixed(0)} – ${Number(high).toFixed(0)}
+                        {isDemo && ' (demo)'}
                       </Badge>
-                      {isHighValue && (
+                      {isHighValue && !isDemo && (
                         <Badge bg="warning" text="dark">
                           High Value
                         </Badge>

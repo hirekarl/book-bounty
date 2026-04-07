@@ -69,12 +69,39 @@ def _get_ebay_token() -> str | None:
         return None
 
 
+def _mock_valuation_data(isbn: str) -> dict:
+    """Returns deterministic mock eBay valuation data for demo/dev use.
+
+    Seeded from the ISBN digits so each book gets a consistent but distinct
+    price range. Marked with ``_demo: True`` so the UI can surface a warning.
+    """
+    digit_sum = sum(int(c) for c in isbn if c.isdigit())
+    base = 4.0 + (digit_sum % 40)  # $4-$43 range
+    low = round(base * 0.65, 2)
+    high = round(base * 1.45, 2)
+    sample_size = 5 + (digit_sum % 11)  # 5-15 listings
+    return {
+        "_demo": True,
+        "ebay": {
+            "low": low,
+            "high": high,
+            "sample_size": sample_size,
+            "fetched_at": datetime.now(tz=UTC).isoformat(),
+        },
+    }
+
+
 def fetch_valuation_data(isbn: str) -> dict:
     """Fetches eBay sold-listing price data for a book by ISBN (GTIN).
 
+    If ``DEMO_MODE`` is set in the environment, returns deterministic mock data
+    instead of calling the eBay API (useful when credentials are not yet
+    configured). Mock results are marked with ``_demo: True``.
+
     Uses the eBay Browse API item_summary/search endpoint filtered to used
-    condition IDs (3000, 4000, 5000). Returns an empty dict if credentials are
-    absent, fewer than 2 price data points are available, or any error occurs.
+    condition IDs (1000, 2000, 2500, 3000, 4000). Returns an empty dict if
+    credentials are absent, fewer than 2 price data points are available, or
+    any error occurs.
 
     Args:
         isbn: The book's ISBN (used as the GTIN query parameter).
@@ -83,6 +110,9 @@ def fetch_valuation_data(isbn: str) -> dict:
         A dict with an "ebay" key containing low, high, sample_size, and
         fetched_at fields, or an empty dict on failure / insufficient data.
     """
+    if os.getenv("DEMO_MODE"):
+        return _mock_valuation_data(isbn)
+
     token = _get_ebay_token()
     if token is None:
         return {}

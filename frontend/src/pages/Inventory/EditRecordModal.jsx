@@ -20,13 +20,23 @@ const isStale = (fetchedAt) => {
 };
 
 const MarketPricingSection = ({ valuationData, onRefreshValuation, isRefreshingValuation }) => {
-  const { ebay, abebooks, booksrun } = valuationData || {};
+  const { ebay, abebooks, booksrun, _demo: isDemo } = valuationData || {};
 
   return (
     <div className="mt-4 pt-3 border-top">
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h6 className="fw-bold mb-0">
           <i className="bi bi-graph-up me-2 text-success"></i>Market Pricing
+          {isDemo && (
+            <Badge
+              bg="warning"
+              text="dark"
+              className="ms-2 fw-normal"
+              style={{ fontSize: '0.7rem' }}
+            >
+              Demo data
+            </Badge>
+          )}
         </h6>
         <Button
           variant="outline-secondary"
@@ -51,7 +61,7 @@ const MarketPricingSection = ({ valuationData, onRefreshValuation, isRefreshingV
             <span>
               eBay: ${fmt(ebay.low)} – ${fmt(ebay.high)} ({ebay.sample_size} listings)
             </span>
-            {isStale(ebay.fetched_at) && (
+            {!isDemo && isStale(ebay.fetched_at) && (
               <span className="text-muted ms-2">
                 — Data from {new Date(ebay.fetched_at).toLocaleDateString()} — may be outdated
               </span>
@@ -64,7 +74,7 @@ const MarketPricingSection = ({ valuationData, onRefreshValuation, isRefreshingV
               AbeBooks: ${fmt(abebooks.low)} – ${fmt(abebooks.high)} (median ${fmt(abebooks.median)}
               )
             </span>
-            {isStale(abebooks.fetched_at) && (
+            {!isDemo && isStale(abebooks.fetched_at) && (
               <span className="text-muted ms-2">
                 — Data from {new Date(abebooks.fetched_at).toLocaleDateString()} — may be outdated
               </span>
@@ -76,12 +86,18 @@ const MarketPricingSection = ({ valuationData, onRefreshValuation, isRefreshingV
             <span>
               Buyback offer: ${fmt(booksrun.buyback_price)} ({booksrun.condition})
             </span>
-            {isStale(booksrun.fetched_at) && (
+            {!isDemo && isStale(booksrun.fetched_at) && (
               <span className="text-muted ms-2">
                 — Data from {new Date(booksrun.fetched_at).toLocaleDateString()} — may be outdated
               </span>
             )}
           </div>
+        )}
+        {isDemo && (
+          <p className="text-warning-emphasis mb-0 mt-1">
+            <i className="bi bi-flask me-1"></i>
+            Simulated prices — eBay API credentials not yet configured.
+          </p>
         )}
       </div>
     </div>

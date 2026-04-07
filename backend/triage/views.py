@@ -102,7 +102,7 @@ class RecommendView(APIView):
 
         try:
             recommendation = get_ai_recommendation(
-                goal.description, book_metadata, condition, valuation_data=valuation_data
+                goal.description, book_metadata, condition, valuation_data=valuation_data,
             )
         except Exception as exc:
             return Response(
@@ -342,7 +342,7 @@ class RecommendBulkView(APIView):
 
         try:
             bulk_recommendation = get_bulk_ai_recommendation(
-                list(entries), goal, valuation_map=valuation_map
+                list(entries), goal, valuation_map=valuation_map,
             )
         except Exception as exc:
             return Response(
