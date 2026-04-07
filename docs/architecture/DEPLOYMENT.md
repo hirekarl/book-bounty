@@ -21,7 +21,7 @@ The following configurations have been implemented in the codebase to support Re
 - [x] **Build Command**: `npm install && npm run build` correctly outputs to the `dist/` directory.
 - [x] **Publish Directory**: The `render.yaml` specifies `staticPublishPath: dist`.
 - [x] **API Base URL**: `VITE_API_BASE_URL` is configured to point to the deployed backend Web Service URL (`https://bookbounty-api.onrender.com/api`).
-- [x] **Client-Side Routing**: Render's Static Site handles client-side routing automatically by serving `index.html` for unknown paths.
+- [x] **Client-Side Routing**: A `frontend/public/_redirects` file containing `/*  /index.html  200` is required. Render's static host does **not** automatically fall back to `index.html` for unknown paths — without this file, any direct navigation to a deep link (e.g. `/welcome`, `/login`) returns a 404 error from the CDN before React Router can handle it. Vite copies `public/` verbatim to `dist/` at build time, so this file is automatically included in the production bundle.
 
 ## 3. Blueprint Configuration (`render.yaml`)
 The `render.yaml` file defines our Infrastructure as Code (IaC). It has been configured to ensure that only free resources are provisioned.

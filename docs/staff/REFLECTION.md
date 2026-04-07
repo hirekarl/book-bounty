@@ -15,6 +15,12 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ## Log Entries
 
+### 2026-04-07: Phase 9 Execution + SPA Routing Fix
+- **Task:** (1) Implemented the Phase 9 UX plan: `.gitattributes` LF enforcement, Dashboard Culling Goal elevation, and Title/Author search fallback with disambiguation UI in TriageWizard. (2) Fixed direct-URL 404 error for `/welcome` on the Render static site deployment.
+- **Friction Points:** DEPLOYMENT.md contained an incorrect claim ("Render's Static Site handles client-side routing automatically") which gave false confidence that `/welcome` would work as a direct URL. In practice, Render's CDN serves files verbatim — a request to `/welcome` looks for a `welcome` file in `dist/`, finds nothing, and 404s before React Router ever loads.
+- **Mitigation:** Added `frontend/public/_redirects` with `/* /index.html 200`. Vite copies `public/` to `dist/` at build time, so this lands in the bundle automatically on next deploy. Corrected DEPLOYMENT.md to accurately describe the requirement.
+- **Efficiency Gain:** The `_redirects` pattern is now documented. Any future static deployment (Netlify, Render, Cloudflare Pages) will use the same mechanism. Atlas should check DEPLOYMENT.md for accuracy before trusting deployment assumptions.
+
 ### 2026-04-07: Phase 9 Proposal (UX & Advanced Search)
 - **Task:** Drafted the Phase 9 proposal (`docs/roadmap/proposals/PHASE_9_UX_AND_SEARCH.md`) to address critical friction points: (1) Front-end CRLF line-ending regressions, (2) Dashboard hierarchy (elevating the Culling Goal above Shelf Impact), and (3) Adding Title/Author search fallback to the Triage Wizard for books without ISBNs.
 - **Friction Points:** Recurring line-ending linting errors from Prism wasting turn budgets; users getting lost when forced back to the Dashboard to set a Culling Goal.
