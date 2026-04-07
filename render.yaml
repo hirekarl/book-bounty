@@ -3,7 +3,7 @@ services:
   - type: web
     name: bookbounty-api
     runtime: python
-    plan: free
+    plan: free # Backend services require a plan
     rootDir: backend
     buildCommand: ./build.sh
     startCommand: gunicorn core.wsgi
@@ -27,14 +27,14 @@ services:
       - key: GEMINI_API_KEY
         sync: false
 
-  # --- Frontend: Static Site (Fixed Type) ---
-  - type: web # Render requires 'web' for both services and static sites
+  # --- Frontend: Static Site ---
+  - type: web
     name: bookbounty-ui
-    runtime: static # This tells Render it's a Static Site
-    plan: free
+    runtime: static
+    # plan: free  <-- REMOVED: Static sites are free by default and do not accept a plan field
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist # Use 'staticPublishPath' for the build output
+    staticPublishPath: dist # Explicitly for runtime: static
     envVars:
       - key: VITE_API_BASE_URL
         value: https://bookbounty-api.onrender.com/api
