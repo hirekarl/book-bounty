@@ -2,13 +2,10 @@
 # Exit on error
 set -o errexit
 
-# Install uv if not present
-pip install uv
+# No need to 'pip install uv'; Render already provides version 0.10.2
+# Sync dependencies (this creates/updates a managed virtualenv)
+uv sync
 
-# Install dependencies directly from the manifest
-# Using -r pyproject.toml bypasses the 'Multiple top-level packages' error
-uv pip install --system -r pyproject.toml
-
-# Django tasks
-python manage.py migrate
-python manage.py collectstatic --no-input
+# Use 'uv run' to ensure we use the environment we just synced
+uv run python manage.py migrate
+uv run python manage.py collectstatic --no-input

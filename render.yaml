@@ -1,12 +1,11 @@
 services:
-  # --- Backend: Django Web Service ---
   - type: web
     name: bookbounty-api
     runtime: python
-    plan: free # Backend services require a plan
+    plan: free
     rootDir: backend
     buildCommand: ./build.sh
-    startCommand: gunicorn core.wsgi
+    startCommand: uv run gunicorn core.wsgi # Use uv run here as well
     envVars:
       - key: DATABASE_URL
         fromDatabase:
