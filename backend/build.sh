@@ -2,12 +2,13 @@
 # Exit on error
 set -o errexit
 
-# Fix: Explicitly target the local .venv to silence the mismatch warning
-export UV_PROJECT_ENVIRONMENT=.venv
+# Render's Python runtime sets a VIRTUAL_ENV at the repo root.
+# Unset it to force uv to use the .venv in this subdirectory.
+unset VIRTUAL_ENV
 
-# Sync dependencies (this will now include psycopg)
+# Sync dependencies using the backend/uv.lock file
 uv sync --frozen
 
-# Run Django tasks
+# Execute Django commands via uv run
 uv run python manage.py migrate
 uv run python manage.py collectstatic --no-input
