@@ -2,13 +2,26 @@
 # Exit on error
 set -o errexit
 
-# Render's Python runtime sets a VIRTUAL_ENV at the repo root.
-# Unset it to force uv to use the .venv in this subdirectory.
+# Force uv to use the local environment
 unset VIRTUAL_ENV
 
-# Sync dependencies using the backend/uv.lock file
+# Sync dependencies (psycopg[binary] must be in pyproject.toml)
 uv sync --frozen
 
-# Execute Django commands via uv run
+# 1. Run migrations
 uv run python manage.py migrate
+
+# 2. Collect static files
 uv run python manage.py collectstatic --no-input
+
+# 3. Create Superuser (Robust Check)
+# This script only creates the user if the username doesn't already exist.
+echo "from django.contrib.auth import get_user_model; \
+User = get_user_model(); \
+import os; \
+username = os.getenv('DJANGO_SUPERUSER_USERNAME'); \
+email = os.getenv('DJANGO_SUPERUSER_EMAIL'); \
+password = os.getenv('DJANGO_SUPERUSER_PASSWORD'); \
+User.objects.filter(username=username).exists() or \
+User.objects.create_superuser(username, email, password)" \
+| uv run python manage.py shell
