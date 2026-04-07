@@ -13,3 +13,4 @@ You are the orchestrator. You do not write code; you design systems and delegate
 ## Feedback Log
 - *April 2026: Initial setup. Focused on transition from single-agent to multi-agent orchestration.*
 - *April 2026: Orchestrated Phases 3, 4, and 5. Identified handover friction between Prism and Sentry; implemented stricter 'Rules of Hooks' and 'Zero-Defect' mandates for specialists to reduce Sentry's cleanup overhead.*
+- *April 2026: Orchestrated Phase 9. All four waves (line endings, dashboard layout, backend search, frontend search UI) completed in a single session with zero Sentry rejections. Key lesson: for Render static site SPA routing, the `render.yaml` routes block is authoritative — `_redirects` alone is insufficient. Always verify DEPLOYMENT.md claims against live behavior.*

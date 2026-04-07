@@ -74,6 +74,7 @@ Base URL: `http://localhost:8000/api/`
 | GET/POST/PATCH | `goals/` | CRUD for culling goals |
 | POST | `recommend/` | AI recommendation — see below |
 | POST | `recommend/bulk/` | Bulk AI recommendations for multiple entries |
+| GET | `search/` | Title/author search via Open Library — `?title=...&author=...`; returns candidate list for disambiguation |
 
 ### `POST /api/recommend/`
 ```json
@@ -161,7 +162,9 @@ cd backend && uv run python manage.py createsuperuser
 
 ### `Dashboard.jsx`
 - Hero section shows live `stats.in_collection` count
+- **Culling Goal card sits above Shelf Impact** — elevated in Phase 9. Uses `border-warning` when a goal is active, `border-danger` with "Required before scanning" badge when none is set.
 - Culling Goal card: active goal display, Change (list inactive goals), New Goal form with preset templates
+- Shelf Impact section (ImpactStats + SpatialROI + AI narrative) renders below the goal card
 - Stats grid: Active Decisions row + Resolved row, each card links to Inventory with correct filter params
 - Links use `?status=KEEP&resolved=false` and `?status=KEEP&resolved=true` patterns
 
@@ -172,6 +175,8 @@ cd backend && uv run python manage.py createsuperuser
   - `confidence < 0.5` → "AI Uncertain" badge + yellow progress bar
   - Accept: pre-fills status and suggested_price; Override: shows manual status picker
 - **Step 3:** Confirm and save — creates CatalogEntry, returns to step 1 for next scan
+
+**Title/Author Search (Phase 9)** — below the manual ISBN field in Step 1, a "Search by Title / Author" section allows searching Open Library when no barcode is available. Shows a disambiguation list (cover thumbnail, title, author, year). Selecting a result feeds its ISBN into `handleLookup`. Results with no ISBN are shown greyed out and disabled.
 
 **Scanner implementation** — uses lower-level `Html5Qrcode` (not `Html5QrcodeScanner`) for full layout control. Key design decisions:
 
@@ -345,5 +350,10 @@ This project uses a multi-agent "staff" model.
 ---
 
 ## 14. Project Status
-- **Phase 1 through Phase 8:** Completed.
+- **Phase 1 through Phase 9:** Completed.
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
+
+## 15. Deployment Notes (Render)
+- **Frontend:** Static site (`runtime: static`). Render does NOT auto-serve `index.html` for unknown paths.
+- **SPA Routing Fix:** Two mechanisms in place — `frontend/public/_redirects` (`/* /index.html 200`) and a `routes` rewrite block in `render.yaml`. The `render.yaml` routes block is authoritative; the `_redirects` file is a belt-and-suspenders fallback.
+- **Public routes:** `/welcome` (Landing) and `/login` (Login) are unauthenticated. All other routes are behind `ProtectedRoute`.
