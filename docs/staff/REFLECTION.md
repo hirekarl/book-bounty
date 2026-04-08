@@ -13,6 +13,18 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: Staff Audit, Persona Refactor, New Specialists
+
+- **Task:** Full staff audit; refactor all persona files for conciseness; add Ember (Security) and Scout (DevOps); update Sentry mandate; correct ESLint/OS documentation.
+- **Audit findings:** Forge reliable but drifts on cross-layer contracts. Prism highest friction but improving. Nova clean. Sentry's "reject only" mandate overcorrected — Atlas absorbed trivial fixes. Archivist clean. Two gaps identified: no adversarial security reviewer, no deployment config owner.
+- **New personas:** Ember (IDOR, permissions, mass assignment, sensitive data) and Scout (render.yaml, .env.example, SPA routing, migration safety). Both fire after their respective domains change, before Sentry.
+- **Persona refactor:** Replaced "Feedback Log" (chronological event records) with "Key Lessons" (principles only). Removed ~40 entries that were pure events with no lasting behavioral value. Mandates tightened to imperative bullets. All files now scannable in a single pass.
+- **Sentry mandate update:** Added trivial-fix allowance (Prettier, single-line lint, import ordering). Structural rejections unchanged.
+- **Friction Points:** None — clean pass.
+- **Efficiency Gain:** New sessions can ingest a persona file in seconds. Key Lessons serve as a distilled "what has gone wrong before and why" rather than a project history. Ember fills the security gap left by the multi-tenant refactor shipping without adversarial review.
+
+---
+
 ### 2026-04-08: User Registration — Complete
 
 - **Task:** Self-service user registration — backend `RegisterView` + React `Register.jsx` + Landing/Login CTA wiring.

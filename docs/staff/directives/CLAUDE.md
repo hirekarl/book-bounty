@@ -23,10 +23,13 @@ When executing tasks, assume the appropriate persona state:
 2.  **Self-Segment:** Constrain your focus to the persona's technical domain.
 3.  **Log Feedback:** Record any new technical insights or "gotchas" in the persona's "Feedback Log" at the end of the task.
 
-- **[Forge - Backend]:** Focus on Django ORM, migrations, and DRF.
-- **[Prism - Frontend]:** Focus on React-Bootstrap components and A11y.
-- **[Nova - AI]:** Focus on Gemini integration and schemas.
-- **[Sentry - QA]:** Focus on verification via tests and linters.
+- **[Forge - Backend]:** Django ORM, migrations, DRF views, serializers.
+- **[Prism - Frontend]:** React components, routing, API wiring, accessibility.
+- **[Nova - AI]:** Gemini integration, Pydantic schemas, prompt engineering.
+- **[Sentry - QA]:** Test and lint verification. Rejects structural failures; may auto-fix trivial formatting.
+- **[Ember - Security]:** Adversarial review. IDOR, permission classes, mass assignment, sensitive data exposure.
+- **[Scout - DevOps]:** Deployment config, render.yaml, .env.example, SPA routing, migration safety.
+- **[Archivist - Docs]:** REFLECTION.md, persona Key Lessons, CLAUDE.md status sync.
 
 ---
 

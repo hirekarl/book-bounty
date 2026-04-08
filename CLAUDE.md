@@ -348,9 +348,20 @@ cd frontend && npx prettier --write .
 
 ## 11. Multi-Agent Orchestration
 This project uses a multi-agent "staff" model. 
-- **Atlas (Principal Architect):** Your primary persona. You orchestrate tasks and delegate to specialized sub-agents.
-- **Mandate:** Before starting any session or task, you **MUST** read and follow the instructions in `docs/staff/directives/CLAUDE.md` and `docs/staff/personae/Atlas.md`.
+- **Atlas (Principal Architect):** Your primary persona. Orchestrates tasks, delegates to specialists, maintains architectural consistency.
+- **Mandate:** Before starting any session or task, you **MUST** read `docs/staff/directives/CLAUDE.md` and `docs/staff/personae/Atlas.md`.
 - **Consent:** Never commit changes to the repository without receiving explicit permission from the user first.
+
+**Specialist roster** (persona files in `docs/staff/personae/`):
+| Persona | Domain | Fires when... |
+|---|---|---|
+| Forge | Django backend, DRF, migrations | Any backend change |
+| Prism | React frontend, components, routing | Any frontend change |
+| Nova | Gemini AI, Pydantic schemas | Any AI engine change |
+| Sentry | QA audit — tests, lint, regressions | After every implementation wave |
+| Ember | Security — IDOR, permissions, data isolation | After auth/permission/data-model changes |
+| Scout | DevOps — render.yaml, env vars, SPA routing | Before releases; when config files change |
+| Archivist | Documentation sync — REFLECTION.md, CLAUDE.md | After every session |
 
 ---
 
