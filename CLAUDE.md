@@ -98,7 +98,7 @@ Returns `TriageRecommendation` schema (see ai_engine.py):
   "is_fallback": false
 }
 ```
-`is_fallback: true` when the AI client is unavailable — the UI surfaces a warning banner in this case.
+`is_fallback: true` when the AI client is unavailable — the UI surfaces a warning banner **and hides the Accept button**, replacing it with "Choose Status Manually" (forces the user to make an explicit decision rather than accepting a safe default).
 
 ### Query params for `GET /api/entries/`
 - `?status=KEEP|DONATE|SELL|DISCARD`
@@ -359,7 +359,7 @@ This project uses a multi-agent "staff" model.
 ---
 
 ## 14. Project Status
-- **Phase 1 through Phase 9:** Completed.
+- **Phase 1 through Phase 10:** Completed.
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
 
 ## 15. Deployment Notes (Render)
