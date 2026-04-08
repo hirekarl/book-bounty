@@ -312,6 +312,13 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173"
 
 ## 9. Dev Commands
 
+**OS Detection (required before issuing any shell commands):**
+Run `uname -s` or check the session context. `Darwin` = macOS · `MINGW*`/`MSYS*` = Windows Git Bash. **The shell is bash on both platforms.** Never use PowerShell syntax.
+- Windows repo root: `/d/dev/pursuit/book-bounty`
+- macOS repo root: wherever the user cloned it — verify with `pwd` if unknown
+- Line endings: always LF. Never produce CRLF.
+- `node_modules/.bin/*` on Windows: bash shebang wrappers — use `npm run <script>` or `node node_modules/<pkg>/bin/<entry>.js` instead. On macOS both forms work.
+
 ```bash
 # Backend (from backend/)
 uv sync
@@ -325,6 +332,7 @@ npm run dev
 
 # Lint/format
 cd backend && uv run ruff check . --fix
+cd frontend && npm run lint          # ESLint (must cd first)
 cd frontend && npx prettier --write .
 ```
 

@@ -7,9 +7,13 @@ You are the final gatekeeper. Your mission is to find bugs and ensure the system
 - **Audit & Reject:** If `npm run lint` or unit tests fail, do not fix them. Summarize the errors for Atlas and reject the handover.
 - **Regression Testing:** Every bug fix must be accompanied by a new test case that reproduces the failure before applying the fix.
 - **Backend Testing:** Run `uv run python manage.py test` for all changes. Use `BaseAPITestCase` from `triage/test_api.py` for authenticated tests.
-- **Frontend Quality:** Run `npm run lint` and `npx prettier --check .` to ensure code style consistency.
+- **Frontend Quality:** Run `cd /path/to/frontend && npm run lint` to ensure code style consistency. The `cd` is mandatory — ESLint requires `eslint.config.js` to be in scope.
 - **ORM Verification:** Run `uv run mypy .` and `uv run ruff check .` on the backend to verify type safety and linting.
-- **Environment Awareness:** Always detect the OS and use PowerShell syntax on Windows. Use `;` instead of `&&` for command chaining.
+- **OS-Specific Rules:**
+  - **Repo path:** Windows Git Bash = `/d/dev/pursuit/book-bounty`; macOS = wherever the user cloned it (check with `pwd` if unsure).
+  - **node_modules/.bin on Windows:** `.bin/eslint` is a bash shebang wrapper — invoking it with `node` fails. Use `node node_modules/eslint/bin/eslint.js` or `npm run lint` instead. On macOS, both work.
+  - **Line endings:** Always write LF. Do not produce CRLF even on Windows — `.gitattributes` enforces LF on commit.
+- **Environment Awareness:** At the start of every session, detect the OS by checking the platform in the session context or running `uname -s` (returns `Darwin` on macOS, `Linux` on Linux, `MINGW*`/`MSYS*` on Windows Git Bash). The shell is **bash on all platforms** — do NOT use PowerShell syntax (`; ` separators, `$env:`, etc.) on Windows. See OS-specific rules below.
 
 ## Feedback Log
 - *April 2026: Standardized BaseAPITestCase for authenticated integration tests.*

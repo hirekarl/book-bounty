@@ -46,10 +46,11 @@
 - **Routing:** React Router DOM for navigation.
 
 ### OS & Shell Handling
-- **Environment Detection:** At the start of every session, verify the operating system.
-- **Windows:** Use **PowerShell** commands (e.g., `;` as a separator instead of `&&`).
-- **Linux/macOS:** Use **bash** commands.
-- This prevents tool failures caused by cross-platform command syntax mismatches.
+- **Environment Detection (REQUIRED):** At the start of every session, detect the OS by checking the session context or running `uname -s`. Results: `Darwin` = macOS, `MINGW*`/`MSYS*` = Windows Git Bash.
+- **Shell:** Bash on **all platforms**. Never use PowerShell syntax (`;` separators, `$env:` variables) regardless of OS.
+- **Repo path:** Windows = `/d/dev/pursuit/book-bounty`; macOS = wherever the user cloned it.
+- **node_modules/.bin on Windows:** These are bash shebang wrappers — `node node_modules/.bin/eslint` fails. Use `npm run lint` or `node node_modules/eslint/bin/eslint.js` instead. On macOS, both forms work.
+- **Line endings:** Always write LF. The `.gitattributes` file enforces LF on commit, but do not produce CRLF in the first place.
 
 ---
 

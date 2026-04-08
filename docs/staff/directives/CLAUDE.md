@@ -47,7 +47,10 @@ When executing tasks, assume the appropriate persona state:
 
 ## 4. Engineering Mandates
 
-- **Windows Environment:** Use PowerShell syntax (`;` separator, etc.).
+- **OS Detection (REQUIRED):** At the start of every session, detect the operating system. Check the platform in the session context or run `uname -s`. Results: `Darwin` = macOS, `Linux` = Linux, `MINGW*`/`MSYS*` = Windows Git Bash. The shell is **bash on all platforms** — never use PowerShell syntax (`;` separators, `$env:` variables, etc.) regardless of OS.
+- **Platform-Specific Rules:**
+  - **Repo path:** Windows = `/d/dev/pursuit/book-bounty`; macOS = wherever the user cloned it (verify with `pwd` if unknown).
+  - **node_modules/.bin on Windows:** `.bin/*` scripts are bash shebang wrappers — invoking them with `node` fails. Prefer `npm run <script>` or `node node_modules/<pkg>/bin/<entry>.js`. On macOS, both forms work.
+  - **Line endings:** Always write LF. Never produce CRLF. The `.gitattributes` file enforces LF on commit, but agents should not generate CRLF in the first place.
 - **Consistency:** Use React-Bootstrap primitives; avoid raw CSS.
 - **Integrity:** Never bypass the type system or disable linting warnings.
-em or disable linting warnings.
