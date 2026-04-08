@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Landing from './pages/Landing';
 import TriageWizard from './pages/TriageWizard';
 import Inventory from './pages/Inventory';
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/welcome" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route
             path="/"
             element={

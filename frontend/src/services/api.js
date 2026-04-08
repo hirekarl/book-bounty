@@ -47,6 +47,12 @@ export const login = (credentials) =>
     return res;
   });
 
+export const register = (data) =>
+  api.post('/auth/register/', data).then((res) => {
+    localStorage.setItem('token', res.data.key);
+    return res;
+  });
+
 export const logout = () =>
   api.post('/auth/logout/').finally(() => {
     localStorage.removeItem('token');

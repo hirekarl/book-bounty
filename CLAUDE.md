@@ -365,7 +365,7 @@ This project uses a multi-agent "staff" model.
 
 ## 14. Project Status
 - **Phase 1 through Phase 10:** Completed.
-- **Multi-Tenant Refactor:** Model/view layer complete. `user` FK added to `CullingGoal` and `CatalogEntry`; all 7 API view surfaces scoped to `request.user`. **Remaining:** User registration endpoint (currently only superuser-created accounts are possible).
+- **Multi-Tenant Refactor:** Complete. `user` FK on `CullingGoal` and `CatalogEntry`; all 7 API surfaces scoped to `request.user`; self-service registration at `POST /api/auth/register/`; React `/register` Sign Up page.
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
 
 ## 15. Deployment Notes (Render)

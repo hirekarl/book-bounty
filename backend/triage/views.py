@@ -7,14 +7,19 @@ entries, and retrieving dashboard statistics.
 import re
 
 import requests
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Count, F, FloatField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, viewsets
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -35,6 +40,55 @@ from triage.services import (
     get_or_create_book,
     search_books_by_title_author,
 )
+
+
+class RegisterView(APIView):
+    """Creates a new user account and returns an auth token."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request: Request) -> Response:
+        """Registers a new user.
+
+        Expected payload:
+            {
+                "username": "alice",
+                "password1": "securepass123",
+                "password2": "securepass123",
+                "email": "alice@example.com"  // optional
+            }
+
+        Returns:
+            {"key": "<auth token>"} on success.
+        """
+        username = request.data.get("username", "").strip()
+        password1 = request.data.get("password1", "")
+        password2 = request.data.get("password2", "")
+        email = request.data.get("email", "").strip()
+
+        errors: dict = {}
+
+        if not username:
+            errors["username"] = ["This field is required."]
+        elif User.objects.filter(username=username).exists():
+            errors["username"] = ["A user with that username already exists."]
+
+        if not password1:
+            errors["password1"] = ["This field is required."]
+        elif password1 != password2:
+            errors["password2"] = ["Passwords do not match."]
+        else:
+            try:
+                validate_password(password1)
+            except ValidationError as exc:
+                errors["password1"] = list(exc.messages)
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.create_user(username=username, password=password1, email=email)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"key": token.key}, status=status.HTTP_201_CREATED)
 
 
 class CatalogEntryPagination(PageNumberPagination):

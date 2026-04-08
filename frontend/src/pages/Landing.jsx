@@ -99,8 +99,19 @@ const Landing = () => {
               <i className="bi bi-github"></i>
               <span className="d-none d-sm-inline">GitHub</span>
             </Nav.Link>
-            <Button variant="warning" className="fw-bold px-4" onClick={() => navigate('/login')}>
+            <Button
+              variant="outline-warning"
+              className="fw-bold px-3"
+              onClick={() => navigate('/login')}
+            >
               Sign In
+            </Button>
+            <Button
+              variant="warning"
+              className="fw-bold px-3"
+              onClick={() => navigate('/register')}
+            >
+              Sign Up
             </Button>
           </Nav>
         </Container>
@@ -135,19 +146,17 @@ const Landing = () => {
                   variant="warning"
                   size="lg"
                   className="fw-bold px-5 py-3 shadow-sm"
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/register')}
                 >
-                  Sign In
+                  Get Started
                 </Button>
                 <Button
                   variant="outline-light"
                   size="lg"
                   className="px-5 py-3"
-                  href="https://github.com/hirekarl/book-bounty"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => navigate('/login')}
                 >
-                  <i className="bi bi-github me-2"></i>View on GitHub
+                  Sign In
                 </Button>
               </div>
             </Col>

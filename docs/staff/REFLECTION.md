@@ -13,6 +13,35 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: User Registration — Complete
+
+- **Task:** Self-service user registration — backend `RegisterView` + React `Register.jsx` + Landing/Login CTA wiring.
+- **Outcome:** Clean single-session execution. All 38 tests pass; ESLint exit 0; ruff clean.
+- **Backend:** Lightweight custom `RegisterView` (not dj-rest-auth registration + allauth — allauth wiring would require sites framework + email backend config disproportionate to app scope). `AllowAny` permission. Validates username uniqueness, password match, Django password validators. Creates `User` + `Token`, returns `{"key": token.key}`. URL: `POST /api/auth/register/`. 5 new test cases cover happy path, mismatch, duplicate username, weak password, missing username.
+- **Frontend:** `Register.jsx` mirrors `Login.jsx` structure. Field-level error display from API response. `Login.jsx` gains "Don't have an account? Sign up" link. Landing hero CTA swapped to "Get Started" → `/register` with "Sign In" as secondary. Landing navbar gains dual Sign In / Sign Up buttons.
+- **Friction Points:** Prettier violations in `Register.jsx` (import multiline format, inline conditional render, JSX text spacing). Fixed with `node node_modules/eslint/bin/eslint.js --fix`. No logic changes — formatting only.
+- **Efficiency Gain:** Archivist plan log before execution eliminated ambiguity on scope (backend-only vs. full UI) and the allauth decision. Pattern: log the key architectural decision (why NOT allauth) in the plan so future agents don't re-litigate it.
+
+---
+
+### 2026-04-08: User Registration — Implementation Plan (Pre-Execution)
+
+- **Task:** Add user self-service registration — backend endpoint + React Sign Up page.
+- **Decision:** Lightweight custom `RegisterView` (not dj-rest-auth registration + allauth). Allauth is installed but not wired; wiring it requires sites framework + email backend config that is disproportionate for this app's scope.
+- **Wave A — Backend (Forge):**
+    1. `RegisterView` in `triage/views.py` — `AllowAny`; accepts `username`, `password1`, `password2`, optional `email`; validates match + Django password validators + username uniqueness; creates `User` + `Token`; returns `{"key": token.key}`.
+    2. URL: `api/auth/register/` wired in `core/urls.py`.
+    3. `RegistrationTests` class in `test_api.py`: happy path, password mismatch, duplicate username, weak password.
+- **Wave B — Frontend (Prism):**
+    1. `register(data)` in `api.js` — POST to `auth/register/`, stores token in localStorage.
+    2. `Register.jsx` — mirrors Login page style; username + email (optional) + password + confirm password; inline API error display; "Already have an account? Sign in" link.
+    3. `/register` route added to `App.jsx` (public, alongside `/login`).
+    4. `Login.jsx` — "Don't have an account? Sign up" link added below the form.
+    5. `Landing.jsx` — hero CTA updated: "Sign In" stays; add "Sign Up" button alongside it.
+- **Wave C — Sentry:** run backend tests + ESLint on all modified frontend files.
+
+---
+
 ### 2026-04-08: Multi-Tenant Refactor — Model & View Layer Complete
 
 - **Task:** Completed the backend code layer of the multi-tenant refactor. The previous session only landed documentation updates; this session implemented the actual isolation.

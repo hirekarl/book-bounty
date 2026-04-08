@@ -478,3 +478,68 @@ class HappyPathIntegrationTest(BaseAPITestCase):
         self.assertEqual(active_list_response.status_code, status.HTTP_200_OK)
         active_ids = [e["id"] for e in active_list_response.data["results"]]
         self.assertIn(entry_id, active_ids)
+
+
+class RegistrationTests(APITestCase):
+    """Tests for the user registration endpoint."""
+
+    def setUp(self) -> None:
+        """Uses an unauthenticated client (registration is public)."""
+        self.url = reverse("auth-register")
+
+    def test_register_happy_path(self) -> None:
+        """Valid credentials create a user and return an auth token."""
+        data = {
+            "username": "newuser",
+            "password1": "StrongPass99!",
+            "password2": "StrongPass99!",
+            "email": "newuser@example.com",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("key", response.data)
+        self.assertTrue(User.objects.filter(username="newuser").exists())
+
+    def test_register_password_mismatch(self) -> None:
+        """Mismatched passwords return 400 with a password2 error."""
+        data = {
+            "username": "newuser",
+            "password1": "StrongPass99!",
+            "password2": "DifferentPass99!",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("password2", response.data)
+
+    def test_register_duplicate_username(self) -> None:
+        """Registering with an existing username returns 400 with a username error."""
+        User.objects.create_user(username="taken", password="StrongPass99!")
+        data = {
+            "username": "taken",
+            "password1": "StrongPass99!",
+            "password2": "StrongPass99!",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("username", response.data)
+
+    def test_register_weak_password(self) -> None:
+        """A password that fails Django validators returns 400 with a password1 error."""
+        data = {
+            "username": "newuser",
+            "password1": "123",
+            "password2": "123",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("password1", response.data)
+
+    def test_register_missing_username(self) -> None:
+        """Missing username returns 400 with a username error."""
+        data = {
+            "password1": "StrongPass99!",
+            "password2": "StrongPass99!",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("username", response.data)

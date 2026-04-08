@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
 
 const Login = () => {
@@ -73,6 +73,12 @@ const Login = () => {
               </Form>
             </Card.Body>
           </Card>
+          <p className="text-center text-muted mt-3 small">
+            Don&apos;t have an account?{' '}
+            <Link to="/register" className="text-warning fw-bold">
+              Sign up
+            </Link>
+          </p>
         </Col>
       </Row>
     </Container>
