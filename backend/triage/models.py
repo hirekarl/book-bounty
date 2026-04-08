@@ -5,6 +5,7 @@ metadata and the CatalogEntry record for physical copies.
 """
 
 
+from django.conf import settings
 from django.db import models
 
 
@@ -36,6 +37,13 @@ class CullingGoal(models.Model):
         is_active (bool): Whether this is the current active goal.
     """
 
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="culling_goals",
+    )
     name = models.CharField(max_length=100)
     description = models.TextField()
     is_active = models.BooleanField(default=False)
@@ -65,6 +73,13 @@ class CatalogEntry(models.Model):
         FAIR = "FAIR", "Fair"
         POOR = "POOR", "Poor"
 
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="catalog_entries",
+    )
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="entries")
     culling_goal = models.ForeignKey(
         CullingGoal,

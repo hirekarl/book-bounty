@@ -48,15 +48,23 @@ class CatalogEntryPagination(PageNumberPagination):
 class CullingGoalViewSet(viewsets.ModelViewSet):
     """ViewSet for managing CullingGoal records."""
 
-    queryset = CullingGoal.objects.all().order_by("-created_at")
+    queryset = CullingGoal.objects.none()
     serializer_class = CullingGoalSerializer
 
+    def get_queryset(self) -> models.QuerySet[CullingGoal]:
+        """Returns goals belonging to the current user."""
+        return CullingGoal.objects.filter(user=self.request.user).order_by("-created_at")
+
+    def perform_create(self, serializer: CullingGoalSerializer) -> None:
+        """Associates the new goal with the current user."""
+        serializer.save(user=self.request.user)
+
     def perform_update(self, serializer: CullingGoalSerializer) -> None:
-        """Ensures only one goal is active at a time."""
+        """Ensures only one of this user's goals is active at a time."""
         with transaction.atomic():
             instance = serializer.save()
             if instance.is_active:
-                CullingGoal.objects.exclude(pk=instance.pk).update(is_active=False)
+                CullingGoal.objects.filter(user=self.request.user).exclude(pk=instance.pk).update(is_active=False)
 
 
 class RecommendView(APIView):
@@ -79,9 +87,9 @@ class RecommendView(APIView):
 
         culling_goal_id = request.data.get("culling_goal_id")
         if culling_goal_id:
-            goal = CullingGoal.objects.filter(pk=culling_goal_id).first()
+            goal = CullingGoal.objects.filter(pk=culling_goal_id, user=request.user).first()
         else:
-            goal = CullingGoal.objects.filter(is_active=True).first()
+            goal = CullingGoal.objects.filter(is_active=True, user=request.user).first()
 
         if not goal:
             return Response(
@@ -180,7 +188,7 @@ class BookSearchView(APIView):
 class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
     """ViewSet for managing CatalogEntry records."""
 
-    queryset = CatalogEntry.objects.all().select_related("book").order_by("-created_at")
+    queryset = CatalogEntry.objects.none()
     serializer_class = CatalogEntrySerializer
     pagination_class = CatalogEntryPagination
 
@@ -196,7 +204,7 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
 
     def get_queryset(self) -> models.QuerySet[CatalogEntry]:
         """Filters entries by status, resolved state, search query, or in-collection view."""
-        queryset = super().get_queryset()
+        queryset = CatalogEntry.objects.filter(user=self.request.user).select_related("book").order_by("-created_at")
 
         status_filter = self.request.query_params.get("status")
         if status_filter:
@@ -233,7 +241,7 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
         if not marketplace_description and isinstance(ai_rec, dict):
             marketplace_description = ai_rec.get("marketplace_description")
 
-        save_kwargs: dict = {}
+        save_kwargs: dict = {"user": self.request.user}
         if marketplace_description:
             save_kwargs["marketplace_description"] = marketplace_description
         if valuation_data:
@@ -290,7 +298,7 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
                 {"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST,
             )
 
-        updated_count = CatalogEntry.objects.filter(id__in=entry_ids).update(
+        updated_count = CatalogEntry.objects.filter(id__in=entry_ids, user=request.user).update(
             status=new_status,
         )
         return Response({"updated_count": updated_count}, status=status.HTTP_200_OK)
@@ -299,7 +307,7 @@ class CatalogEntryViewSet(viewsets.ModelViewSet[CatalogEntry]):
 class DashboardStatsView(APIView):
     """View to retrieve dashboard statistics."""
 
-    def get(self, _request: Request) -> Response:
+    def get(self, request: Request) -> Response:
         """Retrieves dashboard statistics using efficient aggregation.
 
         Returns:
@@ -308,7 +316,7 @@ class DashboardStatsView(APIView):
             in_collection: total books physically present
         """
         # Efficiently calculate all counts in a single pass using conditional aggregation
-        stats_agg = CatalogEntry.objects.aggregate(
+        stats_agg = CatalogEntry.objects.filter(user=request.user).aggregate(
             **{
                 f"active_{s}": Count("id", filter=Q(status=s, resolved_at__isnull=True))
                 for s in CatalogEntry.Status.values
@@ -355,9 +363,9 @@ class RecommendBulkView(APIView):
 
         culling_goal_id = request.data.get("culling_goal_id")
         if culling_goal_id:
-            goal = CullingGoal.objects.filter(pk=culling_goal_id).first()
+            goal = CullingGoal.objects.filter(pk=culling_goal_id, user=request.user).first()
         else:
-            goal = CullingGoal.objects.filter(is_active=True).first()
+            goal = CullingGoal.objects.filter(is_active=True, user=request.user).first()
 
         if not goal:
             return Response(
@@ -367,7 +375,7 @@ class RecommendBulkView(APIView):
 
         # Fetch entries efficiently, ensuring they aren't already resolved
         entries = CatalogEntry.objects.filter(
-            id__in=entry_ids, resolved_at__isnull=True,
+            id__in=entry_ids, resolved_at__isnull=True, user=request.user,
         ).select_related("book")
 
         if not entries.exists():
@@ -417,9 +425,9 @@ class RecommendBulkView(APIView):
 class ValuationView(APIView):
     """Fetch or refresh market valuation data for a catalog entry."""
 
-    def post(self, _request: Request, pk: int) -> Response:
+    def post(self, request: Request, pk: int) -> Response:
         """Fetches market valuation data for the given entry and persists it."""
-        entry = get_object_or_404(CatalogEntry.objects.select_related("book"), pk=pk)
+        entry = get_object_or_404(CatalogEntry.objects.select_related("book"), pk=pk, user=request.user)
         valuation_data = fetch_valuation_data(entry.book.isbn)
         entry.valuation_data = valuation_data
         entry.save(update_fields=["valuation_data", "updated_at"])
@@ -429,7 +437,7 @@ class ValuationView(APIView):
 class DashboardImpactView(APIView):
     """View to retrieve impact metrics for the shelf dashboard."""
 
-    def get(self, _request: Request) -> Response:
+    def get(self, request: Request) -> Response:
         """Calculates and returns shelf impact aggregations.
 
         Metrics:
@@ -439,9 +447,9 @@ class DashboardImpactView(APIView):
             top_donation_destinations: Frequency of donation_dest for DONATE resolved entries.
             impact_narrative: AI-generated progress summary.
         """
-        resolved_entries = CatalogEntry.objects.filter(resolved_at__isnull=False).select_related(
-            "book",
-        )
+        resolved_entries = CatalogEntry.objects.filter(
+            resolved_at__isnull=False, user=request.user,
+        ).select_related("book")
 
         total_resolved_books = resolved_entries.count()
 

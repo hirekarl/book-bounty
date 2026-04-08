@@ -41,6 +41,7 @@ class APITests(BaseAPITestCase):
         )
         self.entry = CatalogEntry.objects.create(
             book=self.book,
+            user=self.user,
             status=CatalogEntry.Status.KEEP,
             condition_flags=[],
             notes="A kept book.",
@@ -106,7 +107,7 @@ class APITests(BaseAPITestCase):
         """Test the dashboard statistics endpoint."""
         # Add another entry to change stats
         another_book = Book.objects.create(isbn="222", title="B2", author="A2")
-        CatalogEntry.objects.create(book=another_book, status=CatalogEntry.Status.SELL)
+        CatalogEntry.objects.create(book=another_book, user=self.user, status=CatalogEntry.Status.SELL)
 
         url = reverse("dashboard-stats")
         response = self.client.get(url)
@@ -122,7 +123,7 @@ class APITests(BaseAPITestCase):
     def test_filter_entries(self) -> None:
         """Test filtering entries by status."""
         another_book = Book.objects.create(isbn="333", title="B3", author="A3")
-        CatalogEntry.objects.create(book=another_book, status=CatalogEntry.Status.SELL)
+        CatalogEntry.objects.create(book=another_book, user=self.user, status=CatalogEntry.Status.SELL)
 
         url = reverse("catalog-entries-list")
         response = self.client.get(url, {"status": "SELL"})
@@ -149,12 +150,12 @@ class APITests(BaseAPITestCase):
         from triage.models import CullingGoal
 
         goal = CullingGoal.objects.create(
-            name="Test Goal", description="Reduce by 50%", is_active=True,
+            name="Test Goal", description="Reduce by 50%", is_active=True, user=self.user,
         )
 
         # Create another entry
         another_book = Book.objects.create(isbn="999", title="Another Book", author="Author")
-        another_entry = CatalogEntry.objects.create(book=another_book)
+        another_entry = CatalogEntry.objects.create(book=another_book, user=self.user)
 
         mock_get_bulk.return_value = BulkRecommendationResponse(
             recommendations=[
@@ -195,7 +196,7 @@ class APITests(BaseAPITestCase):
         from triage.ai_engine import TriageRecommendation, TriageStatus
         from triage.models import CullingGoal
 
-        CullingGoal.objects.create(name="Goal", description="D", is_active=True)
+        CullingGoal.objects.create(name="Goal", description="D", is_active=True, user=self.user)
 
         mock_get_rec.return_value = TriageRecommendation(
             status=TriageStatus.SELL,
@@ -268,6 +269,7 @@ class ValuationTests(BaseAPITestCase):
         )
         self.entry = CatalogEntry.objects.create(
             book=self.book,
+            user=self.user,
             status=CatalogEntry.Status.KEEP,
         )
 
@@ -356,6 +358,7 @@ class SerializerEdgeCaseTests(BaseAPITestCase):
         )
         self.entry = CatalogEntry.objects.create(
             book=self.book,
+            user=self.user,
             status=CatalogEntry.Status.KEEP,
         )
 
@@ -412,6 +415,7 @@ class HappyPathIntegrationTest(BaseAPITestCase):
             name="Minimalist Move",
             description="Cut collection to essentials for a cross-country move.",
             is_active=True,
+            user=self.user,
         )
         self.assertIsNotNone(goal.pk)
         self.assertTrue(goal.is_active)

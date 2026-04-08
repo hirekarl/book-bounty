@@ -112,7 +112,8 @@ Reference `.env.example` in the root or within subdirectories for required varia
 ---
 
 ## 6. Project Status
-...
+- **Phase 1 through Phase 10:** Completed.
+- **Multi-Tenant Refactor:** Model/view layer complete. `user` FK added to `CullingGoal` and `CatalogEntry`; all 7 API view surfaces scoped to `request.user`. **Remaining:** User registration endpoint.
 ---
 
 ## 8. Fellowship Workspace

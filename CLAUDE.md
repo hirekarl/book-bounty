@@ -297,11 +297,16 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173"
 
 ## 8. Migration State
 
-4 migrations in `backend/triage/migrations/`:
+9 migrations in `backend/triage/migrations/`:
 - `0001_initial` — Book, CatalogEntry
 - `0002_...` — cover_url, description fields on Book
 - `0003_cullinggoal_catalogentry_ai_recommendation_and_more` — CullingGoal model, ai_recommendation field
 - `0004_...` — resolved_at field on CatalogEntry
+- `0005_...` — db_index on isbn/title/author/status/resolved_at
+- `0006_book_cover_image` — cover_image ImageField on Book
+- `0007_book_page_count` — page_count on Book
+- `0008_catalogentry_marketplace_description` — marketplace_description on CatalogEntry
+- `0009_add_user_to_cullinggoal_and_catalogentry` — user FK (nullable) on CullingGoal and CatalogEntry
 
 ---
 
@@ -360,11 +365,10 @@ This project uses a multi-agent "staff" model.
 
 ## 14. Project Status
 - **Phase 1 through Phase 10:** Completed.
-- **Active Task:** Multi-Tenant Refactor (Transitioning from single-user to multi-user).
+- **Multi-Tenant Refactor:** Model/view layer complete. `user` FK added to `CullingGoal` and `CatalogEntry`; all 7 API view surfaces scoped to `request.user`. **Remaining:** User registration endpoint (currently only superuser-created accounts are possible).
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
 
 ## 15. Deployment Notes (Render)
 - **Frontend:** Static site (`runtime: static`). Render does NOT auto-serve `index.html` for unknown paths.
 - **SPA Routing Fix:** Two mechanisms in place — `frontend/public/_redirects` (`/* /index.html 200`) and a `routes` rewrite block in `render.yaml`. The `render.yaml` routes block is authoritative; the `_redirects` file is a belt-and-suspenders fallback.
 - **Public routes:** `/welcome` (Landing) and `/login` (Login) are unauthenticated. All other routes are behind `ProtectedRoute`.
-ther routes are behind `ProtectedRoute`.

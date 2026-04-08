@@ -13,6 +13,25 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: Multi-Tenant Refactor — Model & View Layer Complete
+
+- **Task:** Completed the backend code layer of the multi-tenant refactor. The previous session only landed documentation updates; this session implemented the actual isolation.
+- **Changes:**
+    1. **Models:** Added `user = ForeignKey(AUTH_USER_MODEL, null=True)` to `CullingGoal` and `CatalogEntry`. `Book` remains global/shared.
+    2. **Views (7 surfaces scoped):** `CullingGoalViewSet` — new `get_queryset()`, `perform_create()`, scoped `perform_update()`. `CatalogEntryViewSet` — user-filtered `get_queryset()`, user-injecting `perform_create()`, user-scoped `bulk_update_status`. `RecommendView`, `RecommendBulkView` — culling goal + entry lookups filtered by user. `DashboardStatsView`, `ValuationView`, `DashboardImpactView` — all scoped.
+    3. **Migration:** `0009_add_user_to_cullinggoal_and_catalogentry` generated and applied.
+    4. **Tests:** 7 fixture creation sites in `test_api.py` updated to pass `user=self.user`. All 33 tests pass; ruff clean.
+    5. **CLAUDE.md:** Typo artifact from last commit cleaned up.
+- **Friction Points:** None. Clean single-pass execution.
+- **Key Patterns Established:**
+    1. **User-scoped DRF queryset pattern:** Set `queryset = Model.objects.none()` at class level (safe fallback for schema introspection), then override `get_queryset()` starting from `Model.objects.filter(user=self.request.user)`. Do NOT call `super().get_queryset()` — it returns the class-level `.none()`.
+    2. **perform_create user injection:** `save_kwargs: dict = {"user": self.request.user}` as the base dict; additional kwargs stacked on top.
+    3. **Test fixture discipline:** Any object created directly (not via the API) must explicitly pass `user=self.user` to be visible in user-scoped queries. API-created objects get the user injected by `perform_create`.
+- **Remaining (next session):** User registration endpoint — currently only superuser-created accounts can exist, which blocks true multi-tenancy in production.
+- **Efficiency Gain:** All 7 view surfaces isolated in one session with zero regressions. Pattern is now documented and reusable for any future model that needs per-user scoping.
+
+---
+
 ### 2026-04-07: Handover — Multi-Tenant Refactor (Initiated)
 - **Task:** Transition BookBounty from single-user to multi-tenant architecture.
 - **Current State:** Research complete. Strategy formulated. Initial delegation to update documentation timed out and needs to be restarted.
