@@ -16,12 +16,6 @@ const COHORTS = [
       'Downsizing a home library is emotionally heavy and logistically complex. BookBounty gives you an objective voice for every title on the shelf.',
   },
   {
-    icon: 'bi-file-earmark-text',
-    label: 'Estate Executors',
-    description:
-      "Managing a loved one's collection under time pressure. Scan the whole room, get consistent recommendations, and export a clean disposition report.",
-  },
-  {
     icon: 'bi-bookmark-check',
     label: 'Minimalists & Bibliophiles',
     description:
@@ -264,7 +258,7 @@ const Landing = () => {
               'Resolution lifecycle (active → resolved)',
               'Bulk status updates',
               'In-Collection view',
-              'Shelf impact metrics (space recovered, earnings)',
+              'Progress tracking — pending and resolved counts by decision type',
               'CSV, Excel & PDF export',
               'Token-based single-user auth',
               'Render Blueprint deployment (free tier)',
@@ -346,7 +340,7 @@ const Landing = () => {
                 <i className="bi bi-bookmark-star-fill me-1"></i>BookBounty
               </span>
               <span className="text-white-50 small">
-                &copy; {new Date().getFullYear()} · AI workflow automation MVP
+                &copy; {new Date().getFullYear()} · Personal AI-powered library triage.
               </span>
             </Col>
             <Col md={6} className="text-center text-md-end">

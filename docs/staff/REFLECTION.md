@@ -130,3 +130,17 @@ This log tracks session-level friction points, sub-agent performance, and archit
 - **Mitigation:** Reinforcing the "Zero Hallucination" mandate for the Archivist.
 - **Efficiency Gain:** The new Fellowship Workspace provides a semantic home for strategic writing, preventing technical agents from being distracted by non-code context.
 
+
+### 2026-04-07: Phase 10 (App Mission Audit & UX Remediation)
+- **Task:** Comprehensive "app mission" audit across all frontend pages; 11 findings across 4 waves; Shelf Impact removal committed separately.
+- **Friction Points:**
+    1. **Subagent ESLint invocation fails without `cd` or absolute `cwd`.** Explore agents don't inherit the shell working directory; every prior attempt to run ESLint from a subagent had failed silently or errored with "eslint.config not found" because the agent ran from `/` or a different cwd. Fix: always invoke ESLint as `cd /path/to/frontend && node node_modules/.bin/eslint` in a single Bash command, or pass absolute file paths with the cwd set explicitly.
+    2. **`react-hooks/set-state-in-effect` blocked a legitimate pattern.** Calling `setAiLoading(true)` immediately in a debounce effect is intentional — it disables the Accept button during the debounce window to prevent stale-data saves. The linter treats all synchronous setState-in-effect as a cascade risk. Fix: targeted `// eslint-disable-next-line` with rationale comment. The pattern is documented in CLAUDE.md so future agents don't remove it.
+    3. **Edit tool requires prior Read on BulkReviewModal.** First Edit attempt failed with "file has not been read yet." Resolved by reading the relevant lines via `sed` then re-issuing Edit. Reminder: always read before editing, even for single-line changes.
+    4. **Audit agents provided thorough but noisy findings.** Several TriageWizard findings (keyboard nav, step-transition guards, timing edge cases) were valid general UX improvements but not mission-alignment issues. Atlas spent one synthesis pass filtering 28 raw findings down to 11 actionable ones. This is expected — audit agents should over-report; orchestrator should triage.
+- **Mitigation:**
+    1. Documented the ESLint `cd` pattern in this log. Feedback memory updated.
+    2. Added `// eslint-disable-next-line` with rationale inline; CLAUDE.md updated to document the behavior.
+    3. No structural change needed — just a reminder to read before edit.
+    4. The filtering pass is working as intended. Consider tightening audit agent prompts to distinguish "mission-critical" from "quality-of-life" findings more explicitly in the future.
+- **Efficiency Gain:** Parallel audit (3 agents simultaneously across all pages) surfaced 28 findings in one pass instead of serial page-by-page review. The wave plan structure (4 waves by risk level) allowed clean rollout with zero cross-wave dependencies and all ESLint passes at exit:0.

@@ -30,7 +30,12 @@ const RecommendationCard = ({
         <span>
           <i className="bi bi-stars me-2 text-warning"></i>AI Recommendation
         </span>
-        {aiRec && isUncertain && (
+        {aiRec && overriding && (
+          <Badge bg="secondary">
+            <i className="bi bi-pencil me-1"></i>Your choice
+          </Badge>
+        )}
+        {aiRec && !overriding && isUncertain && (
           <Badge bg="warning" text="dark">
             <i className="bi bi-exclamation-triangle me-1"></i>AI Uncertain
           </Badge>
@@ -67,11 +72,15 @@ const RecommendationCard = ({
           <>
             <div className="d-flex align-items-start gap-3 mb-3">
               <div
-                className={`rounded-3 p-3 bg-${statusConfig.variant} bg-opacity-10 text-center`}
+                className={`rounded-3 p-3 ${overriding ? 'bg-secondary bg-opacity-10' : `bg-${statusConfig.variant} bg-opacity-10`} text-center`}
                 style={{ minWidth: '90px' }}
               >
-                <i className={`bi ${statusConfig.icon} fs-2 text-${statusConfig.variant}`}></i>
-                <div className={`fw-bold small text-${statusConfig.variant} mt-1`}>
+                <i
+                  className={`bi ${statusConfig.icon} fs-2 ${overriding ? 'text-secondary' : `text-${statusConfig.variant}`}`}
+                ></i>
+                <div
+                  className={`fw-bold small ${overriding ? 'text-secondary' : `text-${statusConfig.variant}`} mt-1`}
+                >
                   {statusConfig.label}
                 </div>
               </div>
@@ -138,35 +147,44 @@ const RecommendationCard = ({
 
             {!overriding ? (
               <div className="d-flex gap-2">
+                {!aiRec.is_fallback && (
+                  <Button
+                    variant={statusConfig.variant}
+                    onClick={handleAcceptSuggestion}
+                    className="fw-bold"
+                  >
+                    <i className="bi bi-check-lg me-1"></i>Accept — {statusConfig.label}
+                  </Button>
+                )}
                 <Button
-                  variant={statusConfig.variant}
-                  onClick={handleAcceptSuggestion}
-                  className="fw-bold"
+                  variant={aiRec.is_fallback ? 'warning' : 'outline-secondary'}
+                  onClick={() => setOverriding(true)}
                 >
-                  <i className="bi bi-check-lg me-1"></i>Accept — {statusConfig.label}
-                </Button>
-                <Button variant="outline-secondary" onClick={() => setOverriding(true)}>
-                  Choose My Own
+                  {aiRec.is_fallback ? (
+                    <>
+                      <i className="bi bi-pencil me-1"></i>Choose Status Manually
+                    </>
+                  ) : (
+                    'Choose My Own'
+                  )}
                 </Button>
               </div>
             ) : (
-              <Alert
-                variant="light"
-                className="mb-0 d-flex align-items-center justify-content-between py-2"
-              >
-                <span className="small text-muted">You're choosing your own status.</span>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="p-0 text-muted"
-                  onClick={() => {
-                    setOverriding(false);
-                    setStatus(aiRec.status);
-                  }}
-                >
-                  Use AI suggestion
-                </Button>
-              </Alert>
+              <div>
+                <p className="small text-muted mb-2">You&apos;re choosing your own status.</p>
+                {!aiRec.is_fallback && (
+                  <Button
+                    variant="outline-secondary"
+                    className="w-100"
+                    onClick={() => {
+                      setOverriding(false);
+                      setStatus(aiRec.status);
+                    }}
+                  >
+                    <i className="bi bi-arrow-counterclockwise me-1"></i>Use AI suggestion instead
+                  </Button>
+                )}
+              </div>
             )}
           </>
         )}

@@ -145,7 +145,7 @@ const Dashboard = () => {
               <strong className="text-dark">{stats.in_collection}</strong> books in your collection
             </>
           ) : (
-            'Turn your library into a garage sale goldmine.'
+            'Decide what stays, what sells, and what goes.'
           )}
         </p>
         <Button
@@ -213,7 +213,24 @@ const Dashboard = () => {
               </div>
               <p className="text-muted mb-0 small">{activeGoal.description}</p>
             </div>
-          ) : null}
+          ) : (
+            <div>
+              <p className="text-muted small mb-3">
+                Set a goal to tell the AI what you&apos;re trying to accomplish — keep only
+                essentials, raise money for a move, or clear out a room.
+              </p>
+              <Button
+                variant="warning"
+                size="sm"
+                onClick={() => {
+                  setShowNewGoalForm(true);
+                  setShowGoalList(false);
+                }}
+              >
+                <i className="bi bi-plus-lg me-1"></i>Create Your First Goal
+              </Button>
+            </div>
+          )}
 
           {/* Goal list for switching */}
           <Collapse in={showGoalList}>

@@ -163,8 +163,9 @@ cd backend && uv run python manage.py createsuperuser
 **Nav labels:** The authenticated navbar shows "Scan Books" (route `/scan`) and "Collection" (route `/inventory`). These replaced the prior labels "Triage Wizard" and "Inventory". Active route is highlighted via `useLocation`. Authenticated users who visit `/welcome` are redirected to `/`.
 
 ### `Dashboard.jsx`
-- Hero section shows live `stats.in_collection` count
-- Culling Goal card sits at the top (elevated in Phase 9). Uses `border-warning` when a goal is active, `border-danger` with "Set a goal to start" badge when none is set.
+- Hero section shows live `stats.in_collection` count; fallback tagline: "Decide what stays, what sells, and what goes."
+- Culling Goal card sits at the top. Uses `border-warning` when a goal is active, `border-danger` with "Set a goal to start" badge when none is set.
+- Culling Goal card — no active goal state: shows explanatory copy + "Create Your First Goal" button (triggers `setShowNewGoalForm(true)`)
 - Culling Goal card: active goal display, Change (list inactive goals), New Goal form ("Your culling strategy" label, "Create & Activate" submit button) with preset templates
 - Stats grid: **Pending** row + Resolved row, each card links to Collection with correct filter params
 - Links use `?status=KEEP&resolved=false` and `?status=KEEP&resolved=true` patterns
@@ -175,8 +176,9 @@ cd backend && uv run python manage.py createsuperuser
 - **Step 2:** Book details + AI recommendation card
   - `metadata_found === false` → shows warning banner
   - `confidence < 0.5` → "AI Uncertain" badge + yellow progress bar
-  - Accept: pre-fills status and suggested_price; **"Choose My Own"**: shows manual status picker
-  - **Auto-retrigger on condition change:** changing condition grade or flags triggers a fresh AI recommendation (800ms debounce). Request versioning via `reqVersionRef` discards stale responses; `applyStatus` option preserves the user's manually chosen status in override mode while refreshing price/copy/valuation.
+  - Accept: pre-fills status and suggested_price; **"Choose My Own"**: shows manual status picker. Accept button is **hidden** when `is_fallback: true` — only "Choose Status Manually" is offered.
+  - Override mode: card header shows "Your choice" badge; status icon block renders in neutral gray. "Use AI suggestion instead" shown as full-width button (hidden when `is_fallback: true`).
+  - **Auto-retrigger on condition change:** changing condition grade or flags triggers a fresh AI recommendation (800ms debounce). `setAiLoading(true)` fires immediately (before the debounce delay) to disable Accept during the wait window. Request versioning via `reqVersionRef` discards stale responses; `applyStatus` option preserves the user's manually chosen status in override mode while refreshing price/copy/valuation.
 - **Step 3:** Confirm and save — creates CatalogEntry, "Save & Scan Next" returns to step 1; "Collection" link navigates to `/inventory`
 
 **Title/Author Search (Phase 9)** — below the manual ISBN field in Step 1, a "Search by Title / Author" section allows searching Open Library when no barcode is available. Shows a disambiguation list (cover thumbnail, title, author, year). Selecting a result feeds its ISBN into `handleLookup`. Results with no ISBN are shown greyed out and disabled.
@@ -250,13 +252,14 @@ useEffect(() => {
 - Action column: "Resolve" button OR "Resolved" badge, plus a pencil icon for editing
 - Paginated: loads 50 entries per page; "Load More" button appends next page; shows "Showing X of Y books"
 - Bulk actions: "AI Review" button (was "Bulk Triage"), "Change Status (n)" button (was "Bulk Action (n)")
+- **Empty state:** Two distinct states — if `totalCount === 0` with no filters/search/view active: "You haven't scanned any books yet." + link to `/scan`. Otherwise: "No books match your current filters."
 - **Edit Record Modal:**
   - Title bar shows the book name.
   - Triggered by clicking the book title (accessible via keyboard/role) or pencil icon.
   - Allows editing of status, condition, flags, notes, price ("Price / Donation" label), and donation destination.
   - Supports toggling resolution state (un-resolve) and record deletion. Uses "resolved" terminology (not "processed").
   - Shows **Market Pricing** card when `valuation_data` is present — positioned **above** the Asking Price field: eBay range, AbeBooks range, BooksRun buyback price, staleness warning if data > 30 days old, "Refresh Pricing" button.
-- **BulkReviewModal:** Header "AI Recommendations" (was "Bulk Triage Review"). Cards with AI recommendations that diverge from the current status are highlighted with a warning background (not accepted ones). Footer: "Save All (n Books)".
+- **BulkReviewModal:** Header "AI Recommendations" (was "Bulk Triage Review"). Cards with AI recommendations that diverge from the current status are highlighted with a warning background (not accepted ones). Footer: "Save All (n Books)". **`is_resolved` defaults to `false`** — user must explicitly opt in to resolving entries.
 - Bulk status change, export to CSV/Excel/PDF
 
 ### `Login.jsx`

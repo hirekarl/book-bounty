@@ -254,6 +254,8 @@ const TriageWizard = () => {
   // (applyStatus: false); otherwise we let the AI update everything.
   useEffect(() => {
     if (!isbn || !book || step !== 2) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: disables Accept immediately so user can't save stale data during debounce window
+    setAiLoading(true);
     clearTimeout(conditionDebounceRef.current);
     conditionDebounceRef.current = setTimeout(() => {
       fetchAiRecommendation(isbn, formik.values.condition_grade, formik.values.condition_flags, {

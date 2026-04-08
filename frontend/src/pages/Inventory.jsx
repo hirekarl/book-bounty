@@ -14,7 +14,7 @@ import {
   InputGroup,
   Alert,
 } from 'react-bootstrap';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import api, {
   getCatalogEntries,
   resolveEntry,
@@ -417,10 +417,27 @@ const Inventory = () => {
                 <tr>
                   <td colSpan="7" className="text-center py-5 text-muted">
                     <i className="bi bi-book fs-1 d-block mb-2 opacity-25"></i>
-                    No books match your current filters.
-                    <div className="small mt-1">
-                      Try clearing the search or changing the status filter.
-                    </div>
+                    {totalCount === 0 &&
+                    !statusFilter &&
+                    !searchQuery &&
+                    Object.keys(viewParams).length === 0 ? (
+                      <>
+                        You haven&apos;t scanned any books yet.
+                        <div className="small mt-1">
+                          <Link to="/scan" className="text-warning fw-bold">
+                            Start scanning
+                          </Link>{' '}
+                          to add books to your collection.
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        No books match your current filters.
+                        <div className="small mt-1">
+                          Try clearing the search or changing the status filter.
+                        </div>
+                      </>
+                    )}
                   </td>
                 </tr>
               ) : (

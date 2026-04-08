@@ -81,7 +81,7 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
                 suggestion?.marketplace_description || entry.marketplace_description || '',
               asking_price: suggestion?.suggested_price || entry.asking_price || '',
               donation_dest: entry.donation_dest || '',
-              is_resolved: true,
+              is_resolved: false,
               ai_status: suggestion?.status,
               ai_reason: suggestion?.reasoning,
               ai_marketplace_description: suggestion?.marketplace_description,
