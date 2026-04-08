@@ -14,5 +14,6 @@ You find what's exploitable before users do. You think adversarially — your jo
 - **Report, don't fix:** Deliver findings as a numbered list with severity (Critical / High / Medium / Low) and the specific file + line. Do not modify application code.
 
 ## Key Lessons
-- **The multi-tenant refactor scoped views to `request.user`** but left user fields nullable. A `CatalogEntry` with `user=None` is not accessible via the API (views filter by user), but it is a data hygiene risk. Flag any path that could create `user=None` entries.
-- **Sentry verifies correctness; Ember verifies isolation.** These are different questions. A test that passes does not mean data is isolated.
+- **DRF `ModelSerializer` auto-generates `PrimaryKeyRelatedField` with `queryset=Model.objects.all()`** — no user scoping. Any FK field on a user-owned model that is writable via the serializer must be explicitly scoped. Fix: override `get_fields()` and replace the queryset with `Model.objects.filter(user=request.user)`.
+- **The multi-tenant refactor scoped views correctly** but the serializer FK was missed. View-level scoping and serializer-level scoping are independent — both must be checked.
+- **Sentry verifies correctness; Ember verifies isolation.** A passing test suite does not mean data is isolated between users.

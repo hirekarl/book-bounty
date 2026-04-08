@@ -19,3 +19,4 @@ You own the Django backend: models, migrations, DRF views, serializers, and serv
 - **`STORAGES` config must include `default`** — removing the `default` storage backend causes `InvalidStorageError` during tests. Both `default` and `staticfiles` keys are required in `settings.py`.
 - **Pagination breaks list tests** — adding a paginator to a viewset changes `response.data` from a list to `{count, results, ...}`. Grep for `response.data[` in tests before adding any paginator.
 - **`perform_update` on `CullingGoal`** must scope the `is_active` exclusion to `filter(user=request.user)` — otherwise activating one user's goal deactivates another user's goal.
+- **Writable FK fields in serializers need explicit queryset scoping** — DRF's `ModelSerializer` auto-generates `PrimaryKeyRelatedField(queryset=Model.objects.all())`. Any FK to a user-owned model must override this via `get_fields()` to restrict to the requesting user's records.

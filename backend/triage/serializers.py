@@ -46,13 +46,22 @@ class CullingGoalSerializer(serializers.ModelSerializer):
 class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
     """Serializer for the CatalogEntry model.
 
-    Includes the nested Book metadata.
+    Includes the nested Book metadata. The culling_goal field is restricted
+    to goals owned by the requesting user to prevent cross-tenant FK pollution.
     """
 
     book = BookSerializer(read_only=True)
     book_id = serializers.PrimaryKeyRelatedField(
         queryset=Book.objects.all(), source="book", write_only=True,
     )
+
+    def get_fields(self) -> dict:
+        """Restricts culling_goal choices to the requesting user's goals."""
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            fields["culling_goal"].queryset = CullingGoal.objects.filter(user=request.user)
+        return fields
 
     class Meta:
         """Metadata for the CatalogEntrySerializer."""

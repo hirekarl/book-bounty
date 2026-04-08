@@ -171,9 +171,9 @@ class RecommendView(APIView):
             recommendation = get_ai_recommendation(
                 goal.description, book_metadata, condition, valuation_data=valuation_data,
             )
-        except Exception as exc:
+        except Exception:
             return Response(
-                {"error": f"AI engine error: {exc}"},
+                {"error": "AI recommendation service is unavailable. Please try again later."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
@@ -446,9 +446,9 @@ class RecommendBulkView(APIView):
             bulk_recommendation = get_bulk_ai_recommendation(
                 list(entries), goal, valuation_map=valuation_map,
             )
-        except Exception as exc:
+        except Exception:
             return Response(
-                {"error": f"AI engine error: {exc}"},
+                {"error": "AI recommendation service is unavailable. Please try again later."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

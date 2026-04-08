@@ -13,6 +13,23 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: Ember Security Review — Multi-Tenant Implementation
+
+- **Task:** Retrospective adversarial review of the multi-tenant implementation by Ember.
+- **Findings (6 total, none Critical or High):**
+  1. **Medium — Cross-tenant CullingGoal FK:** `CatalogEntrySerializer.culling_goal` used an unscoped `PrimaryKeyRelatedField`, allowing user A to link their entry to user B's goal. Fixed by overriding `get_fields()` to restrict the queryset to `CullingGoal.objects.filter(user=request.user)`.
+  2. **Medium — No rate limiting on `/api/auth/register/`:** Deployment-layer concern (Render/Nginx); not a code fix. Flagged for Scout.
+  3. **Low — Raw exception passed to AI error responses:** `f"AI engine error: {exc}"` could expose internal SDK details. Fixed: both `RecommendView` and `RecommendBulkView` now return a generic user-facing message; exception detail is suppressed.
+  4. **Low — Username enumeration via registration:** Acceptable tradeoff for app scope. Accepted.
+  5. **Low — `resolved_at` accepts arbitrary datetimes:** Data integrity gap, not a security issue. Accepted.
+  6. **Info — Nullable user FK:** No access control hole; data hygiene risk only. Accepted.
+- **IDOR verdict:** Clean across all 9 view surfaces. User-scoping pattern applied correctly.
+- **Test added:** `test_cannot_link_entry_to_another_users_goal` — verifies 400 on cross-tenant goal assignment.
+- **39 tests passing; ruff clean.**
+- **Efficiency Gain:** Ember's adversarial review caught the culling_goal FK gap that neither Forge nor Sentry flagged during implementation. The gap was introduced because DRF's `ModelSerializer` auto-generates `PrimaryKeyRelatedField` with `queryset=Model.objects.all()` — a subtle default that bypasses user-scoping. Pattern added to Ember's Key Lessons.
+
+---
+
 ### 2026-04-08: Staff Audit, Persona Refactor, New Specialists
 
 - **Task:** Full staff audit; refactor all persona files for conciseness; add Ember (Security) and Scout (DevOps); update Sentry mandate; correct ESLint/OS documentation.

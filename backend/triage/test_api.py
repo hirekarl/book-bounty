@@ -381,6 +381,18 @@ class SerializerEdgeCaseTests(BaseAPITestCase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_cannot_link_entry_to_another_users_goal(self) -> None:
+        """PATCHing culling_goal to another user's goal ID must return 400."""
+        from triage.models import CullingGoal
+
+        other_user = User.objects.create_user(username="otheruser", password="pass")
+        other_goal = CullingGoal.objects.create(
+            name="Other Goal", description="Other user's goal", user=other_user,
+        )
+        url = reverse("catalog-entries-detail", kwargs={"pk": self.entry.pk})
+        response = self.client.patch(url, {"culling_goal": other_goal.pk}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_patch_resolved_at_null_clears_resolution(self) -> None:
         """PATCHing resolved_at to null on a resolved entry must un-resolve it (Wave A1)."""
         # First resolve the entry via the resolve action
