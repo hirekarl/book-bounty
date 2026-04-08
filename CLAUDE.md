@@ -329,7 +329,7 @@ cd frontend && npx prettier --write .
 
 - `docs/architecture/VISION.md` and `docs/architecture/AI_SPEC.md` define the current implementation target.
 - `docs/roadmap/proposals/v3_VISION.md` is aspirational only.
-- This is a **single-user app** — no multi-tenancy, no sharing. One Django user per install.
+- This is a **multi-tenant app** where each user manages their own collection and goals. Books (metadata) are shared globally.
 
 ---
 
@@ -360,9 +360,11 @@ This project uses a multi-agent "staff" model.
 
 ## 14. Project Status
 - **Phase 1 through Phase 10:** Completed.
+- **Active Task:** Multi-Tenant Refactor (Transitioning from single-user to multi-user).
 - **Completed Specs:** See `docs/roadmap/completed/` for implementation details of past phases.
 
 ## 15. Deployment Notes (Render)
 - **Frontend:** Static site (`runtime: static`). Render does NOT auto-serve `index.html` for unknown paths.
 - **SPA Routing Fix:** Two mechanisms in place — `frontend/public/_redirects` (`/* /index.html 200`) and a `routes` rewrite block in `render.yaml`. The `render.yaml` routes block is authoritative; the `_redirects` file is a belt-and-suspenders fallback.
 - **Public routes:** `/welcome` (Landing) and `/login` (Login) are unauthenticated. All other routes are behind `ProtectedRoute`.
+ther routes are behind `ProtectedRoute`.

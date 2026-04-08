@@ -13,7 +13,24 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-07: Handover — Multi-Tenant Refactor (Initiated)
+- **Task:** Transition BookBounty from single-user to multi-tenant architecture.
+- **Current State:** Research complete. Strategy formulated. Initial delegation to update documentation timed out and needs to be restarted.
+- **Strategy:** 
+    1. **Docs:** Update `README.md`, `CLAUDE.md`, `GEMINI.md`, and persona mandates to remove "single-user" constraints.
+    2. **Models:** Add `user = ForeignKey(User)` to `CullingGoal` and `CatalogEntry`. `Book` remains shared.
+    3. **Views:** Update `get_queryset` and logic to filter by `request.user`.
+- **Next Step:** Execute the documentation updates (Phase 1 of the refactor).
+
+---
+
 ## Log Entries
+
+### 2026-04-07: Transition to Multi-Tenant Architecture
+- **Task:** Updated project documentation (CLAUDE.md, GEMINI.md, Atlas.md, README.md) to reflect the shift from a single-user to a multi-tenant application.
+- **Friction Points:** None during documentation update, though careful coordination was needed to ensure all "single-user" mentions were captured.
+- **Mitigation:** Used `grep_search` to identify all instances of "single-user" across the codebase documentation.
+- **Efficiency Gain:** The documentation now accurately reflects the new multi-tenant reality, preventing confusion for future developers and sub-agents.
 
 ### 2026-04-07: UX Audit + Full-App Copy & Workflow Remediation
 - **Task:** Conducted a structured 4-wave UX remediation pass across the entire frontend (Dashboard, TriageWizard, Inventory, nav/components/Landing). Four parallel sub-agents audited each surface; findings were synthesized into a prioritized wave plan and executed in full.

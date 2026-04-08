@@ -4,7 +4,12 @@
       "Bash(npx prettier:*)",
       "Bash(npm run:*)",
       "Bash(uv run:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(node /Users/karlsaintlucy/Documents/pursuit/book-bounty/frontend/node_modules/.bin/eslint /Users/karlsaintlucy/Documents/pursuit/book-bounty/frontend/src/pages/TriageWizard.jsx)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(node node_modules/.bin/eslint --fix src/pages/Inventory.jsx src/pages/Dashboard.jsx)",
+      "Bash(node node_modules/.bin/eslint src/pages/Inventory.jsx src/pages/Dashboard.jsx)",
+      "Bash(echo \"Exit: $?\")"
     ]
   }
 }

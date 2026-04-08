@@ -1,6 +1,6 @@
 # BookBounty: Project Context & Instructions
 
-**BookBounty** is a single-user web application for cataloging personal book collections and managing their lifecycle (Keep, Donate, Sell, or Discard).
+**BookBounty** is a multi-tenant web application for cataloging personal book collections and managing their lifecycle (Keep, Donate, Sell, or Discard). Each user owns their own CatalogEntries and CullingGoals, while Book metadata remains shared globally.
 
 ---
 

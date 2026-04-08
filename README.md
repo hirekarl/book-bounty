@@ -238,7 +238,7 @@ uv run python manage.py migrate
 uv run python manage.py createsuperuser
 ```
 
-`migrate` sets up the SQLite database with all tables. `createsuperuser` creates the login account you'll use in the app — BookBounty is single-user, so this is your one account.
+`migrate` sets up the SQLite database with all tables. `createsuperuser` creates an initial admin account — BookBounty is multi-tenant, so you can create multiple users.
 
 ---
 
@@ -481,3 +481,4 @@ book-bounty/
 ## Fellowship Workspace
 
 The `docs/fellowship/` directory is reserved for the user's personal fellowship-related reflections, research, and deliverables. This workspace is integrated into the project for ease of access but is semantically separated from technical specifications.
+ications.
