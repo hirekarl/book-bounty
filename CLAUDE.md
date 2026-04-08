@@ -164,9 +164,8 @@ cd backend && uv run python manage.py createsuperuser
 
 ### `Dashboard.jsx`
 - Hero section shows live `stats.in_collection` count
-- **Culling Goal card sits above Shelf Impact** — elevated in Phase 9. Uses `border-warning` when a goal is active, `border-danger` with "Set a goal to start" badge when none is set.
+- Culling Goal card sits at the top (elevated in Phase 9). Uses `border-warning` when a goal is active, `border-danger` with "Set a goal to start" badge when none is set.
 - Culling Goal card: active goal display, Change (list inactive goals), New Goal form ("Your culling strategy" label, "Create & Activate" submit button) with preset templates
-- Shelf Impact section (ImpactStats + SpatialROI + AI narrative, labeled "AI Summary") renders below the goal card
 - Stats grid: **Pending** row + Resolved row, each card links to Collection with correct filter params
 - Links use `?status=KEEP&resolved=false` and `?status=KEEP&resolved=true` patterns
 
