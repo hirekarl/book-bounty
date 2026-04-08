@@ -59,8 +59,7 @@ const RecommendationCard = ({
         {aiRec && !aiLoading && aiRec.is_fallback === true && (
           <Alert variant="warning" className="mb-3">
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-            AI engine was unreachable. This recommendation is a safe default — please review
-            manually.
+            AI unavailable — this recommendation is a safe default. Please review manually.
           </Alert>
         )}
 
@@ -80,7 +79,7 @@ const RecommendationCard = ({
                 <p className="mb-2">{aiRec.reasoning}</p>
                 {aiRec.suggested_price && (
                   <p className="text-primary fw-bold mb-2">
-                    Suggested price: ${aiRec.suggested_price}
+                    Suggested price: ${Number(aiRec.suggested_price).toFixed(2)}
                   </p>
                 )}
                 {(() => {
@@ -102,7 +101,7 @@ const RecommendationCard = ({
                         text={isDemo ? 'dark' : undefined}
                       >
                         {isDemo && <i className="bi bi-flask me-1"></i>}
-                        Market: ${Number(low).toFixed(0)} – ${Number(high).toFixed(0)}
+                        Market: ${Number(low).toFixed(2)} – ${Number(high).toFixed(2)}
                         {isDemo && ' (demo)'}
                       </Badge>
                       {isHighValue && !isDemo && (
@@ -147,7 +146,7 @@ const RecommendationCard = ({
                   <i className="bi bi-check-lg me-1"></i>Accept — {statusConfig.label}
                 </Button>
                 <Button variant="outline-secondary" onClick={() => setOverriding(true)}>
-                  Override
+                  Choose My Own
                 </Button>
               </div>
             ) : (
@@ -155,9 +154,7 @@ const RecommendationCard = ({
                 variant="light"
                 className="mb-0 d-flex align-items-center justify-content-between py-2"
               >
-                <span className="small text-muted">
-                  Override mode — choose your own status below.
-                </span>
+                <span className="small text-muted">You're choosing your own status.</span>
                 <Button
                   variant="link"
                   size="sm"

@@ -54,6 +54,10 @@ const TriageWizard = () => {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   // Stable ref to the active Html5Qrcode instance so cleanup can always reach it
   const qrRef = useRef(null);
+  // Incremented on every fetchAiRecommendation call; stale responses are discarded
+  const reqVersionRef = useRef(0);
+  // Debounce timer for condition-change auto-retrigger
+  const conditionDebounceRef = useRef(null);
 
   // Book state
   const [isbn, setIsbn] = useState('');
@@ -104,17 +108,23 @@ const TriageWizard = () => {
   }, []);
 
   const fetchAiRecommendation = useCallback(
-    (bookIsbn, grade, flags) => {
+    (bookIsbn, grade, flags, { applyStatus = true } = {}) => {
+      // Stamp this request; any response with a stale version will be discarded
+      const version = ++reqVersionRef.current;
       setAiLoading(true);
       setAiError(null);
       setAiRec(null);
       setAiValuationData(null);
       getRecommendation({ isbn: bookIsbn, condition_grade: grade, condition_flags: flags })
         .then((res) => {
+          if (version !== reqVersionRef.current) return; // stale — a newer request is in flight
           const { valuation_data, ...rec } = res.data;
           setAiRec(rec);
           setAiValuationData(valuation_data || null);
-          formik.setFieldValue('status', rec.status);
+          // Only apply the AI's status when the user hasn't manually overridden it
+          if (applyStatus) {
+            formik.setFieldValue('status', rec.status);
+          }
           if (rec.suggested_price) {
             formik.setFieldValue('asking_price', String(rec.suggested_price));
           }
@@ -124,6 +134,7 @@ const TriageWizard = () => {
           setAiLoading(false);
         })
         .catch((err) => {
+          if (version !== reqVersionRef.current) return;
           const msg = err.response?.data?.error || 'AI recommendation failed.';
           setAiError(msg);
           setAiLoading(false);
@@ -236,6 +247,22 @@ const TriageWizard = () => {
     formik.setFieldValue('condition_flags', nextFlags);
   };
 
+  // Auto-retrigger AI recommendation when condition changes on step 2.
+  // Debounced 800ms so rapid flag toggles batch into a single request.
+  // Uses the current value of `overriding` captured at fire time: if the user
+  // has manually chosen their own status, we refresh price/copy/valuation only
+  // (applyStatus: false); otherwise we let the AI update everything.
+  useEffect(() => {
+    if (!isbn || !book || step !== 2) return;
+    clearTimeout(conditionDebounceRef.current);
+    conditionDebounceRef.current = setTimeout(() => {
+      fetchAiRecommendation(isbn, formik.values.condition_grade, formik.values.condition_flags, {
+        applyStatus: !overriding,
+      });
+    }, 800);
+    return () => clearTimeout(conditionDebounceRef.current);
+  }, [formik.values.condition_grade, formik.values.condition_flags]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAcceptSuggestion = () => {
     formik.setFieldValue('status', aiRec.status);
     if (aiRec.suggested_price) {
@@ -271,6 +298,8 @@ const TriageWizard = () => {
     setStep(1);
     setBook(null);
     setIsbn('');
+    reqVersionRef.current = 0;
+    clearTimeout(conditionDebounceRef.current);
     formik.resetForm();
     setAiRec(null);
     setAiValuationData(null);
@@ -324,6 +353,7 @@ const TriageWizard = () => {
     return (
       <Container className="py-4">
         <div className="text-center mb-4">
+          <div className="text-muted small mb-2">Step 1 of 3</div>
           <i className="bi bi-upc-scan display-4 text-warning"></i>
           <h2 className="fw-bold mt-2">Scan or Enter ISBN</h2>
         </div>
@@ -396,7 +426,7 @@ const TriageWizard = () => {
                 <hr className="my-4" />
 
                 <p className="text-muted small text-uppercase fw-bold mb-3">
-                  <i className="bi bi-search me-1"></i>Search by Title / Author
+                  <i className="bi bi-search me-1"></i>Search by Title or Author
                 </p>
                 <p className="text-muted small mb-3">
                   No barcode? Search by title or author to find and select the correct edition.
@@ -514,6 +544,9 @@ const TriageWizard = () => {
 
     return (
       <Container className="py-4">
+        <div className="text-center mb-2">
+          <div className="text-muted small">Step 2 of 3</div>
+        </div>
         <GoalPill goal={activeGoal} />
 
         <Row>
@@ -588,6 +621,7 @@ const TriageWizard = () => {
                     isbn,
                     formik.values.condition_grade,
                     formik.values.condition_flags,
+                    { applyStatus: !overriding },
                   )
                 }
                 valuationData={aiValuationData}
@@ -636,6 +670,7 @@ const TriageWizard = () => {
                     isbn,
                     formik.values.condition_grade,
                     formik.values.condition_flags,
+                    { applyStatus: !overriding },
                   )
                 }
                 aiRec={aiRec}
@@ -667,7 +702,7 @@ const TriageWizard = () => {
                   type="submit"
                   disabled={aiLoading}
                 >
-                  COMPLETE TRIAGE
+                  Save & Scan Next
                 </Button>
               </div>
             </Form>
@@ -680,10 +715,11 @@ const TriageWizard = () => {
   if (step === 3) {
     return (
       <Container className="py-5 text-center">
+        <div className="text-muted small mb-4">Step 3 of 3</div>
         <div className="mb-4">
           <i className="bi bi-check-circle-fill display-1 text-success"></i>
         </div>
-        <h2 className="fw-bold">Triage Complete!</h2>
+        <h2 className="fw-bold">Saved!</h2>
         <p className="lead text-muted mb-5">
           <strong>{book.title}</strong> has been successfully cataloged.
         </p>
@@ -697,7 +733,7 @@ const TriageWizard = () => {
             className="px-5"
             onClick={() => navigate('/collection')}
           >
-            Inventory
+            Collection
           </Button>
         </div>
       </Container>

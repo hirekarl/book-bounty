@@ -166,7 +166,15 @@ const Dashboard = () => {
             'Turn your library into a garage sale goldmine.'
           )}
         </p>
-        <Button as={Link} to="/scan" variant="warning" size="lg" className="mt-3 px-5 py-3 fw-bold">
+        <Button
+          as={Link}
+          to="/scan"
+          variant="warning"
+          size="lg"
+          className="mt-3 px-5 py-3 fw-bold"
+          disabled={!activeGoal && !goalsLoading}
+          title={!activeGoal && !goalsLoading ? 'Set a goal first' : undefined}
+        >
           <i className="bi bi-upc-scan me-2"></i> Start Scanning
         </Button>
       </header>
@@ -182,7 +190,7 @@ const Dashboard = () => {
             <i className="bi bi-bullseye me-2 text-warning"></i>Culling Goal
             {!activeGoal && !goalsLoading && (
               <Badge bg="danger" className="ms-2 fw-normal">
-                Required before scanning
+                Set a goal to start
               </Badge>
             )}
           </span>
@@ -219,19 +227,11 @@ const Dashboard = () => {
           ) : activeGoal ? (
             <div>
               <div className="d-flex align-items-center gap-2 mb-1">
-                <Badge bg="warning" text="dark">
-                  Active
-                </Badge>
                 <span className="fw-bold fs-5">{activeGoal.name}</span>
               </div>
               <p className="text-muted mb-0 small">{activeGoal.description}</p>
             </div>
-          ) : (
-            <div className="text-center text-muted py-2">
-              <i className="bi bi-exclamation-circle me-2"></i>
-              No active culling goal. Set one below before scanning.
-            </div>
-          )}
+          ) : null}
 
           {/* Goal list for switching */}
           <Collapse in={showGoalList}>
@@ -300,7 +300,7 @@ const Dashboard = () => {
                 </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-bold text-muted text-uppercase">
-                    Instructions for the AI
+                    Your culling strategy
                   </Form.Label>
                   <Form.Control
                     as="textarea"
@@ -312,7 +312,7 @@ const Dashboard = () => {
                   />
                 </Form.Group>
                 <Button type="submit" variant="warning" disabled={goalSaving}>
-                  {goalSaving ? <Spinner animation="border" size="sm" /> : 'Save & Set Active'}
+                  {goalSaving ? <Spinner animation="border" size="sm" /> : 'Create & Activate'}
                 </Button>
               </Form>
             </div>
@@ -350,9 +350,7 @@ const Dashboard = () => {
               <Col lg={4}>
                 <Card className="h-100 border-0 shadow-sm bg-warning bg-opacity-10 border-start border-4 border-warning">
                   <Card.Body className="p-4">
-                    <h6 className="text-uppercase text-warning fw-bold small mb-3">
-                      AI Progress Insights
-                    </h6>
+                    <h6 className="text-uppercase text-warning fw-bold small mb-3">AI Summary</h6>
                     <div className="d-flex">
                       <i className="bi bi-quote fs-1 text-warning opacity-50 me-2"></i>
                       <p className="mb-0 fs-5 lh-base text-dark" style={{ fontStyle: 'italic' }}>
@@ -395,8 +393,8 @@ const Dashboard = () => {
             </Button>
           </div>
 
-          {/* Active / pending decisions */}
-          <p className="text-muted small text-uppercase fw-bold mb-2">Active Decisions</p>
+          {/* Pending decisions */}
+          <p className="text-muted small text-uppercase fw-bold mb-2">Pending</p>
           <Row className="g-3 mb-4">
             {ACTIVE_CARDS.map((card) => (
               <Col key={card.key} xs={6} lg={3}>

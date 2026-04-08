@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Container, Row, Col, Button, Navbar, Nav, Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
@@ -79,6 +79,12 @@ const FEATURES = [
 
 const Landing = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">

@@ -290,7 +290,7 @@ const Inventory = () => {
       e.book.author,
       e.status,
       e.resolved_at ? new Date(e.resolved_at).toLocaleDateString() : '-',
-      e.status === 'SELL' ? `$${e.asking_price}` : e.donation_dest || '-',
+      e.status === 'SELL' ? `$${Number(e.asking_price).toFixed(2)}` : e.donation_dest || '-',
     ]);
     doc.autoTable(tableColumn, tableRows, { startY: 20 });
     doc.save('bookbounty_inventory.pdf');
@@ -309,12 +309,12 @@ const Inventory = () => {
         <div className="d-flex gap-2">
           {selectedIds.some((id) => !entries.find((e) => e.id === id)?.resolved_at) && (
             <Button variant="warning" onClick={() => setShowBulkModal(true)}>
-              <i className="bi bi-magic me-1"></i>Bulk Triage
+              <i className="bi bi-magic me-1"></i>AI Review
             </Button>
           )}
           {selectedIds.length > 0 && (
             <Dropdown as={ButtonGroup}>
-              <Button variant="primary">Bulk Action ({selectedIds.length})</Button>
+              <Button variant="primary">Change Status ({selectedIds.length})</Button>
               <Dropdown.Toggle split variant="primary" id="dropdown-bulk" />
               <Dropdown.Menu>
                 <Dropdown.Header>Change Status To:</Dropdown.Header>
@@ -407,7 +407,7 @@ const Inventory = () => {
                 <th>Book Details</th>
                 <th>Status</th>
                 <th>Condition</th>
-                <th>Price / Dest</th>
+                <th>Price / Donation</th>
                 <th>Notes</th>
                 <th>Action</th>
               </tr>
@@ -417,7 +417,10 @@ const Inventory = () => {
                 <tr>
                   <td colSpan="7" className="text-center py-5 text-muted">
                     <i className="bi bi-book fs-1 d-block mb-2 opacity-25"></i>
-                    No books found.
+                    No books match your current filters.
+                    <div className="small mt-1">
+                      Try clearing the search or changing the status filter.
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -484,7 +487,7 @@ const Inventory = () => {
                       <td className="small">
                         {e.status === 'SELL' && e.asking_price && (
                           <span className={isResolved ? 'text-muted' : 'text-primary fw-bold'}>
-                            ${e.asking_price}
+                            ${Number(e.asking_price).toFixed(2)}
                           </span>
                         )}
                         {e.status === 'DONATE' && e.donation_dest && (
@@ -504,7 +507,7 @@ const Inventory = () => {
                         <div className="d-flex gap-2 align-items-center">
                           {isResolved ? (
                             <Badge bg="light" text="muted" className="border fw-normal">
-                              <i className="bi bi-check2 me-1"></i>Done
+                              <i className="bi bi-check2 me-1"></i>Resolved
                             </Badge>
                           ) : (
                             <Button

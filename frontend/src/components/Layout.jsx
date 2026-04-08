@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import { Container, Navbar, Nav, Button } from 'react-bootstrap';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import UserGuideModal from './common/UserGuideModal';
 
 const Layout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { showNotification } = useNotification();
   const [showGuide, setShowGuide] = useState(false);
 
   const handleLogout = () => {
-    logout().finally(() => navigate('/login'));
+    logout().finally(() => {
+      showNotification({ message: "You've been signed out.", type: 'info', duration: 3000 });
+      navigate('/login');
+    });
   };
 
   return (
@@ -23,14 +29,14 @@ const Layout = () => {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link as={Link} to="/">
+              <Nav.Link as={Link} to="/" active={location.pathname === '/'}>
                 Dashboard
               </Nav.Link>
-              <Nav.Link as={Link} to="/scan">
-                Triage Wizard
+              <Nav.Link as={Link} to="/scan" active={location.pathname === '/scan'}>
+                Scan Books
               </Nav.Link>
-              <Nav.Link as={Link} to="/collection">
-                Inventory
+              <Nav.Link as={Link} to="/collection" active={location.pathname === '/collection'}>
+                Collection
               </Nav.Link>
             </Nav>
             <div className="d-flex gap-2">

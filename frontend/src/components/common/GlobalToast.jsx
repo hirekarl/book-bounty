@@ -20,6 +20,21 @@ const GlobalToast = () => {
     }
   };
 
+  const getTitle = (type) => {
+    switch (type) {
+      case 'success':
+        return 'Success';
+      case 'danger':
+        return 'Error';
+      case 'warning':
+        return 'Warning';
+      case 'info':
+        return 'Info';
+      default:
+        return 'Notice';
+    }
+  };
+
   return (
     <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1060 }}>
       {notifications.map((notification) => (
@@ -34,7 +49,7 @@ const GlobalToast = () => {
         >
           <Toast.Header closeButton>
             <i className={`bi ${getIcon(notification.type)} me-2`}></i>
-            <strong className="me-auto">Notification</strong>
+            <strong className="me-auto">{getTitle(notification.type)}</strong>
           </Toast.Header>
           <Toast.Body className={notification.type === 'warning' ? 'text-dark' : 'text-white'}>
             {notification.message}

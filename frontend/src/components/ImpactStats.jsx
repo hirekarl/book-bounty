@@ -34,7 +34,11 @@ const ImpactStats = ({ totalResolved, potentialEarnings, topDestinations }) => {
         <Card className="h-100 border-0 shadow-sm text-center bg-primary text-white">
           <Card.Body className="d-flex flex-column justify-content-center py-4">
             <div className="display-4 fw-bold mb-1">
-              ${potentialEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              $
+              {potentialEarnings.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
             <Card.Title className="text-uppercase tracking-wider small opacity-75">
               Potential Earnings

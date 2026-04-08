@@ -160,21 +160,25 @@ cd backend && uv run python manage.py createsuperuser
 
 ## 6. Frontend Pages
 
+**Nav labels:** The authenticated navbar shows "Scan Books" (route `/scan`) and "Collection" (route `/inventory`). These replaced the prior labels "Triage Wizard" and "Inventory". Active route is highlighted via `useLocation`. Authenticated users who visit `/welcome` are redirected to `/`.
+
 ### `Dashboard.jsx`
 - Hero section shows live `stats.in_collection` count
-- **Culling Goal card sits above Shelf Impact** — elevated in Phase 9. Uses `border-warning` when a goal is active, `border-danger` with "Required before scanning" badge when none is set.
-- Culling Goal card: active goal display, Change (list inactive goals), New Goal form with preset templates
-- Shelf Impact section (ImpactStats + SpatialROI + AI narrative) renders below the goal card
-- Stats grid: Active Decisions row + Resolved row, each card links to Inventory with correct filter params
+- **Culling Goal card sits above Shelf Impact** — elevated in Phase 9. Uses `border-warning` when a goal is active, `border-danger` with "Set a goal to start" badge when none is set.
+- Culling Goal card: active goal display, Change (list inactive goals), New Goal form ("Your culling strategy" label, "Create & Activate" submit button) with preset templates
+- Shelf Impact section (ImpactStats + SpatialROI + AI narrative, labeled "AI Summary") renders below the goal card
+- Stats grid: **Pending** row + Resolved row, each card links to Collection with correct filter params
 - Links use `?status=KEEP&resolved=false` and `?status=KEEP&resolved=true` patterns
 
-### `TriageWizard.jsx` (Scan page)
-- **Step 1:** Goal guard — blocks if no active culling goal; shows GoalPill + camera scanner
+### `TriageWizard.jsx` (Scan Books page)
+- **Step counter** displayed at the top of the wizard ("Step 1 of 3", "Step 2 of 3", "Step 3 of 3").
+- **Step 1:** Goal guard — blocks if no active culling goal ("Start Scanning" button disabled); shows GoalPill + camera scanner
 - **Step 2:** Book details + AI recommendation card
   - `metadata_found === false` → shows warning banner
   - `confidence < 0.5` → "AI Uncertain" badge + yellow progress bar
-  - Accept: pre-fills status and suggested_price; Override: shows manual status picker
-- **Step 3:** Confirm and save — creates CatalogEntry, returns to step 1 for next scan
+  - Accept: pre-fills status and suggested_price; **"Choose My Own"**: shows manual status picker
+  - **Auto-retrigger on condition change:** changing condition grade or flags triggers a fresh AI recommendation (800ms debounce). Request versioning via `reqVersionRef` discards stale responses; `applyStatus` option preserves the user's manually chosen status in override mode while refreshing price/copy/valuation.
+- **Step 3:** Confirm and save — creates CatalogEntry, "Save & Scan Next" returns to step 1; "Collection" link navigates to `/inventory`
 
 **Title/Author Search (Phase 9)** — below the manual ISBN field in Step 1, a "Search by Title / Author" section allows searching Open Library when no barcode is available. Shows a disambiguation list (cover thumbnail, title, author, year). Selecting a result feeds its ISBN into `handleLookup`. Results with no ISBN are shown greyed out and disabled.
 
@@ -240,17 +244,20 @@ useEffect(() => {
 
 **Do not** add `experimentalFeatures`, `aspectRatio`, or CSS overrides on `#reader video` — all three have been tried and break scanning.
 
-### `Inventory.jsx`
+### `Inventory.jsx` (Collection page)
 - View toggles: All / In Collection / Pending / Resolved
 - Initialized from URL params (Dashboard links pass `?status=...&resolved=...`)
 - Resolved rows styled with `text-muted`, `opacity-50` cover image, secondary "Kept · date" badge
-- Action column: "Resolve" button OR "Done" badge, plus a pencil icon for editing
+- Action column: "Resolve" button OR "Resolved" badge, plus a pencil icon for editing
 - Paginated: loads 50 entries per page; "Load More" button appends next page; shows "Showing X of Y books"
+- Bulk actions: "AI Review" button (was "Bulk Triage"), "Change Status (n)" button (was "Bulk Action (n)")
 - **Edit Record Modal:**
+  - Title bar shows the book name.
   - Triggered by clicking the book title (accessible via keyboard/role) or pencil icon.
-  - Allows editing of status, condition, flags, notes, price, and donation destination.
-  - Supports toggling resolution state (un-resolve) and record deletion.
-  - Shows **Market Pricing** card when `valuation_data` is present: eBay range, AbeBooks range, BooksRun buyback price, staleness warning if data > 30 days old, "Refresh Pricing" button.
+  - Allows editing of status, condition, flags, notes, price ("Price / Donation" label), and donation destination.
+  - Supports toggling resolution state (un-resolve) and record deletion. Uses "resolved" terminology (not "processed").
+  - Shows **Market Pricing** card when `valuation_data` is present — positioned **above** the Asking Price field: eBay range, AbeBooks range, BooksRun buyback price, staleness warning if data > 30 days old, "Refresh Pricing" button.
+- **BulkReviewModal:** Header "AI Recommendations" (was "Bulk Triage Review"). Cards with AI recommendations that diverge from the current status are highlighted with a warning background (not accepted ones). Footer: "Save All (n Books)".
 - Bulk status change, export to CSV/Excel/PDF
 
 ### `Login.jsx`

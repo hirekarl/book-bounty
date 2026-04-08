@@ -141,7 +141,7 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
       <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="fw-bold">
           <i className="bi bi-magic me-2 text-warning"></i>
-          Bulk Triage Review
+          AI Recommendations
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="pt-2">
@@ -202,7 +202,7 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
                       </div>
 
                       <Card
-                        className={`border-0 ${isDifferent ? 'bg-light' : 'bg-warning bg-opacity-10'}`}
+                        className={`border-0 ${isDifferent ? 'bg-warning bg-opacity-10' : 'bg-light'}`}
                       >
                         <Card.Body className="p-3">
                           <Row className="align-items-center">
@@ -397,7 +397,7 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
               Completing...
             </>
           ) : (
-            `Complete Bulk Triage (${selectedEntries.length} Books)`
+            `Save All (${selectedEntries.length} Books)`
           )}
         </Button>
       </Modal.Footer>

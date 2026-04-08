@@ -176,7 +176,7 @@ const EditRecordModal = ({
     <>
       <Modal show={show} onHide={onHide} size="lg" centered>
         <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title className="fw-bold">Edit Record</Modal.Title>
+          <Modal.Title className="fw-bold">Edit: {entry.book.title}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-2">
           <Row>
@@ -202,6 +202,14 @@ const EditRecordModal = ({
             <Col md={8}>
               <h5 className="fw-bold mb-1">{entry.book.title}</h5>
               <p className="text-muted mb-3">by {entry.book.author}</p>
+
+              {entry.valuation_data && Object.keys(entry.valuation_data).length > 0 && (
+                <MarketPricingSection
+                  valuationData={entry.valuation_data}
+                  onRefreshValuation={onRefreshValuation}
+                  isRefreshingValuation={isRefreshingValuation}
+                />
+              )}
 
               <Form noValidate onSubmit={formik.handleSubmit}>
                 <Row className="g-3 mb-3">
@@ -304,7 +312,7 @@ const EditRecordModal = ({
                     <Form.Group className="mb-3" controlId="edit-marketplace-description">
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <Form.Label className="small fw-bold text-muted text-uppercase mb-0">
-                          Marketplace Listing
+                          Listing Description
                         </Form.Label>
                         <Button
                           variant="link"
@@ -374,19 +382,11 @@ const EditRecordModal = ({
                   />
                   <Form.Text className="text-muted">
                     {formik.values.is_resolved
-                      ? 'This book will be marked as processed.'
-                      : 'This book will remain in your active triage list.'}
+                      ? 'This book will be marked as resolved.'
+                      : 'This book will remain in your pending list.'}
                   </Form.Text>
                 </Form.Group>
               </Form>
-
-              {entry.valuation_data && Object.keys(entry.valuation_data).length > 0 && (
-                <MarketPricingSection
-                  valuationData={entry.valuation_data}
-                  onRefreshValuation={onRefreshValuation}
-                  isRefreshingValuation={isRefreshingValuation}
-                />
-              )}
             </Col>
           </Row>
         </Modal.Body>

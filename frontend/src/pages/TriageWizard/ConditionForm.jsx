@@ -34,7 +34,7 @@ const ConditionForm = ({
         <span>Condition & Details</span>
         {aiRec && (
           <Button variant="outline-warning" size="sm" onClick={fetchAiRecommendation}>
-            <i className="bi bi-arrow-clockwise me-1"></i>Re-analyze
+            <i className="bi bi-arrow-clockwise me-1"></i>Get New Recommendation
           </Button>
         )}
       </Card.Header>
@@ -57,7 +57,7 @@ const ConditionForm = ({
 
         <Form.Group className="mb-4">
           <Form.Label className="fw-bold text-muted small text-uppercase">
-            Specific Issues
+            Condition Issues
           </Form.Label>
           <div className="d-flex flex-wrap gap-3">
             {CONDITION_FLAGS.map((flag) => (
@@ -124,7 +124,7 @@ const ConditionForm = ({
             <Form.Group className="mb-4" controlId="triage-marketplace-description">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <Form.Label className="fw-bold text-muted small text-uppercase mb-0">
-                  Marketplace Listing
+                  Listing Description
                 </Form.Label>
                 <Button
                   variant="link"
