@@ -555,3 +555,47 @@ class RegistrationTests(APITestCase):
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("username", response.data)
+
+    def test_registration_throttle_scope(self) -> None:
+        """RegistrationRateThrottle must declare scope = 'registration'."""
+        from triage.views import RegistrationRateThrottle
+
+        self.assertEqual(RegistrationRateThrottle.scope, "registration")
+
+
+class ResolvedAtValidationTests(BaseAPITestCase):
+    """Tests for the resolved_at future-date validation in CatalogEntrySerializer."""
+
+    def setUp(self) -> None:
+        """Set up a book and entry for validation tests."""
+        super().setUp()
+        self.book = Book.objects.create(
+            isbn="5559876543210",
+            title="Validation Book",
+            author="Val Author",
+        )
+        self.entry = CatalogEntry.objects.create(
+            book=self.book,
+            user=self.user,
+            status=CatalogEntry.Status.KEEP,
+        )
+
+    def test_patch_resolved_at_future_returns_400(self) -> None:
+        """PATCHing resolved_at to a future datetime must return 400."""
+        from django.utils import timezone
+
+        future_ts = (timezone.now() + timezone.timedelta(days=1)).isoformat()
+        url = reverse("catalog-entries-detail", kwargs={"pk": self.entry.pk})
+        response = self.client.patch(url, {"resolved_at": future_ts}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("resolved_at", response.data)
+
+    def test_patch_resolved_at_past_is_accepted(self) -> None:
+        """PATCHing resolved_at to a past datetime must succeed (200)."""
+        from django.utils import timezone
+
+        past_ts = (timezone.now() - timezone.timedelta(days=1)).isoformat()
+        url = reverse("catalog-entries-detail", kwargs={"pk": self.entry.pk})
+        response = self.client.patch(url, {"resolved_at": past_ts}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data.get("resolved_at"))

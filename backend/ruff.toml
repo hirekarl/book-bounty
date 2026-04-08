@@ -22,6 +22,7 @@ ignore = [
     "PTH122",    # os.path.splitext — pre-existing in services.py
     "SIM108",    # ternary operator — pre-existing in services.py
     "ARG002",    # unused method argument — DRF override contract requires matching parent signature
+    "TRY003",    # long exception messages — DRF ValidationError always uses inline messages
     "E501",      # line too long — AI prompt strings and docstrings are exempt from wrapping
     "D101",      # missing docstring in public class — pre-existing in serializers.py
     "D106",      # missing docstring in nested class — pre-existing in serializers.py

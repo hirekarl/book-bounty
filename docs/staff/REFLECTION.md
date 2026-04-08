@@ -13,6 +13,18 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: Rate Limiting + resolved_at Validation (Ember Deferred Items)
+
+- **Task:** Implement two deferred items from Ember's security review: rate limiting on `/api/auth/register/` and `resolved_at` future-date validation.
+- **Rate limiting:** DRF's built-in throttling system with a custom `AnonRateThrottle` subclass (`RegistrationRateThrottle`, `scope = "registration"`) wired to `DEFAULT_THROTTLE_RATES["registration"] = "10/hour"`. No third-party packages needed. Test: `test_registration_throttle_scope` (unit test on `scope` attribute — avoids hitting cache-based rate limits in tests).
+- **resolved_at validation:** `validate_resolved_at()` method on `CatalogEntrySerializer` — raises `ValidationError("resolved_at cannot be set to a future date.")` if the submitted value is not None and exceeds `timezone.now()`. Tests: `test_patch_resolved_at_future_returns_400` and `test_patch_resolved_at_past_is_accepted`.
+- **ruff:** TRY003 (long exception messages) added to ignore list — DRF `ValidationError` always uses inline messages; extracting to a constant class is unnecessary overhead.
+- **42 tests passing; ruff clean.**
+- **DEFERRED — Nullable User FK (Info finding from Ember):** `CullingGoal.user` and `CatalogEntry.user` are nullable (`null=True, blank=True`) — added for migration safety during the multi-tenant refactor. The correct final state is non-nullable. This requires a multi-step migration: (1) backfill any rows where `user IS NULL` (assign to a known user or delete orphans), (2) `AlterField` to remove `null=True`. No access control hole exists today — nullable means orphaned records, not public records. Do not attempt this migration without a backfill strategy. This item is parked for the next session.
+- **DEFERRED — Deployment-layer rate limiting (Scout):** Render/Nginx rate limiting on `/api/auth/register/` is a Scout concern. Application-layer throttling (above) is in place; deployment-layer hardening is a separate task.
+
+---
+
 ### 2026-04-08: Ember Security Review — Multi-Tenant Implementation
 
 - **Task:** Retrospective adversarial review of the multi-tenant implementation by Ember.

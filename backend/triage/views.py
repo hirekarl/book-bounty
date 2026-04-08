@@ -22,6 +22,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from triage.ai_engine import (
@@ -42,10 +43,17 @@ from triage.services import (
 )
 
 
+class RegistrationRateThrottle(AnonRateThrottle):
+    """Limits registration attempts to the 'registration' scope (10/hour)."""
+
+    scope = "registration"
+
+
 class RegisterView(APIView):
     """Creates a new user account and returns an auth token."""
 
     permission_classes = [AllowAny]
+    throttle_classes = [RegistrationRateThrottle]
 
     def post(self, request: Request) -> Response:
         """Registers a new user.

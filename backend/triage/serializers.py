@@ -6,6 +6,7 @@ used in the REST API.
 
 from typing import ClassVar
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from triage.models import Book, CatalogEntry, CullingGoal
@@ -62,6 +63,14 @@ class CatalogEntrySerializer(serializers.ModelSerializer[CatalogEntry]):
         if request and request.user and request.user.is_authenticated:
             fields["culling_goal"].queryset = CullingGoal.objects.filter(user=request.user)
         return fields
+
+    def validate_resolved_at(self, value: object) -> object:
+        """Rejects future-dated resolution timestamps."""
+        if value is not None and value > timezone.now():
+            raise serializers.ValidationError(
+                "resolved_at cannot be set to a future date.",
+            )
+        return value
 
     class Meta:
         """Metadata for the CatalogEntrySerializer."""
