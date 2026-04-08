@@ -4,9 +4,11 @@ This module contains unit tests to verify the behavior of the Book and
 CatalogEntry models.
 """
 
+from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from triage.models import Book, CatalogEntry
+from triage.models import Book, CatalogEntry, CullingGoal
 
 
 class ModelTests(TestCase):
@@ -14,6 +16,7 @@ class ModelTests(TestCase):
 
     def setUp(self) -> None:
         """Set up test data for the model tests."""
+        self.user = User.objects.create_user(username="testuser", password="password")
         self.book = Book.objects.create(
             isbn="1234567890123",
             title="Test Book",
@@ -37,6 +40,7 @@ class ModelTests(TestCase):
         """Test that a CatalogEntry instance is correctly created."""
         entry = CatalogEntry.objects.create(
             book=self.book,
+            user=self.user,
             status=CatalogEntry.Status.KEEP,
             condition_flags=["MINT"],
             notes="Excellent condition.",
@@ -51,6 +55,7 @@ class ModelTests(TestCase):
         """Test CatalogEntry with SELL status and asking price."""
         entry = CatalogEntry.objects.create(
             book=self.book,
+            user=self.user,
             status=CatalogEntry.Status.SELL,
             asking_price=19.99,
         )
@@ -62,8 +67,37 @@ class ModelTests(TestCase):
         """Test CatalogEntry with DONATE status and destination."""
         entry = CatalogEntry.objects.create(
             book=self.book,
+            user=self.user,
             status=CatalogEntry.Status.DONATE,
             donation_dest="Local Library",
         )
         assert entry.status == CatalogEntry.Status.DONATE
         assert entry.donation_dest == "Local Library"
+
+    def test_culling_goal_creation(self) -> None:
+        """Test that a CullingGoal instance is correctly created."""
+        goal = CullingGoal.objects.create(
+            user=self.user,
+            name="Test Goal",
+            description="Test Description",
+        )
+        assert goal.user == self.user
+        assert goal.name == "Test Goal"
+        assert goal.description == "Test Description"
+        assert str(goal) == "Test Goal"
+
+    def test_catalog_entry_requires_user(self) -> None:
+        """Verify that CatalogEntry.objects.create() raises IntegrityError if user is missing."""
+        with self.assertRaises(IntegrityError):
+            CatalogEntry.objects.create(
+                book=self.book,
+                status=CatalogEntry.Status.KEEP,
+            )
+
+    def test_culling_goal_requires_user(self) -> None:
+        """Verify that CullingGoal.objects.create() raises IntegrityError if user is missing."""
+        with self.assertRaises(IntegrityError):
+            CullingGoal.objects.create(
+                name="Test Goal",
+                description="Test Description",
+            )

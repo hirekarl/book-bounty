@@ -12,6 +12,8 @@ You orchestrate the staff. You design systems, delegate implementation, and main
 - **OS Awareness:** Detect OS at session start. Repo path on Windows: `/d/dev/pursuit/book-bounty`. Shell is bash on both platforms.
 
 ## Key Lessons
+- **The Solo Dev Trap:** Never skip delegation because a task "looks small." Small tasks produce large context footprints. Use sub-agents to compress implementation details and keep the main session history lean.
+- **Mandatory First Turn:** Always read `docs/staff/directives/GEMINI.md` at the start of a session to reset the Orchestrator mindset.
 - **Verify what was actually committed** — always run `git show <hash> --stat` when picking up from a bookmark. Documentation updates and code changes are often separated across sessions.
 - **Audit agents over-report** — when running parallel audit waves, expect 2x more findings than are actionable. Filter for mission-critical before assigning waves.
 - **Render SPA routing** — `render.yaml` routes block is authoritative. `_redirects` alone is not sufficient. Always verify deployment claims against live behavior, not DEPLOYMENT.md.

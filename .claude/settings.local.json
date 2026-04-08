@@ -9,7 +9,10 @@
       "Bash(echo \"exit:$?\")",
       "Bash(node node_modules/.bin/eslint --fix src/pages/Inventory.jsx src/pages/Dashboard.jsx)",
       "Bash(node node_modules/.bin/eslint src/pages/Inventory.jsx src/pages/Dashboard.jsx)",
-      "Bash(echo \"Exit: $?\")"
+      "Bash(echo \"Exit: $?\")",
+      "Bash(node node_modules/.bin/eslint src/pages/Register.jsx src/pages/Login.jsx src/pages/Landing.jsx src/App.jsx src/services/api.js)",
+      "Bash(node node_modules/eslint/bin/eslint.js src/pages/Register.jsx src/pages/Login.jsx src/pages/Landing.jsx src/App.jsx src/services/api.js)",
+      "Bash(node node_modules/eslint/bin/eslint.js --fix src/pages/Register.jsx)"
     ]
   }
 }

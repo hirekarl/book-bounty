@@ -1,6 +1,6 @@
 # BookBounty: Claude Code Context
 
-**BookBounty** is a single-user AI-powered personal library triage web app. Users scan books by ISBN, get an AI recommendation (KEEP/DONATE/SELL/DISCARD) based on their stated culling goal, and track outcomes over time.
+**BookBounty** is a multi-tenant AI-powered personal library triage web app. Users scan books by ISBN, get an AI recommendation (KEEP/DONATE/SELL/DISCARD) based on their stated culling goal, and track outcomes over time.
 
 ---
 
@@ -40,11 +40,11 @@ Immutable metadata keyed by ISBN. Fetched from Open Library on first scan and ca
 
 ### `CullingGoal`
 User's stated goal for the current culling session. Fed verbatim to the AI as context.
-- `name`, `description`, `is_active` (only one active at a time), `created_at`
+- `user` (FK, non-nullable), `name`, `description`, `is_active` (only one active at a time), `created_at`
 
 ### `CatalogEntry`
 One physical copy of a book with a triage decision.
-- `book` (FK), `culling_goal` (FK, nullable), `status` (KEEP/DONATE/SELL/DISCARD)
+- `user` (FK, non-nullable), `book` (FK), `culling_goal` (FK, nullable), `status` (KEEP/DONATE/SELL/DISCARD)
 - `condition_grade` (MINT/GOOD/FAIR/POOR), `condition_flags` (JSON list)
 - `notes`, `asking_price`, `donation_dest`
 - `valuation_data` (JSON), `ai_recommendation` (JSON — stored raw AI response)
@@ -297,7 +297,7 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173"
 
 ## 8. Migration State
 
-9 migrations in `backend/triage/migrations/`:
+10 migrations in `backend/triage/migrations/`:
 - `0001_initial` — Book, CatalogEntry
 - `0002_...` — cover_url, description fields on Book
 - `0003_cullinggoal_catalogentry_ai_recommendation_and_more` — CullingGoal model, ai_recommendation field
@@ -307,6 +307,7 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173"
 - `0007_book_page_count` — page_count on Book
 - `0008_catalogentry_marketplace_description` — marketplace_description on CatalogEntry
 - `0009_add_user_to_cullinggoal_and_catalogentry` — user FK (nullable) on CullingGoal and CatalogEntry
+- `0010_alter_catalogentry_user_alter_cullinggoal_user` — transitions user FKs to non-nullable; backfills orphaned records to first user.
 
 ---
 

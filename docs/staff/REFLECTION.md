@@ -13,6 +13,43 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: SESSION STATUS: HARDENED
+
+- **Task:** Multi-Tenant Schema Hardening (Non-nullable User FKs).
+- **Implemented:** `CullingGoal.user` and `CatalogEntry.user` are now non-nullable at the database level.
+- **Verified:** Migration `0010_alter_catalogentry_user_alter_cullinggoal_user` (backfill + schema change) successfully applied; all tests passing.
+- **Corrected:** `triage/tests.py` updated to ensure all model factory/creation calls include required `user` association.
+- **Hardened:** 
+    - [x] Add explicit `CullingGoal` model-level unit test.
+    - [x] Add database-level constraint verification test (asserting `IntegrityError` on null user).
+    - [x] Refactor migration `0010` backfill logic to gracefully handle empty user tables.
+- **Efficiency Gain:** Consolidation of the multi-tenant schema ensures data isolation is enforced by the database engine, not just application logic.
+
+---
+
+### 2026-04-08: Test Refinement & Migration Hardening
+
+- **Task:** Finalized multi-tenant database integrity and test coverage.
+- **Outcome:** Database-level constraints are now explicitly verified. Migration `0010` is safe for fresh environments.
+- **New Tests:** `CullingGoal` unit tests; `IntegrityError` verification for `CatalogEntry` and `CullingGoal` null-user violations.
+- **Principle: Database-level constraints require database-level verification.** Application-layer tests (and factories) can mask schema gaps; explicit `IntegrityError` assertions are necessary to verify that the database engine is enforcing the multi-tenant wall.
+- **Principle: Defensive Backfill Logic.** Migrations narrowing schema constraints (e.g., `null=True` to `null=False`) must handle empty tables gracefully. Assigning a default user only if one exists prevents migration failure during fresh builds or CI runs with empty databases.
+
+---
+
+### 2026-04-08: Multi-Tenant Hardening — Non-nullable User FKs
+
+- **Task:** Finalized multi-tenant data integrity by transitioning `CullingGoal.user` and `CatalogEntry.user` from nullable to non-nullable fields.
+- **Outcome:** Migration `0010_alter_catalogentry_user_alter_cullinggoal_user` successfully applied. All 42 tests passing. Model unit tests updated to include required `user` fields.
+- **Technical Rationale:** Multi-tenancy must be enforced at the database level (`null=False`) to prevent orphaned records that could accidentally become "publicly accessible" if application-layer filters fail. Non-nullable FKs ensure every record is strictly owned.
+- **Data Migration Logic (0010):** Implemented a `RunPython` backfill that assigns any orphaned records (from the pre-multi-tenant era) to the earliest created user (ID 1). This preserves existing data while satisfying the new schema constraints.
+- **Sentry Audit Findings:**
+    - **Migration stability risk:** The backfill logic in `0010` is conditional on the existence of at least one user. If the user table is empty, the logic returns, but the subsequent `AlterField` would fail if orphaned records were present. **Principle:** Backfill migrations must verify the safe-state of target tables before attempting schema narrowing.
+    - **Coverage Gap:** `CullingGoal` lacked a dedicated model-level unit test in `tests.py`. **Principle:** Model-level unit tests are mandatory for schema changes to verify constraints and relationship logic independently of the API.
+    - **Verification Gap:** The data backfill logic is currently untested within the CI suite. **Principle:** Complex `RunPython` migrations should be verified through specialized migration test cases or manual state validation in a dedicated staging pass.
+
+---
+
 ### 2026-04-08: Rate Limiting + resolved_at Validation (Ember Deferred Items)
 
 - **Task:** Implement two deferred items from Ember's security review: rate limiting on `/api/auth/register/` and `resolved_at` future-date validation.

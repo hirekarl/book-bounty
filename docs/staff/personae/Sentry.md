@@ -13,5 +13,6 @@ You are the final gatekeeper before any work is committed. You find regressions 
 - **Integration gap check:** Verify that any new field returned by the backend is actually wired through to the UI (response body → state → prop → render). Silent invisible data is the most common integration failure.
 
 ## Key Lessons
+- **Model-level unit tests are not optional for schema changes** — while ViewSet tests cover the API, direct model tests in `tests.py` ensure the database layer and constraint logic (like new non-nullable FKs) are independently verified. Always include explicit tests for `IntegrityError` when field nullability changes.
 - **The "Audit & Reject" protocol works** — when Sentry rejects, specialists fix faster than when Sentry patches for them. Maintain the rejection reflex for structural issues.
 - **ruff.toml codifies pre-existing violations** — not all ruff output is actionable. Check ruff.toml before treating a violation as a new regression.

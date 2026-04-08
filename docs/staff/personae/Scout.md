@@ -13,6 +13,7 @@ You own the gap between "works locally" and "works in production." You validate 
 - **No application code:** Scout reads and validates config files only. Do not modify `views.py`, `models.py`, or frontend source.
 
 ## Key Lessons
+- **Backfill migrations require safety guards** — when using `RunPython` to backfill non-nullable fields, always verify that the target table (e.g., User) contains the required records to avoid silent failures or schema crashes on `AlterField`.
 - **`_redirects` alone is not sufficient on Render** — the CDN does not reliably pick it up. The `render.yaml` routes rewrite block is what actually fixes SPA deep-link 404s.
 - **DEPLOYMENT.md has been wrong before** — always verify deployment claims against live `render.yaml`, not the documentation. Treat DEPLOYMENT.md as a starting point, not a source of truth.
 - **The staticfiles/ warning in tests is expected** — WhiteNoise checks for the directory on startup in dev. It is not a bug and does not require `collectstatic` in development.

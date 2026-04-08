@@ -40,8 +40,6 @@ class CullingGoal(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="culling_goals",
     )
     name = models.CharField(max_length=100)
@@ -76,8 +74,6 @@ class CatalogEntry(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="catalog_entries",
     )
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="entries")
