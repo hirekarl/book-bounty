@@ -23,7 +23,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 
 from triage.ai_engine import (
@@ -50,6 +50,12 @@ class RegistrationRateThrottle(AnonRateThrottle):
     """Limits registration attempts to the 'registration' scope (10/hour)."""
 
     scope = "registration"
+
+
+class AiRecommendationRateThrottle(UserRateThrottle):
+    """Limits AI recommendation calls to the 'ai_recommendation' scope (100/day)."""
+
+    scope = "ai_recommendation"
 
 
 class RegisterView(APIView):
@@ -134,6 +140,8 @@ class CullingGoalViewSet(viewsets.ModelViewSet):
 
 class RecommendView(APIView):
     """Calls the AI engine to generate a triage recommendation for a book."""
+
+    throttle_classes = [AiRecommendationRateThrottle]
 
     def post(self, request: Request) -> Response:
         """Returns a structured AI recommendation.
@@ -416,6 +424,8 @@ class DashboardStatsView(APIView):
 
 class RecommendBulkView(APIView):
     """Calls the AI engine to generate recommendations for multiple catalog entries."""
+
+    throttle_classes = [AiRecommendationRateThrottle]
 
     def post(self, request: Request) -> Response:
         """Returns structured AI recommendations for multiple entries.

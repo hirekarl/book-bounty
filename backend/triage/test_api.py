@@ -562,6 +562,12 @@ class RegistrationTests(APITestCase):
 
         self.assertEqual(RegistrationRateThrottle.scope, "registration")
 
+    def test_ai_recommendation_throttle_scope(self) -> None:
+        """AiRecommendationRateThrottle must declare scope = 'ai_recommendation'."""
+        from triage.views import AiRecommendationRateThrottle
+
+        self.assertEqual(AiRecommendationRateThrottle.scope, "ai_recommendation")
+
 
 class ResolvedAtValidationTests(BaseAPITestCase):
     """Tests for the resolved_at future-date validation in CatalogEntrySerializer."""

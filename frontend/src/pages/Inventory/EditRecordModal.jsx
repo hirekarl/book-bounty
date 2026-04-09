@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Button, Row, Col, Form, Badge, InputGroup, Spinner } from 'react-bootstrap';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { useFormik } from 'formik';
 import { catalogSchema, validateWithZod } from '../../schemas/catalogSchema';
 import { useNotification } from '../../contexts/NotificationContext';
+import { getRecommendation } from '../../services/api';
 
 const CONDITION_GRADES = ['MINT', 'GOOD', 'FAIR', 'POOR'];
 const CONDITION_FLAGS = ['Water Damage', 'Torn Pages', 'Spine Damage', 'Annotated', 'Yellowing'];
@@ -120,6 +121,12 @@ const EditRecordModal = ({
 }) => {
   const { showNotification } = useNotification();
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [aiSuggestedPrice, setAiSuggestedPrice] = useState(null);
+  const [aiUpdating, setAiUpdating] = useState(false);
+  const [priceManuallySet, setPriceManuallySet] = useState(false);
+  const priceManuallySetRef = useRef(false);
+  const conditionDebounceRef = useRef(null);
+  const conditionInitializedRef = useRef(false);
 
   const formik = useFormik({
     initialValues: {
@@ -141,6 +148,10 @@ const EditRecordModal = ({
   // Sync Formik with entry when modal opens or entry changes
   useEffect(() => {
     if (show && entry) {
+      conditionInitializedRef.current = false;
+      setAiSuggestedPrice(null);
+      setPriceManuallySet(false);
+      priceManuallySetRef.current = false;
       formik.setValues({
         status: entry.status || 'KEEP',
         condition_grade: entry.condition_grade || 'GOOD',
@@ -154,6 +165,39 @@ const EditRecordModal = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, entry]);
+
+  // Auto-retrigger AI price suggestion when condition changes (800ms debounce).
+  // Skips the first run after modal open (values are being initialised from entry).
+  // Only updates asking_price if the user hasn't manually set their own value.
+  useEffect(() => {
+    if (!show || !entry) return;
+    if (!conditionInitializedRef.current) {
+      conditionInitializedRef.current = true;
+      return;
+    }
+    setAiUpdating(true);
+    clearTimeout(conditionDebounceRef.current);
+    conditionDebounceRef.current = setTimeout(() => {
+      getRecommendation({
+        isbn: entry.book.isbn,
+        condition_grade: formik.values.condition_grade,
+        condition_flags: formik.values.condition_flags,
+      })
+        .then((res) => {
+          const { suggested_price } = res.data;
+          if (suggested_price) {
+            const priceStr = String(suggested_price);
+            setAiSuggestedPrice(priceStr);
+            if (!priceManuallySetRef.current) {
+              formik.setFieldValue('asking_price', priceStr);
+            }
+          }
+        })
+        .catch(() => {})
+        .finally(() => setAiUpdating(false));
+    }, 800);
+    return () => clearTimeout(conditionDebounceRef.current);
+  }, [formik.values.condition_grade, formik.values.condition_flags]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!entry) return null;
 
@@ -292,8 +336,11 @@ const EditRecordModal = ({
                 {formik.values.status === 'SELL' && (
                   <>
                     <Form.Group className="mb-3" controlId="edit-asking-price">
-                      <Form.Label className="small fw-bold text-muted text-uppercase">
+                      <Form.Label className="small fw-bold text-muted text-uppercase d-flex align-items-center gap-2">
                         Asking Price ($)
+                        {aiUpdating && (
+                          <Spinner size="sm" animation="border" className="text-muted" />
+                        )}
                       </Form.Label>
                       <Form.Control
                         name="asking_price"
@@ -304,13 +351,35 @@ const EditRecordModal = ({
                         value={formik.values.asking_price}
                         isInvalid={formik.touched.asking_price && !!formik.errors.asking_price}
                         aria-invalid={formik.touched.asking_price && !!formik.errors.asking_price}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          formik.handleChange(e);
+                          setPriceManuallySet(true);
+                          priceManuallySetRef.current = true;
+                        }}
                         onBlur={formik.handleBlur}
                         aria-describedby="asking-price-feedback"
                       />
                       <Form.Control.Feedback type="invalid" id="asking-price-feedback">
                         {formik.errors.asking_price}
                       </Form.Control.Feedback>
+                      {priceManuallySet &&
+                        aiSuggestedPrice &&
+                        formik.values.asking_price !== aiSuggestedPrice && (
+                          <Form.Text>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="p-0 text-muted text-decoration-none"
+                              onClick={() => {
+                                formik.setFieldValue('asking_price', aiSuggestedPrice);
+                                setPriceManuallySet(false);
+                                priceManuallySetRef.current = false;
+                              }}
+                            >
+                              Use AI price: ${Number(aiSuggestedPrice).toFixed(2)}
+                            </Button>
+                          </Form.Text>
+                        )}
                     </Form.Group>
 
                     <Form.Group className="mb-3" controlId="edit-marketplace-description">

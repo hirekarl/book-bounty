@@ -107,6 +107,7 @@ REST_FRAMEWORK = {
         "anon": "200/day",
         "user": "2000/day",
         "registration": "10/hour",
+        "ai_recommendation": "100/day",
     },
 }
 
