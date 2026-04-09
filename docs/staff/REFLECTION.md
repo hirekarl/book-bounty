@@ -13,6 +13,17 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: eBay Integration — Live Key Setup & Single-Listing Fix
+
+- **Task:** Connect real eBay Production credentials; diagnose and fix zero-data result across all books.
+- **Outcome:** eBay OAuth token flow confirmed working. Root cause: `fetch_valuation_data` returned `{}` when fewer than 2 listings existed for an ISBN (`len(prices) < 2` guard). Lowered threshold to `< 1` — a single listing is valid data.
+- **UI fix:** `RecommendationCard` and `EditRecordModal` now render a single price (`$25.87`) instead of a degenerate range (`$25.87 – $25.87`) when `low === high`. Grammar fix: "1 listings" → "1 listing".
+- **Diagnosis pattern:** Added temporary `logger.debug` lines to `services.py` to dump raw eBay response + item count + extracted prices inline via Django shell. Confirmed token was obtained (HTTP 200 on token endpoint) but only 1 item returned for the test ISBN.
+- **Key lesson:** The `< 2` floor was written assuming a range requires 2 points — correct in principle but too aggressive for sparse catalogs. A single real listing is more useful than no data.
+- **eBay keyset activation note:** eBay Production keysets require compliance with marketplace account deletion policy before activation. Personal/non-public apps can apply for an exemption ("I do not persist eBay data") — approved same-session.
+
+---
+
 ### 2026-04-08: SESSION STATUS: HARDENED
 
 - **Task:** Multi-Tenant Schema Hardening (Non-nullable User FKs).

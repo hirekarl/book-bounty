@@ -138,7 +138,7 @@ def fetch_valuation_data(isbn: str) -> dict:
             for item in items
             if "price" in item
         ]
-        if len(prices) < 2:
+        if len(prices) < 1:
             return {}
         return {
             "ebay": {

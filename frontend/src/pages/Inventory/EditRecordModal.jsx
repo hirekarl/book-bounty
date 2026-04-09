@@ -59,7 +59,11 @@ const MarketPricingSection = ({ valuationData, onRefreshValuation, isRefreshingV
         {ebay && (
           <div>
             <span>
-              eBay: ${fmt(ebay.low)} – ${fmt(ebay.high)} ({ebay.sample_size} listings)
+              eBay:{' '}
+              {ebay.low === ebay.high
+                ? `$${fmt(ebay.low)}`
+                : `$${fmt(ebay.low)} – $${fmt(ebay.high)}`}{' '}
+              ({ebay.sample_size} {ebay.sample_size === 1 ? 'listing' : 'listings'})
             </span>
             {!isDemo && isStale(ebay.fetched_at) && (
               <span className="text-muted ms-2">

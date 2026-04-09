@@ -110,7 +110,10 @@ const RecommendationCard = ({
                         text={isDemo ? 'dark' : undefined}
                       >
                         {isDemo && <i className="bi bi-flask me-1"></i>}
-                        Market: ${Number(low).toFixed(2)} – ${Number(high).toFixed(2)}
+                        Market:{' '}
+                        {low === high
+                          ? `$${Number(low).toFixed(2)}`
+                          : `$${Number(low).toFixed(2)} – $${Number(high).toFixed(2)}`}
                         {isDemo && ' (demo)'}
                       </Badge>
                       {isHighValue && !isDemo && (
