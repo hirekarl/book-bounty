@@ -27,7 +27,7 @@
 
 ## What It Does
 
-BookBounty is a single-user web application that helps you work through a personal book collection and decide what to do with each book. Rather than evaluating every title by hand, you define a **Culling Goal** — a plain-language statement of your intent ("I'm moving into a tiny house and need to cut 80% of my collection") — and the AI engine uses that goal as context when analyzing each book you scan.
+BookBounty is a multi-tenant web application that helps you work through a personal book collection and decide what to do with each book. Rather than evaluating every title by hand, you define a **Culling Goal** — a plain-language statement of your intent ("I'm moving into a tiny house and need to cut 80% of my collection") — and the AI engine uses that goal as context when analyzing each book you scan.
 
 The result is a fast, opinionated triage loop: scan a barcode, get a recommendation with reasoning, accept it or override it, save the outcome. Repeat until your shelves are clear.
 
@@ -467,6 +467,8 @@ book-bounty/
 ├── docs/
 │   ├── architecture/           # Living strategy (Vision, AI Spec, Orchestration, Deployment)
 │   │   └── DEPLOYMENT.md       # Render Blueprint deployment checklist
+│   ├── marketing/              # Elevator pitch, demo scripts, and brand assets
+│   ├── strategy/               # Competitor analysis and investor ROI
 │   ├── staff/                  # Multi-agent team context (Personas, Directives, Reflection)
 │   ├── roadmap/                # Planning (Proposals and completed phase archives)
 │   └── fellowship/             # User's personal fellowship workspace

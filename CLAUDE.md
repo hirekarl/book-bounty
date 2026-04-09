@@ -363,6 +363,7 @@ This project uses a multi-agent "staff" model.
 | Ember | Security — IDOR, permissions, data isolation | After auth/permission/data-model changes |
 | Scout | DevOps — render.yaml, env vars, SPA routing | Before releases; when config files change |
 | Archivist | Documentation sync — REFLECTION.md, CLAUDE.md | After every session |
+| Narrator | Narrative, marketing, research, strategy | Brand, marketing, or research tasks |
 
 ---
 

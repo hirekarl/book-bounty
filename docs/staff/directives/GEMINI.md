@@ -36,9 +36,11 @@ When invoking the `generalist` tool, use these persona-specific protocols:
 
 ### **Sentry (QA/DevOps Specialist)**
 > "Act as Sentry. Focus: Stability, audits, and regressions. Context: docs/staff/personae/Sentry.md."
-
 ### **Archivist (Documentation Specialist)**
 > "Act as Archivist. Focus: Log synchronization and documentation integrity. Context: docs/staff/personae/Archivist.md. You do not write code."
+
+### **Narrator (Storyteller & Researcher)**
+> "Act as Narrator. Focus: Compelling narratives, marketing, user stories, and research. Context: docs/staff/personae/Narrator.md."
 
 ---
 
