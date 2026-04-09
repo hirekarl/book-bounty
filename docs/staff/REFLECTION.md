@@ -11,7 +11,40 @@ This log tracks session-level friction points, sub-agent performance, and archit
 - **Mitigation:** [How did we fix the persona mandates or directives?]
 - **Efficiency Gain:** [How much context/time will this save next time?]
 
+### 2026-04-10: Strategic Documentation & Narrative Refinement (Narrator/Archivist)
+
+- **Date:** 2026-04-10
+- **Task:** Reworked the `README.md` for narrative impact, created the `DOCUMENTATION_GUIDE.md`, and indexed the strategic suite.
+- **Friction Points:** None. The collaboration between Narrator (storytelling) and Archivist (structural integrity) resulted in a unified front for both technical and non-technical stakeholders.
+- **Mitigation:** Used "audience-first" framing in the Documentation Guide to categorize 25+ files into logical storytelling paths (User, Peer, Stakeholder).
+- **Efficiency Gain:** The new `DOCUMENTATION_GUIDE.md` reduces the discovery time for new contributors and stakeholders by providing a map of the 10+ phases of development.
+- **Principle: The Narrator-Archivist Symbiosis.** A compelling vision (Narrator) is only as good as its structural accessibility (Archivist). Documentation must be both a story and a system.
+- **Principle: Path-Based Information Architecture.** Different audiences require different document entry points. Organizing docs by "Paths" (User, Peer, Stakeholder) prevents information overload and ensures narrative resonance.
+
 ---
+
+### 2026-04-10: Narrative Expansion & Institutional Strategy (Narrator/Archivist)
+
+- **Date:** 2026-04-10
+- **Task:** Revised and expanded the marketing and strategy suite to focus on the Student Purge, Retiree Downsize, and V3 Institutional Scout narratives.
+- **Friction Points:** None. The Narrator persona provided high-signal output that bridged the gap between technical utility and life-transition empathy.
+- **Mitigation:** Used deep-dive cohort narratives to ground the pitch and demo scripts in specific, high-stakes user stories.
+- **Efficiency Gain:** The "Institutional Scout" narrative provides a clear B2B path that transforms the app from a personal utility into a piece of academic infrastructure.
+- **Principle: Cohort-Specific Empathy.** Marketing must speak the specific "pain language" of the cohort (e.g., "gas money" for students vs. "legacy" for retirees) to drive conversion during high-stakes life transitions.
+- **Principle: The Institutional Intelligence Layer.** Future B2B value is driven by "surfacing hidden gems" from private collections, not just commodity book resale.
+- **Principle: Documentation Synchronicity.** As Archivist, ensuring that every narrative shift is reflected across the strategy, marketing, and reflection logs maintains project integrity and prevents "vision drift."
+
+---
+
+### 2026-04-09: Strategic Assessment & Fellowship Indexing
+
+- **Date:** 2026-04-09
+- **Task:** Conducted high-level strategic assessment of BookBounty and established the Fellowship Memory index.
+- **Friction Points:** Initial absence of a centralized index for fellowship-related strategic writing.
+- **Mitigation:** Created `docs/fellowship/MEMORY.md` to serve as a high-signal index for milestones and reflections, following the Archivist mandate.
+- **Efficiency Gain:** Future strategic updates and fellowship deliverables are now semantically mapped, preventing "context fragmentation" in non-technical documentation.
+- **Principle: Narrative Alignment (Investor-Ready).** Strategic assessments must bridge technical capabilities (e.g., Gemini integration) with market megatrends (e.g., The Great Downsizing) to demonstrate investment viability.
+- **Principle: Single Source of Memory.** Every significant milestone must have a corresponding entry in the `MEMORY.md` index to ensure project history is scannable in under 15 seconds.
 
 ### 2026-04-09: Marketing Strategy & Narrator Onboarding
 

@@ -1,23 +1,24 @@
 # Scalability and ROI Analysis: Investor Overview
 
-## 1. The Strategic Pivot: Software-First Logistics
-Unlike traditional "re-commerce" companies (Ziffit, ThriftBooks), BookBounty does **not** own warehouses, trucks, or physical inventory. We are a **software-first matchmaking layer**. By automating the triage and valuation process, we capture the highest-value segment of the supply chain—the decision—without the capital-intensive overhead of physical logistics.
+## 1. High-Margin, Low-CAPEX Logistics
+Unlike traditional "re-commerce" players (ThriftBooks, Ziffit), BookBounty does **not** own trucks, warehouses, or inventory. We are a **software-first matchmaking layer**. By automating the triage and valuation process at the source (the user's shelf), we capture the highest-value segment of the supply chain — the decision — with zero physical overhead.
 
-## 2. Scalability of the AI Engine
-- **Processing Power:** By leveraging **Gemini 2.5 Flash** with `instructor`, we achieve professional-grade bibliographic reasoning for less than $0.01 per scan.
-- **Bulk Reasoning:** Our "Comparative Multi-Book Analysis" allows us to process entire shelves in single API calls, minimizing latency and maximizing cost-efficiency as the user base grows.
-- **Global Reach:** The platform is built on a multi-tenant Django/React stack, making it instantly deployable across multiple languages and markets with minimal local infrastructure.
+## 2. The Dual-Cohort Growth Engine
+Our growth is fueled by two high-volume, "life-event" cohorts:
+- **The Student Purge:** 20M+ college students in the US, with a $10B+ annual textbook market. We capture them at the "exit point" (graduation) by offering speed and liquidity.
+- **The Retiree Downsize:** 10,000 Baby Boomers reach retirement age every day. They are the "Generation of Stuff," liquidating massive personal libraries. We offer them a "Result-Driven" clarity and emotional legacy.
 
-## 3. Revenue Model & ROI (V2 -> V3)
-- **B2C Subscriptions:** A tiered model where "The Professional Librarian" tier offers unlimited AI triage, advanced condition grading, and auto-listing exports.
-- **B2B Institutional Marketplace (The V3 Moat):**
-  - **Subscription Fees:** Libraries and archives pay to have their Collection Development Policies (CDPs) indexed.
-  - **Transaction Fees:** BookBounty takes a "Match Fee" for every successful acquisition facilitated between a user and an institution.
-  - **Data Licensing:** Aggregated, anonymized data on personal collection trends and secondary market liquidity.
+**Combined CAC/LTV:** Life-event triggers (moving, graduation) provide highly targeted, low-cost acquisition opportunities with a massive lifetime value as users transition through life stages.
 
-## 4. Market Opportunity
-- **The Downsizing Megatrend:** 10,000 Baby Boomers reach retirement age every day in the US. They are the "Generation of Stuff," currently liquidating massive personal libraries.
-- **The Library Gap:** Institutional budgets are tightening, yet they still need to fill specific collection gaps. BookBounty provides a curated, pre-cataloged supply line that doesn't exist today.
+## 3. The Institutional Moat (The V3 Advantage)
+While competitors focus on the common "commodity" book, BookBounty V3 identifies the **1% of high-value scholarly titles** that institutions crave.
+- **The Data Asset:** We are building a global, real-time index of books currently sitting on private shelves — a "Shadow Archive" that no one else can see.
+- **Institutional Subscriptions:** Academic libraries and archives pay for "First Look" matching to their specific Collection Development Policies (CDPs).
+- **Match-and-Procure Fees:** A high-margin transaction fee on every successful acquisition.
+
+## 4. Scalability of the AI Engine
+- **Processing Power:** Gemini 2.5 Flash via `instructor` achieves professional-grade bibliographic reasoning for <$0.01 per scan.
+- **Global Reach:** Our multi-tenant Django/React stack is designed for rapid internationalization. The "Shadow Archive" data becomes more valuable as we scale across different regions and languages.
 
 ## 5. Investment Thesis
-BookBounty is a high-margin, low-CAPEX play on the circular economy. We are building the **Google for the Private Library**—an intelligence layer that makes physical assets liquid through AI reasoning. The ROI is driven by the transition from a consumer tool to an essential B2B marketplace infrastructure.
+BookBounty is the **intelligence layer for the circular book economy**. We turn physical clutter into liquid assets through AI reasoning. The transition from a personal B2C utility to an essential B2B institutional infrastructure creates a "winner-takes-all" data moat. We don't just clear shelves; we curate the world's private collections for the next generation.

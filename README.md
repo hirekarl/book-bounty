@@ -1,10 +1,22 @@
 # BookBounty
 
-**An AI-powered personal library triage tool.** Scan your books, set a downsizing goal, and let Gemini 2.5 Flash tell you what to keep, sell, donate, or discard — one ISBN at a time.
+**Your AI-powered library downsizing consultant.** 
+
+Life transitions—moving into a first apartment, clearing an estate, or downsizing for retirement—are often measured in boxes of books. BookBounty transforms the overwhelming task of library triage into a streamlined, intentional process. Using Gemini 2.5 Flash, it helps you decide what to keep, sell, donate, or discard—one ISBN at a time.
 
 ---
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://bookbounty-ui.onrender.com/)
+
+## Choose Your Path
+
+Whether you are here to reclaim your shelves, study the fellowship journey, or evaluate the project's institutional future, we have organized our documentation to guide you:
+
+- **[I want to use the app]** Jump to the [Usage Guide](#usage-guide) or [Installation](#installation).
+- **[I am a Fellowship Peer]** Explore the [Documentation Guide](docs/DOCUMENTATION_GUIDE.md) to follow the architectural and personal journey.
+- **[I am an Investor or Stakeholder]** Review the [V3 Institutional Vision](docs/roadmap/proposals/v3_VISION.md) and [Strategic Memo](docs/strategy/V3_INSTITUTIONAL_MEMO.md).
+
+---
 
 ## Table of Contents
 
@@ -150,6 +162,18 @@ The engine retries automatically up to 3 times on Gemini 429 (rate limit) respon
 ### Data Persistence
 
 The full `TriageRecommendation` JSON is stored in the `ai_recommendation` field on every `CatalogEntry`. This gives you an audit trail of what the AI suggested versus what status was ultimately saved.
+
+---
+
+## Future Vision: BookBounty V3
+
+The next evolution of BookBounty transforms it from a personal utility into the **Institutional Acquisition Marketplace**. Instead of books simply disappearing into donation bins, the AI engine will identify items with institutional value (special collections, academic archives, rare history) and surface them to libraries actively seeking to grow their collections.
+
+- **Matchmaking Layer:** Connecting individual sellers with registered institutions.
+- **Acquisition Pool:** A curated marketplace for books that match specific collection development policies (CDPs).
+- **Match Engine:** AI-driven alerts for librarians when a needed book is scanned by a user.
+
+Read the [V3 Institutional Memo](docs/strategy/V3_INSTITUTIONAL_MEMO.md) for more details.
 
 ---
 
