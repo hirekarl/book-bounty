@@ -21,6 +21,12 @@ const COHORTS = [
     description:
       'Curating a more intentional library. Set a precise goal — "keep only what I\'d reread" — and let the AI hold you to it, book by book.',
   },
+  {
+    icon: 'bi-briefcase',
+    label: 'Estate Executors',
+    description:
+      "Sorting a loved one's collection under time pressure. BookBounty brings structure and objectivity to an emotionally charged task.",
+  },
 ];
 
 const HOW_IT_WORKS = [
