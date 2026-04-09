@@ -13,6 +13,31 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
+### 2026-04-08: MVP Polish Pass + Condition-Aware Price Retrigger
+
+- **Task:** Pre-MVP review (4 parallel audit agents: Prism, Forge+Sentry, Ember, Scout+Archivist) followed by two implementation waves.
+- **Audit findings acted on:**
+  - `BookLookupView` and `DashboardImpactView` had unguarded exceptions — Open Library or Gemini failure returned 500. Wrapped with try/except; return 502 / empty narrative fallback respectively.
+  - `BookSearchView` returned raw `f"Search failed: {exc}"` — replaced with generic message.
+  - Login + Register: loading state not reset before `navigate()` — fixed.
+  - `console.error` in Dashboard and BulkReviewModal removed (noise in DevTools during demo).
+  - README stray fragment `ications.` removed.
+- **Audit findings accepted (not fixed):**
+  - `resolved_at` mass assignment — the unresolve workflow depends on PATCH writability; `validate_resolved_at` already blocks future dates. Low practical risk.
+  - `DEBUG` defaults to True — `render.yaml` overrides correctly in production.
+  - Admin interface — standard Django, acceptable for MVP.
+  - Test coverage gaps (search, impact) — not a demo risk.
+- **`resolved_at` read_only revert:** Initially added `resolved_at` to `read_only_fields` per Ember's recommendation. Caused 4 test failures (unresolve workflow, future-date validator tests). Reverted. Lesson: Ember's mass-assignment finding must be cross-checked against the unresolve PATCH pattern before applying — the `/resolve/` endpoint only resolves; unresolve is a deliberate PATCH.
+- **AI throttle:** `AiRecommendationRateThrottle` (100/day per user) on `RecommendView` and `RecommendBulkView`. Mitigates throwaway-account API abuse without email confirmation in place.
+- **EditRecordModal condition-aware price retrigger:**
+  - 800ms debounce on `condition_grade` / `condition_flags` changes → re-calls `/api/recommend/` → updates `asking_price`.
+  - Dirty-field pattern: tracks `priceManuallySetRef` (ref for callback closure, state for render). AI only overwrites if user hasn't manually changed the price.
+  - "Use AI price: $X.XX" hint when user price diverges from latest AI suggestion.
+  - `conditionInitializedRef` skips first effect run after modal open (values initialising from entry, not a user change).
+- **Principle: Use a ref alongside state for values read inside async callbacks.** `priceManuallySet` as state alone would be stale in the debounce closure; `priceManuallySetRef.current` is always current. Both are needed: ref for callbacks, state for render.
+
+---
+
 ### 2026-04-08: eBay Integration — Live Key Setup & Single-Listing Fix
 
 - **Task:** Connect real eBay Production credentials; diagnose and fix zero-data result across all books.
