@@ -481,4 +481,3 @@ book-bounty/
 ## Fellowship Workspace
 
 The `docs/fellowship/` directory is reserved for the user's personal fellowship-related reflections, research, and deliverables. This workspace is integrated into the project for ease of access but is semantically separated from technical specifications.
-ications.

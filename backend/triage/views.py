@@ -4,6 +4,7 @@ This module defines the API views for looking up books, managing catalog
 entries, and retrieving dashboard statistics.
 """
 
+import logging
 import re
 
 import requests
@@ -41,6 +42,8 @@ from triage.services import (
     get_or_create_book,
     search_books_by_title_author,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class RegistrationRateThrottle(AnonRateThrottle):
@@ -211,7 +214,13 @@ class BookLookupView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        book, _ = get_or_create_book(isbn)
+        try:
+            book, _ = get_or_create_book(isbn)
+        except requests.RequestException:
+            return Response(
+                {"error": "Book metadata service is temporarily unavailable."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
         data = dict(BookSerializer(book).data)
         data["metadata_found"] = not (book.title == "Unknown Book" and book.author == "Unknown")
         return Response(data)
@@ -238,9 +247,9 @@ class BookSearchView(APIView):
 
         try:
             results = search_books_by_title_author(title, author)
-        except requests.RequestException as exc:
+        except requests.RequestException:
             return Response(
-                {"error": f"Search failed: {exc}"},
+                {"error": "Book search is temporarily unavailable."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
@@ -557,13 +566,17 @@ class DashboardImpactView(APIView):
         )
 
         # AI Impact Narrative
-        impact_narrative = get_impact_narrative(
-            {
-                "resolved_counts": resolved_counts,
-                "space_saved": round(total_recovered_inches / 12, 2),  # in feet
-                "money_earned": float(total_potential_earnings),
-            },
-        ).win_summary
+        try:
+            impact_narrative = get_impact_narrative(
+                {
+                    "resolved_counts": resolved_counts,
+                    "space_saved": round(total_recovered_inches / 12, 2),  # in feet
+                    "money_earned": float(total_potential_earnings),
+                },
+            ).win_summary
+        except Exception:
+            logger.warning("Failed to generate impact narrative", exc_info=True)
+            impact_narrative = ""
 
         return Response(
             {

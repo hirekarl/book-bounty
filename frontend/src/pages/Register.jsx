@@ -17,7 +17,10 @@ const Register = () => {
     setLoading(true);
     setErrors({});
     register({ username, email, password1, password2 })
-      .then(() => navigate('/'))
+      .then(() => {
+        setLoading(false);
+        navigate('/');
+      })
       .catch((err) => {
         const data = err.response?.data;
         if (data && typeof data === 'object') {

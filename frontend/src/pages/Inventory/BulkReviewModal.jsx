@@ -53,9 +53,8 @@ const BulkReviewModal = ({ show, onHide, selectedEntries, onComplete }) => {
         } else {
           onComplete();
         }
-      } catch (err) {
+      } catch {
         setError('Failed to save some changes. Please try again.');
-        console.error(err);
       } finally {
         setSaving(false);
       }

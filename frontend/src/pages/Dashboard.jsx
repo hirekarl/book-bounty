@@ -95,7 +95,7 @@ const Dashboard = () => {
         setStats(res.data);
       })
       .catch(() => {
-        console.error('Failed to fetch dashboard stats');
+        // stats silently unavailable — UI shows empty counts
       })
       .finally(() => {
         setStatsLoading(false);

@@ -15,7 +15,10 @@ const Login = () => {
     setLoading(true);
     setError(null);
     login({ username, password })
-      .then(() => navigate('/'))
+      .then(() => {
+        setLoading(false);
+        navigate('/');
+      })
       .catch(() => {
         setError('Invalid username or password.');
         setLoading(false);
