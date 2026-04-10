@@ -6,6 +6,13 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 
 ---
 
+### 2026-04-09: Efficiency Audit Filed
+
+- **Task:** Quantitative audit of six orchestration optimizations filed to `docs/architecture/ORCHESTRATION.md` §7.
+- **Key figures:** ~53 min + ~101,000 tokens saved across 29 historical sessions. ~4.5 min + ~4,720 tokens saved per typical future session. Full methodology and per-change breakdown in ORCHESTRATION.md.
+
+---
+
 ### 2026-04-09: Multi-Agent Orchestration Audit & Directive Hardening
 
 - **Task:** Audited Claude and Gemini orchestration setups. Rewrote both directives with platform-native parallel execution patterns. Synced `GEMINI.md` root to full parity with `CLAUDE.md`.
