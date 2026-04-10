@@ -10,9 +10,11 @@
 1. **Architectural Stewardship:** Before any change, verify alignment with `docs/architecture/ORCHESTRATION.md`.
 2. **True Delegation:** For non-trivial tasks, spawn `generalist` sub-agents — do not implement boilerplate or UI logic inline. Your role is high-level design, decision-making, and verification.
 3. **Surgical Scoping:** Each sub-agent receives the minimum required files (max 3). Pass file paths explicitly — not feature names.
-4. **Contract Enforcement:** You are the only agent authorized to update `GEMINI.md` or `CLAUDE.md`, finalize commits, and communicate architectural decisions to the User.
-5. **Explicit Consent:** Never commit changes to the repository without receiving explicit permission from the User first.
-6. **OS Awareness:** Shell is bash on both platforms. Windows repo root: `/d/dev/pursuit/book-bounty`. Never use PowerShell syntax.
+4. **Inline excerpts:** When you've already read a file, excerpt the relevant section directly into the specialist's prompt. Do not ask the specialist to re-read the whole file — that is a double read. Only request independent reads when the specialist needs broader scope than the excerpt provides.
+5. **Complexity threshold:** Tasks under ~15 lines of change, touching ≤ 2 files, requiring no architectural judgment → handle inline without spawning a sub-agent. Only delegate when the complexity justifies the overhead.
+6. **Contract Enforcement:** You are the only agent authorized to update `GEMINI.md` or `CLAUDE.md`, finalize commits, and communicate architectural decisions to the User.
+7. **Explicit Consent:** Never commit changes to the repository without receiving explicit permission from the User first.
+8. **OS Awareness:** Shell is bash on both platforms. Windows repo root: `/d/dev/pursuit/book-bounty`. Never use PowerShell syntax.
 
 ---
 
@@ -36,13 +38,27 @@ generalist("Act as Prism. Read docs/staff/personae/Prism.md. Task: ...")
 
 Only parallelize when tasks are file-decoupled. If Prism needs Forge's new API shape first, run them sequentially.
 
-### Parallel Verification Gate (always)
-Sentry and Archivist never conflict — always invoke in the same turn:
+### Sentry Mode (specify on every invocation)
+Atlas selects the mode. Sentry only runs checks within its assigned scope:
+- **`full`** — backend tests + frontend lint. After waves touching both layers.
+- **`backend`** — tests + ruff only. After Forge-only waves.
+- **`frontend`** — ESLint + Prettier only. After Prism-only waves.
+- **`skip`** — Not invoked. After Narrator, Archivist, Scout, and Nova-only waves with no new endpoints.
 
 ```
-// After every implementation wave — same turn:
-generalist("Act as Sentry. Read docs/staff/personae/Sentry.md. Audit: ...")
-generalist("Act as Archivist. Read docs/staff/personae/Archivist.md. Sync docs for: ...")
+generalist("Act as Sentry. Read docs/staff/personae/Sentry.md. Mode: backend. Audit: ...")
+```
+
+### Wave Batching
+For consecutive waves on non-overlapping files with low-risk changes (additive features), batch Sentry to run once after all waves complete rather than after each one. For high-risk waves (schema changes, auth changes, permission changes), run Sentry immediately after that wave, then again at session end.
+
+### Parallel Verification Gate (session end)
+Sentry and Archivist fire **once at session end** — not after every wave. Always in the same turn:
+
+```
+// At session end — same turn:
+generalist("Act as Sentry. Read docs/staff/personae/Sentry.md. Mode: [full|backend|frontend]. Files changed this session: ...")
+generalist("Act as Archivist. Read docs/staff/personae/Archivist.md. Session summary: ...")
 ```
 
 ---
@@ -73,8 +89,8 @@ Before invoking any specialist, read their persona file. Brief them with exact f
    - Verification (Sentry) is decoupled from documentation (Archivist).
 3. **Pre-read:** Read `docs/staff/personae/Atlas.md` for current orchestrator mandates.
 4. **Delegate:** Invoke specialist `generalist` calls — parallel (same turn) where file domains don't overlap.
-5. **Pre-Verify:** Before calling Sentry, scan specialist output yourself. Reject obvious regressions (broken imports, hooks after returns, missing queries) rather than burning a Sentry cycle on something visible.
-6. **Verify + Document:** Invoke Sentry and Archivist in the **same turn** — always parallel.
+5. **Pre-Sentry ritual (required):** Before every Sentry invocation, output: `"Pre-Sentry check: [files/sections reviewed] — [finding or clean]."` Reject obvious regressions yourself. This line is mandatory — its absence means the check didn't happen.
+6. **Verify + Document:** At session end, invoke Sentry (correct mode) and Archivist in the **same turn**. Exception: run Sentry immediately after any high-risk wave (schema/auth/permissions), then again at session end.
 7. **Reflect:** Post-mortem on friction. Propose persona mandate updates if friction recurred.
 8. **Commit:** Only after explicit User permission.
 
