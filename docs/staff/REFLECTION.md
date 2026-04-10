@@ -6,6 +6,19 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 
 ---
 
+### 2026-04-10: Narrator Sprint — Demo Video Script
+
+- **Date:** 2026-04-10
+- **Task:** Narrator-only sprint. No code changes. Sentry skipped.
+- **Delivered:**
+  - Reviewed source materials: `riley_instructions.txt` (directorial notes for video actor) and `ai_tutor_convo.txt` (fellowship AI tutor conversation containing Karl's elevator pitch / "why" statement)
+  - Drafted BookBounty demo video script through 8 iterations, landing on a mock-PSA / Reefer Madness comedic tone with a "Big Book / communist conspiracy" angle
+  - Script is ~2:30 runtime, narrator voiceover only (no actor dialogue except a closing line folded into VO), footage-agnostic (works with real actor, stock footage, or screen recording)
+  - Final script filed to `docs/fellowship/research/video_script_bookbounty.md`
+- **Principle: Footage-agnostic scripting.** A VO-only script decouples creative approval from production logistics — the script can be locked before any footage is shot or sourced.
+
+---
+
 ### 2026-04-09: Orchestration Hardening Session — Full Wrap
 
 - **Date:** 2026-04-09
