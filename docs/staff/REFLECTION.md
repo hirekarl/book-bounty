@@ -6,6 +6,22 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 
 ---
 
+### 2026-04-09: Orchestration Hardening Session — Full Wrap
+
+- **Date:** 2026-04-09
+- **Task:** Full orchestration audit and improvement sprint across Claude and Gemini systems. No application code changed.
+- **Delivered:**
+  - Both directives rewritten with platform-native parallel execution patterns; `GEMINI.md` root synced to full parity with `CLAUDE.md`
+  - Six efficiency optimizations implemented: Sentry modes, Archivist session-end, inline excerpts, complexity threshold, wave batching, pre-Sentry ritual (~53 min + ~101k tokens saved historically; ~4.5 min + ~4,720 tokens/session going forward)
+  - Four workflow patterns codified: session warm-up, hotfix sprint, narrative sprint loop, pre-release checklist; security audit cadence rule added
+  - REFLECTION.md compressed 374 → 49 lines; archive created; rolling window rule added to Archivist.md
+  - Efficiency audit filed to `docs/architecture/ORCHESTRATION.md` §7
+  - User session anti-patterns saved to memory with proactive reminder mandate
+- **Principle: Workflow codification has compounding ROI.** A pattern defined once removes repeated decomposition overhead from every future session that triggers it. The warm-up, hotfix sprint, and narrative sprint loop each save 1–2 turns per invocation — small per session, significant across a project lifetime.
+- **Principle: The system should be transparent to the user.** Every optimization this session was designed so the user types their task and the system handles the rest. The only user-facing asks: signal session end, give a rough scope, avoid "just quickly."
+
+---
+
 ### 2026-04-09: Efficiency Audit Filed
 
 - **Task:** Quantitative audit of six orchestration optimizations filed to `docs/architecture/ORCHESTRATION.md` §7.
