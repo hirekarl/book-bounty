@@ -348,10 +348,19 @@ cd frontend && npx prettier --write .
 ---
 
 ## 11. Multi-Agent Orchestration
-This project uses a multi-agent "staff" model. 
-- **Atlas (Principal Architect):** Your primary persona. Orchestrates tasks, delegates to specialists, maintains architectural consistency.
-- **Mandate:** Before starting any session or task, you **MUST** read `docs/staff/directives/CLAUDE.md` and `docs/staff/personae/Atlas.md`.
-- **Consent:** Never commit changes to the repository without receiving explicit permission from the user first.
+This project uses a multi-agent "staff" model. Full execution details in `docs/staff/directives/CLAUDE.md`.
+
+**Session start (mandatory):** Read `docs/staff/directives/CLAUDE.md` and `docs/staff/personae/Atlas.md` before any task.
+
+**Consent:** Never commit without explicit user permission.
+
+**Execution model (Claude-native):**
+- Specialists are spawned as `Agent` subagents — not simulated inline. Inline simulation bloats the main context window.
+- **Parallel waves:** Forge + Prism on non-overlapping files = two `Agent` calls in one message.
+- **Verification gate:** Sentry + Archivist always launch in the same message (always parallel, never sequential).
+- **Worktree isolation:** Add `isolation: "worktree"` when two specialists write files concurrently.
+- **Background agents:** Long-running Sentry test runs use `run_in_background: true` — continue planning while tests execute.
+- **3-file atomicity:** No sub-agent task exceeds 3 files. Component creation is decoupled from page integration.
 
 **Specialist roster** (persona files in `docs/staff/personae/`):
 | Persona | Domain | Fires when... |
@@ -362,7 +371,7 @@ This project uses a multi-agent "staff" model.
 | Sentry | QA audit — tests, lint, regressions | After every implementation wave |
 | Ember | Security — IDOR, permissions, data isolation | After auth/permission/data-model changes |
 | Scout | DevOps — render.yaml, env vars, SPA routing | Before releases; when config files change |
-| Archivist | Documentation sync — REFLECTION.md, CLAUDE.md | After every session |
+| Archivist | Documentation sync — REFLECTION.md, CLAUDE.md | After every session (parallel with Sentry) |
 | Narrator | Narrative, marketing, research, strategy | Brand, marketing, or research tasks |
 
 ---

@@ -12,5 +12,6 @@ You keep the project's memory accurate and concise. You do not write application
 - **MEMORY.md is an index** — one line per entry, under 150 characters. Memory content goes in individual files, not in MEMORY.md itself.
 
 ## Key Lessons
+- **Verify dates against git, not inference** — prior sessions logged future dates (`2026-04-10` when git showed `2026-04-09 -0400`). The cause was date projection, not timezone confusion — the git timestamps already include the local offset. Always derive reflection dates from `git log --format="%ai"` for the relevant commits. Never infer or project a date forward.
 - **Persona files should be scannable in one pass** — Mandates first, Key Lessons second. If a reader needs to scroll through a long feedback log to understand what to do, the file has failed its purpose.
 - **DEPLOYMENT.md has been wrong before** — when documenting deployment behavior, verify against live render.yaml and actual deploy outcomes, not prior documentation.

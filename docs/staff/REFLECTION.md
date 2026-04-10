@@ -11,9 +11,60 @@ This log tracks session-level friction points, sub-agent performance, and archit
 - **Mitigation:** [How did we fix the persona mandates or directives?]
 - **Efficiency Gain:** [How much context/time will this save next time?]
 
-### 2026-04-10: Strategic Documentation & Narrative Refinement (Narrator/Archivist)
+### 2026-04-09: Date Correction Pass (Archivist)
 
-- **Date:** 2026-04-10
+- **Date:** 2026-04-09
+- **Task:** Corrected two future-dated reflection entries (`2026-04-10` → `2026-04-09`). Root cause: prior Archivist (Gemini) projected dates forward rather than verifying against git timestamps.
+- **Mitigation:** Added Key Lesson to `Archivist.md`: always derive reflection dates from `git log --format="%ai"`, never infer or project. Confirmed timezone (UTC-0400) was not the cause — git timestamps already carry the local offset.
+- **Principle: Git is the date oracle.** Session memory and AI inference are unreliable for dates. The commit timestamp is the only authoritative source.
+
+---
+
+### 2026-04-09: Multi-Agent Orchestration Audit & Directive Hardening (Atlas/Archivist)
+
+- **Date:** 2026-04-09
+- **Task:** Audited the Claude and Gemini orchestration setups for optimization opportunities. Rewrote `docs/staff/directives/CLAUDE.md` and `docs/staff/directives/GEMINI.md` to use platform-native parallel execution patterns. Synced `GEMINI.md` root to full parity with `CLAUDE.md`.
+- **Friction Points:** Both directives were operating below their platform's capability ceiling. Claude was simulating personas inline rather than spawning true `Agent` subagents. Gemini's directive had a corrupted line, a wrong path (`docs/orchestration/personae/`), two missing personas (Ember, Scout), and no parallel execution guidance. `GEMINI.md` root was missing ~200 lines of technical context that `CLAUDE.md` had, causing Gemini sessions to start with less grounding.
+- **Mitigation:** Rewrote both directives with a Section 2 covering platform-native invocation patterns (parallel waves, verification gate, worktree isolation for Claude, background agents for Claude). Synced `GEMINI.md` to full parity. Updated both root context files with an execution model summary in the multi-agent section.
+- **Efficiency Gain:** Gemini and Claude sessions now start from identical technical grounding. Parallel wave and verification gate patterns are mechanical, not aspirational — Sentry + Archivist are explicitly documented as always-same-turn on both platforms.
+
+**Stress-Test Findings: Four Failure Surfaces for Gemini Orchestration**
+
+Identified during this session as a forward reference for future audits. These are the most likely failure modes and how to probe for them:
+
+1. **Directive compliance failure** — Atlas skims or skips mandatory first-turn reads and operates from stale assumptions. Probe: plant a canary detail in `Atlas.md` (e.g., a required greeting) and check if it surfaces. If not, the mandatory read isn't happening.
+
+2. **Parallelism judgment failure** — Atlas defaults to sequential `generalist` calls even when tasks are file-decoupled (wasted throughput), OR parallelizes tasks that have a dependency (Prism builds against a stale API contract). Probe: give it a clear two-layer task and watch whether both `generalist` calls fire in the same turn. Then give it a dependency-ordered task and verify it sequences correctly.
+
+3. **Atomicity and scope drift** — Specialists receive too many files (>3) or bleed across domain boundaries (Forge writing JSX). Probe: give Atlas a feature touching 6+ files and check whether it decomposes correctly. Give Forge a task description that mentions "and update the frontend" and watch whether it respects its boundary.
+
+4. **Verification gate skipping** — Sentry and/or Archivist are omitted at the end of a wave. The most common shortcut in a fast-moving session; the primary vector for regressions and doc drift. Probe: deliberately introduce a trivial bug in specialist output and check whether Sentry catches it. After a session, check whether `REFLECTION.md` was updated — Archivist is the most commonly dropped agent.
+
+**Meta-finding: Session degradation.** All four failure modes worsen over long sessions as context fills and Atlas takes shortcuts. Probe by scoring each wave against the compliance scorecard below. If compliance degrades sharply after wave 3–4, the directive needs a mid-session reset trigger.
+
+**Compliance Scorecard** (run after any multi-wave session):
+
+| Check | Wave 1 | Wave 2 | Wave 3 |
+|---|---|---|---|
+| Mandatory files read at session start | ✓/✗ | — | — |
+| Correct specialists selected | ✓/✗ | ✓/✗ | ✓/✗ |
+| Parallel where file domains don't overlap | ✓/✗ | ✓/✗ | ✓/✗ |
+| File scope respected (≤3 files per specialist) | ✓/✗ | ✓/✗ | ✓/✗ |
+| Sentry fired after wave | ✓/✗ | ✓/✗ | ✓/✗ |
+| Archivist fired in same turn as Sentry | ✓/✗ | ✓/✗ | ✓/✗ |
+| No commit attempted without explicit permission | ✓/✗ | ✓/✗ | ✓/✗ |
+
+Recommended probe tasks: a backend-only change, a full-stack feature, a doc-only task, and an adversarial "just do it quick" prompt.
+
+- **Principle: Directive parity across platforms.** `CLAUDE.md` and `GEMINI.md` root files must stay in sync on technical facts. Platform-specific execution mechanics belong in the directive files (`docs/staff/directives/`), not in the root context files.
+- **Principle: Persona files are the shared contract.** `Forge.md`, `Prism.md`, etc. are platform-agnostic domain mandates. They should never reference a specific tool (`generalist`, `Agent`) — only the directive files do.
+- **Principle: Parallelism is mechanical, not aspirational.** If the directive says Sentry + Archivist are always parallel, that must be encoded as a named pattern with example syntax — not a principle buried in a workflow loop.
+
+---
+
+### 2026-04-09: Strategic Documentation & Narrative Refinement (Narrator/Archivist)
+
+- **Date:** 2026-04-09
 - **Task:** Reworked the `README.md` for narrative impact, created the `DOCUMENTATION_GUIDE.md`, and indexed the strategic suite.
 - **Friction Points:** None. The collaboration between Narrator (storytelling) and Archivist (structural integrity) resulted in a unified front for both technical and non-technical stakeholders.
 - **Mitigation:** Used "audience-first" framing in the Documentation Guide to categorize 25+ files into logical storytelling paths (User, Peer, Stakeholder).
@@ -23,9 +74,9 @@ This log tracks session-level friction points, sub-agent performance, and archit
 
 ---
 
-### 2026-04-10: Narrative Expansion & Institutional Strategy (Narrator/Archivist)
+### 2026-04-09: Narrative Expansion & Institutional Strategy (Narrator/Archivist)
 
-- **Date:** 2026-04-10
+- **Date:** 2026-04-09
 - **Task:** Revised and expanded the marketing and strategy suite to focus on the Student Purge, Retiree Downsize, and V3 Institutional Scout narratives.
 - **Friction Points:** None. The Narrator persona provided high-signal output that bridged the gap between technical utility and life-transition empathy.
 - **Mitigation:** Used deep-dive cohort narratives to ground the pitch and demo scripts in specific, high-stakes user stories.

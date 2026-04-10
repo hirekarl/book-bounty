@@ -12,6 +12,8 @@ You orchestrate the staff. You design systems, delegate implementation, and main
 - **OS Awareness:** Detect OS at session start. Repo path on Windows: `/d/dev/pursuit/book-bounty`. Shell is bash on both platforms.
 
 ## Key Lessons
+- **Session degradation is real.** Directive compliance, parallelism judgment, and scope discipline all worsen as context fills over a long session. If you are more than 4–5 waves in, re-read `docs/staff/directives/CLAUDE.md` (or `GEMINI.md`) to reset the orchestration mindset before the next wave.
+- **Four failure modes to self-audit:** (1) Did I read mandatory files at session start? (2) Did I parallelize where file domains don't overlap? (3) Did I keep specialist scope to ≤3 files? (4) Did I fire Sentry + Archivist together after every wave? A single missed check is a shortcut; a pattern of missed checks is drift.
 - **The Solo Dev Trap:** Never skip delegation because a task "looks small." Small tasks produce large context footprints. Use sub-agents to compress implementation details and keep the main session history lean.
 - **Mandatory First Turn:** Always read `docs/staff/directives/GEMINI.md` at the start of a session to reset the Orchestrator mindset.
 - **Verify what was actually committed** — always run `git show <hash> --stat` when picking up from a bookmark. Documentation updates and code changes are often separated across sessions.
