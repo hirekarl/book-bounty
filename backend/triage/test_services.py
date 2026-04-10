@@ -10,8 +10,10 @@ from django.test import TestCase
 
 from triage.models import Book, CatalogEntry
 from triage.services import (
+    _isbn10_to_isbn13,
     download_cover_image,
     fetch_book_metadata,
+    fetch_valuation_data,
     get_or_create_book,
     suggest_triage_outcome,
 )
@@ -140,3 +142,41 @@ class ServiceTests(TestCase):
         """Test suggestion logic for books in good condition."""
         outcome = suggest_triage_outcome([])
         self.assertEqual(outcome, CatalogEntry.Status.KEEP)
+
+    @patch("triage.services.requests.get")
+    @patch("triage.services._get_ebay_token")
+    def test_fetch_valuation_data_success(self, mock_token: MagicMock, mock_get: MagicMock) -> None:
+        """Test successful valuation data fetch from eBay."""
+        mock_token.return_value = "fake_token"
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "itemSummaries": [
+                {"price": {"value": "10.00"}},
+                {"price": {"value": "20.00"}},
+            ]
+        }
+
+        data = fetch_valuation_data("039309040X")
+        self.assertIn("ebay", data)
+        self.assertEqual(data["ebay"]["low"], 10.00)
+        self.assertEqual(data["ebay"]["high"], 20.00)
+        self.assertEqual(data["ebay"]["sample_size"], 2)
+
+        # Verify URL construction and ISBN-10 → ISBN-13 conversion
+        args, kwargs = mock_get.call_args
+        self.assertEqual(args[0], "https://api.ebay.com/buy/browse/v1/item_summary/search")
+        self.assertEqual(kwargs["params"]["gtin"], "9780393090406")
+
+    def test_isbn10_to_isbn13_x_check_digit(self) -> None:
+        """ISBN-10 with X check digit converts correctly."""
+        self.assertEqual(_isbn10_to_isbn13("039309040X"), "9780393090406")
+
+    def test_isbn10_to_isbn13_numeric_check_digit(self) -> None:
+        """ISBN-10 with numeric check digit converts correctly."""
+        # The Great Gatsby: 0743273567 → 9780743273565
+        self.assertEqual(_isbn10_to_isbn13("0743273567"), "9780743273565")
+
+    def test_isbn10_to_isbn13_already_isbn13(self) -> None:
+        """ISBN-13 is returned unchanged."""
+        self.assertEqual(_isbn10_to_isbn13("9780393090406"), "9780393090406")

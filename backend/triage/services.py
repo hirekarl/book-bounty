@@ -91,6 +91,23 @@ def _mock_valuation_data(isbn: str) -> dict:
     }
 
 
+def _isbn10_to_isbn13(isbn10: str) -> str:
+    """Converts an ISBN-10 to its ISBN-13 equivalent.
+
+    Strips hyphens, prepends "978", and recalculates the EAN-13 check digit.
+    Returns the original string unchanged if it is already 13 digits.
+    """
+    isbn10 = isbn10.replace("-", "").strip()
+    if len(isbn10) == 13:
+        return isbn10
+    if len(isbn10) != 10:
+        return isbn10  # malformed — pass through and let eBay reject it
+    base = "978" + isbn10[:9]
+    total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(base))
+    check = (10 - (total % 10)) % 10
+    return base + str(check)
+
+
 def fetch_valuation_data(isbn: str) -> dict:
     """Fetches eBay sold-listing price data for a book by ISBN (GTIN).
 
@@ -118,12 +135,13 @@ def fetch_valuation_data(isbn: str) -> dict:
         return {}
 
     try:
+        gtin = _isbn10_to_isbn13(isbn)
         timeout = int(os.getenv("REQUESTS_TIMEOUT", "10"))
         response = requests.get(
             "https://api.ebay.com/buy/browse/v1/item_summary/search",
             headers={"Authorization": f"Bearer {token}"},
             params={
-                "gtin": isbn,
+                "gtin": gtin,
                 # Condition IDs for Books category:
                 # 1000=New, 2000=Like New, 2500=Very Good, 3000=Good, 4000=Acceptable
                 "filter": "conditionIds:{1000|2000|2500|3000|4000}",
