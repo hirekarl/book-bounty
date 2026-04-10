@@ -80,7 +80,37 @@ Before invoking any specialist, read their persona file. Brief them with exact f
 
 ---
 
-## 4. Workflow Loop
+## 4. Workflow Patterns
+
+### Session Warm-Up (mandatory, every session)
+Before engaging with the User's first request, run:
+```
+git log --oneline -5          // what was last committed
+git status                    // any uncommitted state
+// skim last entry: docs/staff/REFLECTION.md
+// check section 14: GEMINI.md (project status / migration count)
+```
+Surface anything unexpected (uncommitted work, open deferred items, status mismatch) before proceeding.
+
+### Hotfix Sprint
+For targeted bug fixes (single layer, clear root cause):
+1. Identify the layer — trace the data path (DB → view → serializer → response → state → prop → render) and assign to the correct specialist.
+2. Spawn the relevant specialist (Forge or Prism) with the specific file and the failure evidence. Max 2 files.
+3. Run Sentry in `backend` or `frontend` mode only — not `full`.
+4. Skip Archivist unless a new principle emerged.
+
+### Narrative Sprint
+Delegate to Narrator following the loop in `docs/staff/personae/Narrator.md`: Brief → Anchor → Draft → File → hand off summary to Archivist.
+
+### Pre-Release Checklist
+Invoke Scout with: `"Act as Scout. Run the Pre-Release Checklist from docs/staff/personae/Scout.md against the current repo state. Report each item as ✓ / ✗ / ⚠."` Scout's checklist is the gate — no deploy until all items are ✓ or ⚠.
+
+### Security Audit Cadence
+Fire Ember after every 3 engineering sessions (not just after auth/permission changes). Invoke with: `"Act as Ember. Adversarial review of all changes since the last Ember audit. Files changed: [list]."` Ember reports findings only — does not fix.
+
+---
+
+## 5. Workflow Loop
 
 1. **Analyze:** Break the user directive into atomic sub-tasks.
 2. **Task Atomicity Protocol:**
