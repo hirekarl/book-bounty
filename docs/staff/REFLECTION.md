@@ -6,6 +6,24 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 
 ---
 
+### 2026-04-10: Tooling Sprint — Playwright Demo Recording Script
+
+- **Date:** 2026-04-10
+- **Task:** Infrastructure-only sprint. No application code changed. Sentry skipped (no production code modified).
+- **Delivered:**
+  - `demo/demo.js` — headed Chromium Playwright script, 1600×900, native `recordVideo` (.webm, viewport-only, no browser chrome)
+  - `demo/package.json` — `playwright` + `dotenv` deps, `npm run demo` entry point
+  - `demo/.env.example` — credential template
+  - `.gitignore` updated — `demo/videos/` and `demo/.env` excluded
+- **Key design decisions:**
+  - Idempotent REST API teardown (DELETE all entries + goals) before browser opens — script is safely re-runnable
+  - 5-scene flow: Landing → Login → Create Culling Goal ("The Patriot Cleanse") → Triage Wizard (ISBN `039309040X`, Marx-Engels Reader) → Collection
+  - Scroll smoothness: `window.scrollTo({ behavior: 'smooth' })` is fire-and-forget and cannot be awaited by Playwright; replaced with an rAF `easeInOutCubic` loop wrapped in a `Promise` inside `page.evaluate()` — Playwright awaits animation completion precisely
+  - Notes field confirmed in `ConditionForm.jsx` (Step 2), selector `#triage-notes`
+- **No new engineering principles.** The scroll fix is a known Playwright pattern. No persona updates needed.
+
+---
+
 ### 2026-04-10: Narrator Sprint — Demo Video Script
 
 - **Date:** 2026-04-10

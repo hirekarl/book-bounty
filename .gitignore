@@ -42,6 +42,10 @@ pnpm-debug.log*
 .vite/
 coverage/
 
+# --- Demo recordings ---
+demo/videos/
+demo/.env
+
 # --- Other ---
 .idea/
 .vscode/
