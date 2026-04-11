@@ -1,42 +1,96 @@
-# BookBounty — Demo Video Script (Final)
-**Target runtime: ~2:30**
-**Tone: The narrator has read exactly the right amount of books.**
+# BookBounty — Demo Video Script
+**Target runtime: ~2:15**
+**Tone: Reefer Madness. Completely straight. Karl is the narrator throughout.**
+
+```
+ACT I   [00:00–00:45]  Visual TBD (app logo / stock footage placeholder)
+APP INTRO              Cut to Playwright recording begins
+ACT II  [00:45–01:50]  1:05 Playwright recording
+ACT III [01:50–02:15]  Visual TBD (app logo / stock footage placeholder)
+```
 
 ---
 
-## [00:00–00:30] — COLD OPEN: KARL'S WHY
-*Karl, talking-head. Steady. Quietly patriotic.*
-
-> "I'm Karl Johnson, and everywhere I've worked — nonprofits, film sets, small businesses — I keep encountering the same crisis. People overwhelmed by a problem they were never meant to solve alone. I build tools that solve it anyway. BookBounty is one of those tools. There are powerful interests that need those books to stay exactly where they are — on your shelves, in your home, and in your head. We're not going to let that happen."
-
----
-
-## [00:30–01:00] — CLIP 1: THE SETUP
-*Stock footage: bookshelves heaving. Rooms consumed.*
+## ACT I [00:00–00:45]
+*Visual: App logo or stock footage — TBD.*
 
 **VO:**
-> "Books. They sit there. Quietly. Waiting to be read. That is precisely the problem. Every unread book in your home is an invitation — to ideas, to questions, to the kind of leisurely ideological drift that foreign interests have spent decades cultivating in the American household. Big Book knows this. And right now, in homes across this great nation, the shelves are full."
+> "I'm Karl Johnson. Everywhere I've worked — nonprofits, film sets, small businesses — I kept encountering the same crisis. People overwhelmed by problems they were never meant to solve alone. I build AI-enhanced tools that solve them anyway."
+
+*(beat)*
+
+> "Books. They sit there. Quietly. Waiting to be read. Every unread volume in the American home is an invitation — to ideas, to questions, to the kind of leisurely ideological drift that foreign interests have spent decades cultivating in the household. Big Book knows this. And right now, in homes across this great nation, the shelves are full."
+
+*(beat)*
+
+> "The concerned citizen attempts to act. But Big Book has ensured the process is confusing and demoralizing. Because a person who spends enough time surrounded by books will eventually pick one up. And once they start reading — well. We've seen where that leads."
+
+*(beat)*
+
+> "This has been going on since at least 1959."
 
 ---
 
-## [01:00–01:45] — CLIP 2: THE STRUGGLE
-*Stock footage: someone surrounded by books, sorting, getting nowhere.*
+## APP INTRODUCTION
+*Cut to Playwright recording. Hold on landing page.*
 
 **VO:**
-> "The concerned citizen attempts to act. But Big Book has ensured the process is confusing and demoralizing — because a person who spends enough time surrounded by books will eventually pick one up. And once they start reading, well. We've seen where that leads. The books go back on the shelf. This has been going on since at least 1959."
+> "BookBounty was built to end the standoff."
 
 ---
 
-## [01:45–02:15] — CLIP 3: THE DISCOVERY
-*Stock footage or screen recording. The app. The scan.*
+## ACT II — SCENE 3 [00:45–01:05]
+*Dashboard. "Create Your First Goal" clicked. "The Patriot Cleanse" typed. Goal description appears.*
 
 **VO:**
-> "BookBounty was built to end the standoff. Scan the ISBN. The app assesses market value and issues a clear directive — keep, sell, donate, or discard. Quickly. Before you have time to flip to the first chapter out of idle curiosity. The books leave the home. The ideas leave with them. Somewhere, an editor closes their copy of Das Kapital and weeps."
+> "The user sets a culling goal — the strategic framework for every decision that follows. The app asks what you are trying to accomplish."
+
+*(step back — let the goal description type out on screen)*
 
 ---
 
-## [02:15–02:50] — CLIP 4: THE RESOLUTION
-*Stock footage: bare shelves. Open space. A free person in a free home.*
+## ACT II — SCENE 4 [01:05–01:40]
+*ISBN entered. Marx-Engels Reader identified. AI recommendation loads. Note typed. Accept. Save. "Saved!"*
 
 **VO:**
-> "The books are gone — sold, donated, dispatched before they could do what they were designed to do. The creeping threat of unstructured afternoon reading has been neutralized. People who've made it through all say the same thing: *Why didn't I do this sooner.*"
+> "The ISBN is entered. BookBounty retrieves the metadata, consults current market data, and issues a directive — before the user has time to flip to the first chapter out of idle curiosity. The AI has reviewed the title against the stated goal."
+
+*(beat)*
+
+> "It concurs."
+
+*(beat — the note types out on screen; do not narrate it)*
+
+---
+
+## ACT II — SCENE 5 [01:40–01:50]
+*Collection page. The entry sits cataloged.*
+
+*(silence)*
+
+---
+
+## ACT III [01:50–02:15]
+*Visual: App logo or stock footage — TBD.*
+
+**VO:**
+> "The books are gone — sold, donated, dispatched before they could do what they were designed to do. The creeping threat of unstructured afternoon reading has been neutralized. People who've made it through say the same thing: *Why didn't I do this sooner.*"
+
+*(beat)*
+
+> "Somewhere, an editor closes their copy of Das Kapital and weeps."
+
+*(beat)*
+
+> "BookBounty. Your books have been warned."
+
+---
+
+## Production notes
+
+- **Act I pacing:** Each of the four VO paragraphs gets a clean beat between them. The final line — "This has been going on since at least 1959." — is delivered alone, after a pause, before the cut.
+- **App intro:** "BookBounty was built to end the standoff." lands over the landing page before the scroll begins. One sentence. Then the demo runs.
+- **Scene 3:** The goal description ("Purge all ideological contraband... if it cites Marx approvingly...") types out on screen over roughly 12 seconds. VO finishes its setup line and falls silent. The description is the joke.
+- **Scene 4:** "It concurs." is isolated — hard pause before it. The note ("Found shelved behind the respectable books. Remove immediately. This volume has no place in a household where liberty is used without quotation marks.") types out in silence. Two visual punchlines; neither needs narration.
+- **Act III:** The Das Kapital line closes the satirical argument. The tagline that follows is delivered straight — no irony, no wink. The contrast is the button.
+- **Total VO word count:** ~230 words across ~2:15. Unhurried.

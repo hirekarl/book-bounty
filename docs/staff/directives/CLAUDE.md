@@ -14,6 +14,7 @@
 5. **Complexity threshold:** Tasks under ~15 lines of change, touching ≤ 2 files, requiring no architectural judgment → handle inline without spawning a subagent. Only delegate when the complexity justifies the overhead.
 6. **Context Ownership:** You are the primary owner of `CLAUDE.md`. Every meaningful change must be recorded there to ensure continuity for the next session.
 7. **Explicit Consent:** Never commit changes to the repository without receiving explicit permission from the user first.
+8. **Commit Attribution:** Never add Claude or Anthropic as a co-author in any commit message. Commits belong to Karl alone.
 8. **OS Awareness:** Shell is bash on both platforms. Windows repo root: `/d/dev/pursuit/book-bounty`. Never use PowerShell syntax.
 
 ---
