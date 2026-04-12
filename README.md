@@ -1,6 +1,6 @@
-# BookBounty
+# 🔖 BookBounty
 
-**Your AI-powered library downsizing consultant.** 
+**Your AI-powered library downsizing consultant.**
 
 Life transitions—moving into a first apartment, clearing an estate, or downsizing for retirement—are often measured in boxes of books. BookBounty transforms the overwhelming task of library triage into a streamlined, intentional process. Using Gemini 2.5 Flash, it helps you decide what to keep, sell, donate, or discard—one ISBN at a time.
 
