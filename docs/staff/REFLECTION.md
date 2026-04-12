@@ -95,9 +95,17 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 
 ---
 
-### 2026-04-09: AI Resource Stewardship & Interface Hardening
+### 2026-04-12: Narrator Sprint — Multi-Agent Staff Section in README
 
-- **Task:** AI throttle (100/day), condition-aware price retrigger in EditRecordModal, exception sanitization on backend views.
-- **Principle: Resource Stewardship.** Application-layer throttling is the first line of defense against runaway LLM costs.
-- **Principle: State-Ref Dualism.** Use refs for values needed in async closures; state for rendering. Prevents stale closure bugs without sacrificing reactivity.
-- **Principle: Fail-Safe Interfaces.** Backend failures must produce graceful UI fallbacks — never raw stack traces or 500s.
+- **Date:** 2026-04-12
+- **Task:** Documentation-only sprint. No application code changed. Sentry skipped (no production code modified).
+- **Delivered:**
+  - New README section "Built with a Multi-Agent AI Staff" covering: Atlas orchestrator role, full 9-persona specialist roster with domains, parallel wave execution pattern, session-end verification gate, background agents, and efficiency benchmarks.
+  - Section inserted between the V3 Vision section and Tech Stack; Table of Contents updated (new item 6, items 7–15 renumbered).
+  - Readers pointed to `docs/architecture/ORCHESTRATION.md` and `docs/staff/personae/` for deeper detail.
+- **No new principles.** Straightforward Narrator sprint; no unexpected friction.
+
+**Addendum (same date):** Atlas inline edit — "Choose Your Path" section in README.md updated so the Fellowship Peer path surfaces `docs/architecture/ORCHESTRATION.md` as the primary link, with the Documentation Guide as secondary. One line changed; no principles, no further doc updates needed.
+
+---
+

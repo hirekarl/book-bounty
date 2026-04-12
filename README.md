@@ -16,7 +16,7 @@ Life transitions—moving into a first apartment, clearing an estate, or downsiz
 Whether you are here to reclaim your shelves, study the fellowship journey, or evaluate the project's institutional future, we have organized our documentation to guide you:
 
 - **[I want to use the app]** Jump to the [Usage Guide](#usage-guide) or [Installation](#installation).
-- **[I am a Fellowship Peer]** Explore the [Documentation Guide](docs/DOCUMENTATION_GUIDE.md) to follow the architectural and personal journey.
+- **[I am a Fellowship Peer]** Start with the [Multi-Agent Orchestration Strategy](docs/architecture/ORCHESTRATION.md) to see how this project was built, then explore the [Documentation Guide](docs/DOCUMENTATION_GUIDE.md) for the full architectural and personal journey.
 - **[I am an Investor or Stakeholder]** Review the [V3 Institutional Vision](docs/roadmap/proposals/v3_VISION.md) and [Strategic Memo](docs/strategy/V3_INSTITUTIONAL_MEMO.md).
 
 ---
@@ -28,15 +28,16 @@ Whether you are here to reclaim your shelves, study the fellowship journey, or e
 3. [Features](#features)
 4. [Workflow](#workflow)
 5. [How the AI Works](#how-the-ai-works)
-6. [Tech Stack](#tech-stack)
-7. [Prerequisites](#prerequisites)
-8. [Installation](#installation)
-9. [Environment Configuration](#environment-configuration)
-10. [Running the App](#running-the-app)
-11. [Usage Guide](#usage-guide)
-12. [API Reference](#api-reference)
-13. [Development](#development)
-14. [Project Structure](#project-structure)
+6. [Built with a Multi-Agent AI Staff](#built-with-a-multi-agent-ai-staff)
+7. [Tech Stack](#tech-stack)
+8. [Prerequisites](#prerequisites)
+9. [Installation](#installation)
+10. [Environment Configuration](#environment-configuration)
+11. [Running the App](#running-the-app)
+12. [Usage Guide](#usage-guide)
+13. [API Reference](#api-reference)
+14. [Development](#development)
+15. [Project Structure](#project-structure)
 
 ---
 
@@ -177,6 +178,30 @@ The next evolution of BookBounty transforms it from a personal utility into the 
 - **Match Engine:** AI-driven alerts for librarians when a needed book is scanned by a user.
 
 Read the [V3 Institutional Memo](docs/strategy/V3_INSTITUTIONAL_MEMO.md) for more details.
+
+---
+
+## Built with a Multi-Agent AI Staff
+
+BookBounty wasn't just built *using* AI — it was built *by* AI, in a literal sense. The development model treats a primary Claude Code session (Atlas) as a principal architect and orchestrator that delegates to a named roster of specialized Claude subagents. Each specialist has a narrow domain, a persona file that defines its mandate and accumulated lessons, and a strict scope on how many files it touches per task.
+
+The roster:
+
+| Agent | Role |
+|---|---|
+| **Atlas** | Principal Architect / Orchestrator — coordinates all specialist waves, holds project context, makes architectural calls |
+| **Forge** | Django backend, DRF, migrations |
+| **Prism** | React frontend, components, routing |
+| **Nova** | Gemini AI integration, Pydantic schemas |
+| **Sentry** | QA audit — tests, lint, regressions |
+| **Ember** | Security — IDOR, permissions, data isolation |
+| **Scout** | DevOps — render.yaml, env vars, SPA routing |
+| **Archivist** | Documentation sync — REFLECTION.md, CLAUDE.md |
+| **Narrator** | Narrative, marketing, research, strategy |
+
+In practice, Atlas batches non-overlapping work into parallel waves — Forge and Prism writing to separate files simultaneously — then closes each session with a verification gate where Sentry (QA) and Archivist (docs) run in the same message. Long test runs execute in the background while planning continues. The model has been in active use across all 10 phases of this project, with measured efficiency gains: approximately 268 seconds and 4,720 tokens saved per average session compared to sequential single-agent execution.
+
+This isn't a theoretical framework — every persona file encodes real lessons learned the hard way during implementation (scanner layout bugs, eBay API edge cases, multi-tenant ORM patterns). The staff model is fully documented, including the efficiency benchmarks, in [`docs/architecture/ORCHESTRATION.md`](docs/architecture/ORCHESTRATION.md). Persona files live in [`docs/staff/personae/`](docs/staff/).
 
 ---
 

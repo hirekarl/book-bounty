@@ -2,6 +2,9 @@
 
 Entries moved here from `REFLECTION.md` when their principles were fully absorbed into persona files or the rolling window was exceeded. Read `REFLECTION.md` for active sessions.
 
+### 2026-04-09: AI Resource Stewardship & Interface Hardening
+- Principles (Resource Stewardship, State-Ref Dualism, Fail-Safe Interfaces) absorbed into Forge.md and Prism.md Key Lessons.
+
 ---
 
 ### 2026-04-08: MVP Polish Pass & Multi-Tenant Hardening
