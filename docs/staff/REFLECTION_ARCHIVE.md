@@ -2,6 +2,11 @@
 
 Entries moved here from `REFLECTION.md` when their principles were fully absorbed into persona files or the rolling window was exceeded. Read `REFLECTION.md` for active sessions.
 
+### 2026-04-10: Playwright Demo Recording Script
+- Infrastructure-only sprint. No application code changed. Sentry skipped. `demo/demo.js` (headed Chromium, native `recordVideo`), `demo/package.json`, `demo/.env.example` delivered. Key design decisions: idempotent REST teardown before browser open; rAF easeInOutCubic scroll loop (smooth scrollTo is fire-and-forget; must be wrapped in a Promise inside `page.evaluate()`). No new principles; scroll fix is a known Playwright pattern. Full detail in `project_playwright_demo.md`.
+
+---
+
 ### 2026-04-09: AI Resource Stewardship & Interface Hardening
 - Principles (Resource Stewardship, State-Ref Dualism, Fail-Safe Interfaces) absorbed into Forge.md and Prism.md Key Lessons.
 

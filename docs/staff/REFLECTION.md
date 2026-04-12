@@ -6,24 +6,6 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 
 ---
 
-### 2026-04-10: Tooling Sprint — Playwright Demo Recording Script
-
-- **Date:** 2026-04-10
-- **Task:** Infrastructure-only sprint. No application code changed. Sentry skipped (no production code modified).
-- **Delivered:**
-  - `demo/demo.js` — headed Chromium Playwright script, 1600×900, native `recordVideo` (.webm, viewport-only, no browser chrome)
-  - `demo/package.json` — `playwright` + `dotenv` deps, `npm run demo` entry point
-  - `demo/.env.example` — credential template
-  - `.gitignore` updated — `demo/videos/` and `demo/.env` excluded
-- **Key design decisions:**
-  - Idempotent REST API teardown (DELETE all entries + goals) before browser opens — script is safely re-runnable
-  - 5-scene flow: Landing → Login → Create Culling Goal ("The Patriot Cleanse") → Triage Wizard (ISBN `039309040X`, Marx-Engels Reader) → Collection
-  - Scroll smoothness: `window.scrollTo({ behavior: 'smooth' })` is fire-and-forget and cannot be awaited by Playwright; replaced with an rAF `easeInOutCubic` loop wrapped in a `Promise` inside `page.evaluate()` — Playwright awaits animation completion precisely
-  - Notes field confirmed in `ConditionForm.jsx` (Step 2), selector `#triage-notes`
-- **No new engineering principles.** The scroll fix is a known Playwright pattern. No persona updates needed.
-
----
-
 ### 2026-04-10: Narrator Sprint — Demo Video Script
 
 - **Date:** 2026-04-10
@@ -106,6 +88,23 @@ Active session log. Rolling window: keep the last 10 sessions. When an entry age
 - **No new principles.** Straightforward Narrator sprint; no unexpected friction.
 
 **Addendum (same date):** Atlas inline edit — "Choose Your Path" section in README.md updated so the Fellowship Peer path surfaces `docs/architecture/ORCHESTRATION.md` as the primary link, with the Documentation Guide as secondary. One line changed; no principles, no further doc updates needed.
+
+---
+
+### 2026-04-12: Narrator Discussion — Demo Video Script Retrospective
+
+- **Date:** 2026-04-12
+- **Task:** Narrator-only discussion. No files written, no code changed. Sentry skipped.
+- **Delivered:** Analytical retrospective on the existing `docs/fellowship/research/video_script_bookbounty.md` — no new asset produced.
+- **Key findings:**
+  - Dual-audience targeting confirmed: fellowship evaluators/peers (appreciate the craft — Reefer Madness structure, straight delivery) and politically-aware college students (appreciate the target — current discourse around book banning). Both cohorts activate different layers of the same joke.
+  - Visual/VO tonal gap is the engine: visuals do the comedy (Comic Sans overlay, jingoistic stock footage, CGI American flag), VO plays it straight. The Act I builder origin story reads as sincere pitch text — it becomes ironic only when paired with the Comic Sans headshot overlay.
+  - Structural bookending: Act I headshot (ironic credibility) mirrors Act III BookBounty logo over CGI flag (ironic patriotism). Two instances of the same visual joke at different registers.
+- **Principle: Load-bearing comedy.** Satirical framing should not obscure the product demo — it should frame the value prop. The Act II Playwright recording remains genuinely functional and legible. The joke is structural (Reefer Madness wrapper around a real product) not decorative (punchlines inserted into the demo). Comedy that interferes with comprehension is a liability; comedy that amplifies the value prop is an asset.
+
+**Addendum (same date — Narrator Sprint, production lock):** No new principles; execution-only follow-up.
+- `docs/staff/personae/Narrator.md` — new **Karl's Comedic Register** section added: five principles (Gap Principle, Restraint is the punchline, Specificity over broadness, Comedy must be load-bearing, Self-aware without breaking). Gap Principle subsequently sharpened: "The joke is total or it isn't" — extends to titles, chapter names, metadata, surrounding copy. Example: "The Dangers of Books" and "Threat Neutralized" as YouTube chapter titles.
+- `docs/fellowship/research/video_script_bookbounty.md` — production details locked: act timing from YouTube chapter markers (00:00 / 00:16 / 00:54 / 01:53), music track URL + cue point (enters at 00:16 synced to "Books"), visual treatment for Act I (Comic Sans overlay, jingoistic Pixabay stock) and Act III (BookBounty logo over CGI waving American flag).
 
 ---
 

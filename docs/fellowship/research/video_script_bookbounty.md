@@ -3,11 +3,20 @@
 **Tone: Reefer Madness. Completely straight. Karl is the narrator throughout.**
 
 ```
-ACT I   [00:00–00:45]  Visual TBD (app logo / stock footage placeholder)
+ACT I   [00:00–00:54]  Builder headshot + jingoistic/Pixabay stock footage
+                       Comic Sans overlay: linkedin.com/in/hirekarl (left, purple) / github.com/hirekarl (right, neon green)
 APP INTRO              Cut to Playwright recording begins
-ACT II  [00:45–01:50]  1:05 Playwright recording
-ACT III [01:50–02:15]  Visual TBD (app logo / stock footage placeholder)
+ACT II  [00:54–01:53]  Playwright recording (~59s)
+ACT III [01:53–02:15]  BookBounty logo over CGI waving American flag
 ```
+
+**YouTube chapters:**
+- `00:00` I'm Karl Johnson
+- `00:16` The Dangers of Books
+- `00:54` BookBounty in Action
+- `01:53` Threat Neutralized
+
+**Music:** https://www.youtube.com/watch?v=GyPOzd-9VRo — enters at `00:16`, synced to VO "Books."
 
 ---
 
