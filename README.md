@@ -6,7 +6,10 @@ Life transitions—moving into a first apartment, clearing an estate, or downsiz
 
 ---
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://bookbounty-ui.onrender.com/)
+[![BookBounty Demo](https://img.youtube.com/vi/eD4bdFRnCDI/maxresdefault.jpg)](https://www.youtube.com/watch?v=eD4bdFRnCDI)
+
+[![Watch Pitch Video](https://img.shields.io/badge/Watch%20Pitch%20Video-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=eD4bdFRnCDI)
+[![Try the App](https://img.shields.io/badge/Try%20the%20App-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://bookbounty-ui.onrender.com/)
 
 ## Choose Your Path
 
